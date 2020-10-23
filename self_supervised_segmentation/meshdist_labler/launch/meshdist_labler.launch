@@ -1,0 +1,8 @@
+<launch>
+
+  <!-- Launch ROS Package Template Node -->
+  <node pkg="meshdist_labler" type="meshdist_labler_node" name="Labler" output="screen">
+    <rosparam command="load" file="$(dirname)/../config/default.yaml" />
+  </node>
+
+</launch>
