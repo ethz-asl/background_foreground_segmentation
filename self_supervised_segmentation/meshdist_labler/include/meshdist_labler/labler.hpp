@@ -9,6 +9,7 @@
 #include <opencv/cv.h>
 #include <pcl/point_types.h>
 #include <pcl_ros/point_cloud.h>
+#include <pointmatcher/PointMatcher.h>
 #include <ros/ros.h>
 #include <sensor_msgs/image_encodings.h>
 #include <std_msgs/ColorRGBA.h>
@@ -19,8 +20,12 @@
 #include <tf_conversions/tf_eigen.h>
 #include <unordered_set>
 
+#include <pointmatcher_ros/point_cloud.h>
+#include <pointmatcher_ros/transform.h>
 namespace meshdist {
 
+typedef PointMatcher<float> PM;
+typedef PM::DataPoints DP;
 /*
  * Main class for the node to handle the ROS interfacing.
  */
@@ -37,7 +42,7 @@ public:
    */
   virtual ~Labler();
 
-private:
+protected:
   /*
    * Reads and verifies the ROS parameters.
    * @return true if successful.
@@ -49,15 +54,33 @@ private:
    * TODO
    *
    * */
-  image_transport::CameraSubscriber sub_;
+
+  void imageCbCam0(const sensor_msgs::ImageConstPtr &image_msg,
+                   const sensor_msgs::CameraInfoConstPtr &info_msg);
+
+  void imageCbCam1(const sensor_msgs::ImageConstPtr &image_msg,
+                   const sensor_msgs::CameraInfoConstPtr &info_msg);
+
+  void imageCbCam2(const sensor_msgs::ImageConstPtr &image_msg,
+                   const sensor_msgs::CameraInfoConstPtr &info_msg);
+
+  image_transport::CameraSubscriber sub1_;
+  image_transport::CameraSubscriber sub2_;
+  image_transport::CameraSubscriber sub3_;
   tf::TransformListener tf_listener_;
   image_geometry::PinholeCameraModel cam_model_;
   std::vector<std::string> frame_ids_;
   image_transport::ImageTransport it_;
-  image_transport::Publisher pub_;
+  image_transport::Publisher pub1_;
+  image_transport::Publisher pub2_;
+  image_transport::Publisher pub3_;
+
+  sensor_msgs::PointCloud2 lastCloud;
+  DP lastDP;
 
   void imageCb(const sensor_msgs::ImageConstPtr &image_msg,
-               const sensor_msgs::CameraInfoConstPtr &info_msg);
+               const sensor_msgs::CameraInfoConstPtr &info_msg,
+               std::string camera_frame, const image_transport::Publisher &pub);
   /**
    * Point cloud callback
    */

@@ -1,0 +1,28 @@
+<?xaml version="1.0"?>
+
+<launch>
+
+  <node pkg="tf"
+        type="static_transform_publisher"
+        name="cam0_imu_transformer"
+        args="0.081439 -0.078048 -0.078029 -0.608695 0.613674 -0.350186 -0.360923 versavis_imu cam0 200" />
+  <node pkg="tf"
+        type="static_transform_publisher"
+        name="cam1_imu_transformer"
+        args="0.080116 0.107271 -0.075342 0.614516 -0.612150 -0.354926 -0.348813 versavis_imu cam1 200" />
+  <node pkg="tf"
+        type="static_transform_publisher"
+        name="cam2_imu_transformer"
+        args="0.079328 0.007542 0.089288 -0.011326 -0.012115 0.706250 0.707768 versavis_imu cam2 200" />
+
+  <!--node pkg="tf"
+        type="static_transform_publisher"
+        name="pose_lidar_broadcaster"
+        args="-0.0129864 0.0168609 -0.238279 0.505473 0.503061 0.480558 0.510382 versavis_imu lidar 100" /-->
+  <node pkg="tf"
+        type="static_transform_publisher"
+        name="pose_lidar_broadcaster"
+        args="-0.195651 0.231361 -0.017719 -0.499011 -0.507098 -0.489864 0.503859 lidar versavis_imu 200"/>
+
+
+</launch>

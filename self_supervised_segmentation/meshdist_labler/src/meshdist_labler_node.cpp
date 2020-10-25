@@ -1,4 +1,4 @@
-#include "meshdist_labler/Labler.hpp"
+#include "meshdist_labler/labler.hpp"
 #include <ros/ros.h>
 
 int main(int argc, char **argv) {

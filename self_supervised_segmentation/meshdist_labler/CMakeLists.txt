@@ -13,7 +13,7 @@ add_definitions(-std=c++14 -Wall -Wextra)
 # LIBRARIES #
 #############
 cs_add_library(${PROJECT_NAME}
-        src/Labler.cpp)
+        src/labler.cpp)
 
 ############
 # BINARIES #
