@@ -22,6 +22,8 @@
   <depend> tf </depend>
   <depend> image_view</depend>
 
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
   <depend>libpointmatcher</depend>
   <depend>libpointmatcher_ros</depend>
 

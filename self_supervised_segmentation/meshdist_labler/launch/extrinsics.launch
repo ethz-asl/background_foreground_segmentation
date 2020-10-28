@@ -5,7 +5,7 @@
   <node pkg="tf"
         type="static_transform_publisher"
         name="cam0_imu_transformer"
-        args="0.081439 -0.078048 -0.078029 -0.608695 0.613674 -0.350186 -0.360923 versavis_imu cam0 200" />
+        args="0.281439 -0.078048 -0.078029 -0.608695 0.613674 -0.350186 -0.360923 versavis_imu cam0 200" />
   <node pkg="tf"
         type="static_transform_publisher"
         name="cam1_imu_transformer"
