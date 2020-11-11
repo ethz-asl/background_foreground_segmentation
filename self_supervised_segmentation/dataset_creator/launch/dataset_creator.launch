@@ -1,0 +1,8 @@
+<launch>
+
+  <!-- Launch ROS Package Template Node -->
+  <node pkg="dataset_creator" type="dataset_creator_node" name="dataset_creator" output="screen">
+    <rosparam command="load" file="$(dirname)/../config/default.yaml" />
+  </node>
+
+</launch>

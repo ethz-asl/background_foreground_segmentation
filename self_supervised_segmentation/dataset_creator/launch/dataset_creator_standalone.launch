@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+
+    <include file="$(find segmentation_filtered_icp)/launch/versavis/extrinsics.launch" />
+
+
+<!--     <node pkg="tf" type="static_transform_publisher" name="laser" args="0 0 0 0 0 0 1  /lidar /rslidar  100"/> -->
+<!-- 	<include file="$(find meshdist_labler)/launch/extrinsics.launch" -->
+<!-- 	         pass_all_args="true" /> -->
+	<include file="$(find smb_state_estimator)/launch/smb_state_estimator_standalone.launch"
+	         pass_all_args="true" />
+	<include file="$(find cpt_selective_icp)/launch/supermegabot_selective_icp.launch"
+	         pass_all_args="true" />
+
+
+	<!--<node type="rviz" name="rviz" pkg="rviz" args="-d $(find cpt_selective_icp)/launch/rviz.rviz" /> -->
+
+ <node pkg="dataset_creator" type="dataset_creator_node" name="dataset_creator" output="screen">
+    <rosparam command="load" file="$(dirname)/../config/default.yaml" />
+  </node>
+
+
+</launch>

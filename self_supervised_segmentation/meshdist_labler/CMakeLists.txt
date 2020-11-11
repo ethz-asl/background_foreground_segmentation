@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 2.8.3)
 project(meshdist_labler)
 
 find_package(catkin_simple REQUIRED)
+
+find_package(
+        Boost
+)
+
+
 catkin_python_setup()
 catkin_simple(ALL_DEPS_REQUIRED)
 
