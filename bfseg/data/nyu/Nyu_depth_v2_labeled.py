@@ -41,7 +41,7 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         features=tfds.features.FeaturesDict({
           'image': tfds.features.Image(shape=(480, 640, 3), dtype=tf.uint8),
           # 'depth': tfds.features.Tensor(shape=(480, 640), dtype=tf.float16),
-          'label': tfds.features.Tensor(shape=(480, 640), dtype=tf.uint16), 
+          'label': tfds.features.Tensor(shape=(480, 640), dtype=tf.uint16),
         }),
         # If there's a common (input, target) tuple from the
         # features, specify them here. They'll be used if
