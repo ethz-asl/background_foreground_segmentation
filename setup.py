@@ -1,9 +1,11 @@
-from setuptools import setup
+# ! DO NOT MANUALLY INVOKE THIS setup.py, USE CATKIN INSTEAD
 
-setup(name='bfseg',
-      version='0.0',
-      install_requries=[
-          'yapf', 'pylint', 'tensorflow==2.3.1', 'tensorflow-datasets',
-          'segmentation-models'
-      ],
-      packages=['bfseg', 'bfseg.data', 'bfseg.data.nyu'])
+from distutils.core import setup
+from catkin_pkg.python_setup import generate_distutils_setup
+
+# fetch values from package.xml
+setup_args = generate_distutils_setup(
+    packages=['bfseg', 'bfseg.data'],
+    package_dir={'': 'src'})
+
+setup(**setup_args)
