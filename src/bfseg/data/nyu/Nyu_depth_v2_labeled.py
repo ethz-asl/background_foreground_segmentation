@@ -24,6 +24,7 @@ _CITATION = """
 
 _URL = 'http://horatio.cs.nyu.edu/mit/silberman/nyu_depth_v2/nyu_depth_v2_labeled.mat'
 
+
 class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for Nyu_depth_v2_labeled dataset."""
 
@@ -39,9 +40,9 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         builder=self,
         description=_DESCRIPTION,
         features=tfds.features.FeaturesDict({
-          'image': tfds.features.Image(shape=(480, 640, 3), dtype=tf.uint8),
-          # 'depth': tfds.features.Tensor(shape=(480, 640), dtype=tf.float16),
-          'label': tfds.features.Tensor(shape=(480, 640), dtype=tf.uint16), 
+            'image': tfds.features.Image(shape=(480, 640, 3), dtype=tf.uint8),
+            # 'depth': tfds.features.Tensor(shape=(480, 640), dtype=tf.float16),
+            'label': tfds.features.Tensor(shape=(480, 640), dtype=tf.uint16),
         }),
         # If there's a common (input, target) tuple from the
         # features, specify them here. They'll be used if
@@ -69,14 +70,16 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
     """Yields examples."""
     # TODO(Nyu_depth_v2_labeled): Yields (key, example) tuples from the dataset
     h5py = tfds.core.lazy_imports.h5py
-    with h5py.File(dataset_path,'r') as f:
+    with h5py.File(dataset_path, 'r') as f:
       Images = f['images']
       # Depths = f['depths']
       Labels = f['labels']
-      Images=np.array(f['images'],dtype=f['images'].dtype).T.squeeze()
+      Images = np.array(f['images'], dtype=f['images'].dtype).T.squeeze()
       # Depths=np.array(f['depths'],dtype=f['images'].dtype).T.squeeze()
-      Labels=np.array(f['labels'],dtype=f['labels'].dtype).T.squeeze()
+      Labels = np.array(f['labels'], dtype=f['labels'].dtype).T.squeeze()
       for i in range(Images.shape[-1]):
-          yield str(i).zfill(4), {'image':Images[:,:,:,i],
-                 # 'depth':Depths[:,:,i],
-                 'label':Labels[:,:,i]}
+        yield str(i).zfill(4), {
+            'image': Images[:, :, :, i],
+            # 'depth':Depths[:,:,i],
+            'label': Labels[:, :, i]
+        }
