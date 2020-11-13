@@ -2,7 +2,6 @@
 ## Overview
 This package extracts the following information from a ROS Bag:
 
-- Name of the ROS bag and corresponding mesh file
 - For each camera:
     - Camera information (All information from the Sensor Message)
     - For each camera frame:
@@ -29,5 +28,6 @@ Sometimes due to bad timings running the standalone launch script can confuse th
 3. Terminal B: `roslaunch smb_state_estimator smb_state_estimator_standalone.launch`
 4. Terminal C: `roslaunch cpt_selective_icp supermegabot_selective_icp_with_rviz.launch publish_distance:=true`
 5. Terminal D: `roslaunch dataset_creator dataset_creator.launch output_folder:=<outputFolder>/ use_camera_stick:=cam0`
-6. Termianl E: `rosbag play --clock <path/to/bagfile>`
-5. RVIZ: Align Mesh with Pointcloud and right click marker -> load mesh, publish mesh
+5. Terminal E: `roslaunch segmentation_filtered_icp extrinsics.launch`
+6. Terminal F: `rosbag play --clock <path/to/bagfile>`
+5. RVIZ: Align Mesh with Pointcloud and right click marker -> load CAD, publish mesh

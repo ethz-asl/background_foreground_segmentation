@@ -28,6 +28,7 @@
 namespace dataset_creator {
 
 typedef PointMatcher<float> PM;
+
 /*
  * Main class for the node to handle the ROS interfacing.
  */
@@ -44,18 +45,59 @@ public:
    */
   virtual ~Creator();
 
+private:
+  /*
+   * Creates a file containing information about the dataset, camera geometry
+   * etc.
+   */
   void createInfoFile(std::string timestamp,
                       image_geometry::PinholeCameraModel camera);
 
+  /*
+   * Initializes the dataset output folder specified by the parameters
+   */
   bool initOutputFolder();
+
   /*
    * Reads and verifies the ROS parameters.
    * @return true if successful.
    */
   bool readParameters();
 
+  /*
+   * Callback to extract information from dataset
+   * @param cloud Point Cloud containing distance information
+   * @param image Image of Camera from
+   * @param c_info Camera information
+   */
+  void callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
+                const sensor_msgs::ImageConstPtr &image,
+                const sensor_msgs::CameraInfoConstPtr &c_info);
+  /*
+   * * Callback to extract images from bag if there is no reliable pointcloud
+   */
+  void no_pc_callback(const sensor_msgs::ImageConstPtr &image,
+                      const sensor_msgs::CameraInfoConstPtr &c_info);
+
+  typedef message_filters::sync_policies::ApproximateTime<
+      sensor_msgs::PointCloud2, sensor_msgs::Image, sensor_msgs::CameraInfo>
+      ApproxSyncPolicy;
+
+  typedef message_filters::Synchronizer<ApproxSyncPolicy> Sync;
+
+  typedef message_filters::sync_policies::ApproximateTime<
+      sensor_msgs::Image, sensor_msgs::CameraInfo>
+      ApproxSyncPolicyNoPC;
+
+  typedef message_filters::Synchronizer<ApproxSyncPolicyNoPC> SyncNoPC;
+
+  // Should dataset folder be overwritten
   bool overrideFolder;
+  // Flag whether dataset folder has been initialized
   bool initialized_dataset;
+  // flag if only images should be extracted or not
+  bool ignore_pointcloud;
+
   std::string cloud_topic;
   std::string cloud_frame;
   std::string camera_frame;
@@ -63,27 +105,30 @@ public:
   std::string camera_info_topic;
   std::string camera_image_topic;
   std::string output_folder;
+
+  // Point cloud distance from mesh will be stored as image -> [0,255]
+  // Distances to mesh will be mapped as follows distance -> min(max_distance,
+  // point_distance)*255 Points that have a bigger distance to a mesh than
+  // max_distance will be reduced to max_distance
   float max_distance;
 
+  // Smae for lidar point distance
+  float lidar_max_distance;
+
   tf::TransformListener *tf_listener;
-
-  typedef message_filters::sync_policies::ApproximateTime<
-          sensor_msgs::PointCloud2, sensor_msgs::Image, sensor_msgs::CameraInfo> ApproxSyncPolicy;
-
-  typedef message_filters::Synchronizer<ApproxSyncPolicy> Sync;
 
   message_filters::Subscriber<sensor_msgs::PointCloud2> cloud_sub;
   message_filters::Subscriber<sensor_msgs::Image> image_sub;
   message_filters::Subscriber<sensor_msgs::CameraInfo> cam_info_sub;
 
+  // Sync function to call if point cloud measurements are available.
   boost::shared_ptr<Sync> sync;
+  // Sync function to call if pc information are not available.
+  boost::shared_ptr<SyncNoPC> no_pc_sync;
+
   image_transport::Publisher pub;
-
+  // Used to publish images
   image_transport::ImageTransport it_;
-
-  void callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
-                const sensor_msgs::ImageConstPtr &image,
-                const sensor_msgs::CameraInfoConstPtr &c_info);
 
   // ROS node handle.
   ros::NodeHandle &nodeHandle_;
