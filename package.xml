@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>background_foreground_segmentation</name>
+  <version>0.1.0</version>
+  <description>Creates a dataset for a construction site ros bag file</description>
+  <maintainer email="zrene@student.ethz.ch">René Zurbrügg</maintainer>
+  <author email="zrene@student.ethz.ch">René Zurbrügg</author>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+
+  <test_depend>rosunit</test_depend>
+
+  <depend>cgal_catkin</depend>
+  <depend>pcl_ros</depend>
+  <depend>roscpp</depend>
+  <depend>image_geometry</depend> 
+  <depend>image_transport </depend>
+  <depend>cv_bridge</depend>
+  <depend> tf </depend>
+  <depend> image_view</depend>
+
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>libpointmatcher</depend>
+  <depend>libpointmatcher_ros</depend>
+
+  <!--
+  <depend>eigen_catkin</depend>
+  <depend>libpointmatcher</depend>
+  <depend>libpointmatcher_ros</depend>
+  <depend>libnabo</depend>
+  <depend>sensor_msgs</depend>
+  <depend>cgal_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>cgal_definitions</depend>
+  <depend>message_generation</depend>
+  <depend>std_msgs</depend>
+  <depend>cgal_conversions</depend>
+  <depend>cgal_visualizations</depend>
+  <depend>cpt_utils</depend>-->
+
+</package>

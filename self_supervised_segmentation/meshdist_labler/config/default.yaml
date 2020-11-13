@@ -1,9 +1,0 @@
-cloudTopic: /distance_pc
-pcTopic: /distance_pc
-cloudFrame: /map
-cameraImageTopic: /camera_stick/cam0/image
-cameraInfoTopic: /camera_stick/cam0/camera_info
-cameraFrame: /cam0
-outputTopic: /cam2_labels
-outputFolder: /home/rene/imgs/
-maxDistance: 0.5

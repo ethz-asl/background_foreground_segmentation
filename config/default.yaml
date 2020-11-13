@@ -1,0 +1,18 @@
+# Set this to true if you only want to extract images and poses from rosbag
+ignorePointcloud: false
+# Topic where point cloud with distance information is published
+cloudTopic: /distance_pc
+# In which frame is the cloud published?
+cloudFrame: /map
+cameraImageTopic: /camera_stick/cam0/image
+cameraInfoTopic: /camera_stick/cam0/camera_info
+cameraFrame: /cam0
+outputTopic: /cam0_labels
+# Output folder of the dataset. Must end with a '/'
+outputFolder: /home/rene/cla_dataset/
+# Max distance from a point to the groundtruth mesh. If a point has i bigger distance, it will be replaced with this value
+maxDistance: 0.5 #[m]
+# Max distance of a lidar point from the camera. If a point has i bigger distance, it will be replaced with this value
+lidarMaxDistance: 10 #[m]
+# If existing files should be overriden
+overrideOutput: true
