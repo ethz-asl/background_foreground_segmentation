@@ -33,7 +33,7 @@ Sometimes due to bad timings running the standalone launch script can confuse th
 2. Terminal B: `rosparam set use_sim_time true`
 3. Terminal B: `roslaunch smb_state_estimator smb_state_estimator_standalone.launch`
 4. Terminal C: `roslaunch cpt_selective_icp supermegabot_selective_icp_with_rviz.launch publish_distance:=true`
-5. Terminal D: `roslaunch background_foreground_segmentation dataset_creator.launch output_folder:=<outputFolder>/ use_camera_stick:=cam0`
+5. Terminal D: `roslaunch background_foreground_segmentation dataset_creator.launch outputFolder:=<outputFolder>/ use_camera_stick:=cam0`
 5. Terminal E: `roslaunch segmentation_filtered_icp extrinsics.launch`
 6. Terminal F: `rosbag play --clock <path/to/bagfile>`
 5. RVIZ: Align Mesh with Pointcloud and right click marker -> load CAD, publish mesh

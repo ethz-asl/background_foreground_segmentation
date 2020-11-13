@@ -11,7 +11,7 @@
 	 </include>
 
     <!-- Start Dataset Creator node -->
-    <node pkg="background_foreground_segmentation" type="dataset_creator_node" name="dataset_creator" output="screen"  pass_all_args="true">
+    <node pkg="background_foreground_segmentation" type="background_foreground_segmentation_node" name="background_foreground_segmentation" output="screen"  pass_all_args="true">
        <rosparam command="load" file="$(dirname)/../config/default.yaml" />
     	<param name="outputFolder" value="$(arg outputFolder)"/>
     </node>

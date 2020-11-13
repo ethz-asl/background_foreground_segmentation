@@ -25,7 +25,7 @@ cs_add_library(${PROJECT_NAME}
 # BINARIES #
 ############
 cs_add_executable(${PROJECT_NAME}_node
-        src/dataset_creator_node.cpp
+        src/background_foreground_segmentation_node.cpp
         )
 
 target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME})
