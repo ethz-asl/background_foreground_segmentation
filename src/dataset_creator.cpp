@@ -78,7 +78,8 @@ bool Creator::readParameters() {
 
   std::string camera_name;
   if (nodeHandle_.getParam("use_camera_stick", camera_name)) {
-    std::cout << "camera stick is set. Going to load default values for topics " << camera_name << std::endl;
+    std::cout << "camera stick is set. Going to load default values for topics "
+              << camera_name << std::endl;
     std::cout << "outputFolder  =  " << output_folder << std::endl;
     camera_image_topic = "/camera_stick/" + camera_name + "/image";
     camera_info_topic = "/camera_stick/" + camera_name + "/camera_info";
@@ -114,8 +115,8 @@ bool Creator::initOutputFolder() {
       std::cerr << "could not create folder: " << output_folder << std::endl;
       return false;
     }
-    std::cout << "Camera folder already exists. Results will be overwritten " << output_folder
-              << std::endl;
+    std::cout << "Camera folder already exists. Results will be overwritten "
+              << output_folder << std::endl;
   }
 
   std::cout << "Initialized dataset folder";
