@@ -107,8 +107,7 @@ private:
   // point_distance)*255 Points that have a bigger distance to a mesh than
   // max_distance will be reduced to max_distance
   float max_distance;
-
-  // Smae for lidar point distance
+  // Same for lidar point distance
   float lidar_max_distance;
 
   tf::TransformListener *tf_listener;

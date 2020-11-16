@@ -2,16 +2,16 @@
 User will need to manually start StateEstimator + ICP + Extrinsic-->
 <launch>
 
-		<!--<arg name="output_folder" default="/home/rene/cla_dataset/" /> -->
-		<!--<arg name="output_folder" default="/home/rene/cla_dataset/" /> -->
+		<arg name="outputFolder" doc="In which folder the dataset should be stored. Must end with /" /> 
 
+		<arg name="use_camera_stick" default = "" doc="If Images are published in a camera_stick/camX like structure, specify from which camera you want to extract the pictures. e.g. cma0" />
 
   <!-- Launch ROS Package Template Node -->
   <node pkg="background_foreground_segmentation" type="background_foreground_segmentation_node" name="background_foreground_segmentation" output="screen">
 
     <rosparam command="load" file="$(dirname)/../config/default.yaml" />
     	<param name="outputFolder" value="$(arg outputFolder)"/>
-    	<param name="use_camera_stick" value="$(arg use_camera_stick)"/>
+    	<param name="use_camera_stick" value="$(arg use_camera_stick)"/> 
   </node>
 
 </launch>

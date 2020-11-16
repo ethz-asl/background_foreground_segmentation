@@ -79,7 +79,8 @@ bool Creator::readParameters() {
     return false;
 
   std::string camera_name;
-  if (nodeHandle_.getParam("use_camera_stick", camera_name)) {
+  if (nodeHandle_.getParam("use_camera_stick", camera_name) &&
+      !camera_name.empty()) {
     std::cout << "camera stick is set. Going to load default values for topics "
               << camera_name << std::endl;
     std::cout << "outputFolder  =  " << output_folder << std::endl;
