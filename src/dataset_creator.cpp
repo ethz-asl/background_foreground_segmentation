@@ -140,6 +140,16 @@ void Creator::createInfoFile(std::string timestamp,
 // Only extracts image and pose and not pointcloud information
 void Creator::no_pc_callback(const sensor_msgs::ImageConstPtr &image,
                              const sensor_msgs::CameraInfoConstPtr &c_info) {
+  sensor_msgs::PointCloud2ConstPtr emptyCloudPointer;
+  // Call callback with empty cloud pointer
+  callback(emptyCloudPointer, image, c_info);
+}
+
+// Extracts images, pose and pointcloud information (Distance to mesh,
+// Absolute distanc)
+void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
+                       const sensor_msgs::ImageConstPtr &image,
+                       const sensor_msgs::CameraInfoConstPtr &c_info) {
 
   // Extract timestamp from header
   std_msgs::Header h = image->header;
@@ -157,7 +167,6 @@ void Creator::no_pc_callback(const sensor_msgs::ImageConstPtr &image,
   // Get image from camera
   image_geometry::PinholeCameraModel model;
   model.fromCameraInfo(c_info);
-
   // Create information file containing pinhole camera parameters
   createInfoFile(timestamp, model);
 
@@ -167,6 +176,11 @@ void Creator::no_pc_callback(const sensor_msgs::ImageConstPtr &image,
   const cv::Mat &camera_image = img->image;
   // Store original image
   cv::imwrite(output_folder + "/" + timestamp + "/original.png", camera_image);
+
+  if (cloud) {
+    // Cloud is defined -> extract pc information
+    projectPointCloud(timestamp, camera_image, cloud, model);
+  }
 
   // Export pose of camera in map frame
   tf::Matrix3x3 rotation = (*map_transform).getBasis();
@@ -188,22 +202,14 @@ void Creator::no_pc_callback(const sensor_msgs::ImageConstPtr &image,
 
   // Publish to topic
   pub.publish(img->toImageMsg());
-  std::cout << "published" << output_folder + timestamp + "_preview.png"
-            << std::endl;
+  std::cout << "published" << output_folder + timestamp + "_preview."
+            << file_type << std::endl;
 }
 
-// Extracts images, pose and pointcloud information (Distance to mesh, Absolute
-// distanc)
-void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
-                       const sensor_msgs::ImageConstPtr &image,
-                       const sensor_msgs::CameraInfoConstPtr &c_info) {
-
-  // Extract timestamp from header
-  std_msgs::Header h = image->header;
-  std::string timestamp = std::to_string(h.stamp.toSec());
-
-  boost::filesystem::create_directory((output_folder + timestamp));
-
+void Creator::projectPointCloud(
+    const std::string timestamp, const cv::Mat &camera_image,
+    const sensor_msgs::PointCloud2ConstPtr &cloud,
+    const image_geometry::PinholeCameraModel &model) {
   // Transform point cloud msg to pcl pointcloud
   pcl::PointCloud<pcl::PointXYZI> in_cloud;
   pcl::fromROSMsg(*cloud, in_cloud);
@@ -213,27 +219,6 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
   tf_listener->waitForTransform(camera_frame, cloud_frame, ros::Time(0),
                                 ros::Duration(3.0));
   tf_listener->lookupTransform(camera_frame, cloud_frame, ros::Time(0), *t);
-
-  // Wait for transform for map
-  std::shared_ptr<tf::StampedTransform> map_transform(new tf::StampedTransform);
-  tf_listener->waitForTransform("/map", camera_frame, ros::Time(0),
-                                ros::Duration(3.0));
-  tf_listener->lookupTransform("/map", camera_frame, ros::Time(0),
-                               *map_transform);
-
-  // Get image from camera
-  image_geometry::PinholeCameraModel model;
-  model.fromCameraInfo(c_info);
-
-  // Create information file containing pinhole camera parameters
-  createInfoFile(timestamp, model);
-
-  cv_bridge::CvImageConstPtr img =
-      cv_bridge::toCvShare(image, sensor_msgs::image_encodings::BGR8);
-  // Camera image
-  const cv::Mat &camera_image = img->image;
-  // Store original image
-  cv::imwrite(output_folder + "/" + timestamp + "/original.png", camera_image);
 
   // Image that contains the projected pointcloud
   cv::Mat preview_img = camera_image.clone();
@@ -278,8 +263,8 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
         distance = lidar_max_distance;
       }
       int distance_value = int(distance / (lidar_max_distance)*254) + 1;
-      // Convert distance value to RGB color. RGB value is between 1 and 255. 0
-      // Is excluded as this should be interpreted as "no measurement"
+      // Convert distance value to RGB color. RGB value is between 1 and 255.
+      // 0 Is excluded as this should be interpreted as "no measurement"
 
       int distance_to_mesh = std::max(
           0, std::min(254, (int)(254 * (it->intensity / max_distance))));
@@ -299,34 +284,13 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
     }
   }
 
-  // Export pose of camera in map frame
-  tf::Matrix3x3 rotation = (*map_transform).getBasis();
-  tf::Vector3 origin = (*map_transform).getOrigin();
-
-  // Convert pose to string to save
-  std::string matrixAsString;
-  for (int i = 0; i < 3; i++) {
-    matrixAsString += std::to_string(rotation.getRow(i).getX()) + "," +
-                      std::to_string(rotation.getRow(i).getY()) + "," +
-                      std::to_string(rotation.getRow(i).getZ()) + "," +
-                      std::to_string(origin[i]) + ";\n";
-  }
-  matrixAsString += "0,0,0,1;";
-  // Save pose matrix
-  std::ofstream myfile(output_folder + timestamp + "pose.txt");
-  myfile << matrixAsString;
-  myfile.close();
-
   // Save images
-  cv::imwrite(output_folder + "/" + timestamp + "/preview.png", preview_img);
+  cv::imwrite(output_folder + "/" + timestamp + "/preview." + file_type,
+              preview_img);
   cv::imwrite(output_folder + timestamp + "/labels.png", labels_img);
   cv::imwrite(output_folder + timestamp + "/distance.png", distance_img);
   // Save pointcloud
   pcl::io::savePCDFile(output_folder + timestamp + "/pcl.pcd", camera_frame_pc);
-  // Publish to topic
-  pub.publish(img->toImageMsg());
-  std::cout << "published" << output_folder + timestamp + "_preview."
-            << file_type << std::endl;
 }
 
 } // namespace dataset_creator
