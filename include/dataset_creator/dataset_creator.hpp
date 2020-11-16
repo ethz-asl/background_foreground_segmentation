@@ -1,5 +1,4 @@
 #pragma once
-
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -12,9 +11,6 @@
 #include <opencv/cv.h>
 #include <pcl/point_types.h>
 #include <pcl_ros/point_cloud.h>
-#include <pointmatcher/PointMatcher.h>
-#include <pointmatcher_ros/point_cloud.h>
-#include <pointmatcher_ros/transform.h>
 #include <ros/ros.h>
 #include <sensor_msgs/image_encodings.h>
 #include <std_msgs/ColorRGBA.h>
@@ -23,7 +19,6 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <tf_conversions/tf_eigen.h>
-#include <unordered_set>
 
 namespace dataset_creator {
 
