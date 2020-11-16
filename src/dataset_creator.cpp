@@ -324,8 +324,8 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
   pcl::io::savePCDFile(output_folder + timestamp + "/pcl.pcd", camera_frame_pc);
   // Publish to topic
   pub.publish(img->toImageMsg());
-  std::cout << "published" << output_folder + timestamp + "_preview." << file_type
-            << std::endl;
+  std::cout << "published" << output_folder + timestamp + "_preview."
+            << file_type << std::endl;
 }
 
 } // namespace dataset_creator
