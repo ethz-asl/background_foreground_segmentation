@@ -11,7 +11,8 @@ find_package(
 catkin_python_setup()
 catkin_simple(ALL_DEPS_REQUIRED)
 
-add_definitions(-std=c++17 -lstdc++fs -Wall -Wextra)
+
+add_definitions(-std=c++14 -Wall -Wextra)
 
 
 #############
