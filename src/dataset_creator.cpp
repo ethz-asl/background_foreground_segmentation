@@ -1,7 +1,7 @@
 #include "dataset_creator/dataset_creator.hpp"
 #include "opencv2/highgui/highgui.hpp"
-#include <boost/filesystem.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include <filesystem>
 #include <iostream>
 #include <message_filters/subscriber.h>
 #include <message_filters/sync_policies/approximate_time.h>
@@ -94,9 +94,9 @@ bool Creator::readParameters() {
 }
 
 bool Creator::initOutputFolder() {
-  if (!boost::filesystem::exists(output_folder)) {
+  if (!std::filesystem::exists(output_folder)) {
     // Folder does not exist
-    if (!boost::filesystem::create_directory(output_folder)) {
+    if (!std::filesystem::create_directory(output_folder)) {
       if (!overrideFolder) {
         std::cerr << "could not create folder: " << output_folder << std::endl;
         return false;
@@ -113,7 +113,7 @@ bool Creator::initOutputFolder() {
   // change outputfolder from "out_folder/" -> "out_folder/cam0/"
   output_folder.erase(output_folder.size() - 1);
   output_folder += camera_frame + "/";
-  if (!boost::filesystem::create_directory(output_folder)) {
+  if (!std::filesystem::create_directory(output_folder)) {
     if (!overrideFolder) {
       std::cerr << "could not create folder: " << output_folder << std::endl;
       return false;
@@ -155,7 +155,7 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
   std_msgs::Header h = image->header;
   std::string timestamp = std::to_string(h.stamp.toSec());
 
-  boost::filesystem::create_directory((output_folder + timestamp));
+  std::filesystem::create_directory((output_folder + timestamp));
 
   // Wait for transform for map
   std::shared_ptr<tf::StampedTransform> map_transform(new tf::StampedTransform);
