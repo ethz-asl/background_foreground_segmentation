@@ -16,3 +16,5 @@ maxDistance: 0.5 #[m]
 lidarMaxDistance: 10 #[m]
 # If existing files should be overriden
 overrideOutput: true
+# Filetype of the original image. Either png or jpg
+fileType: "png"

@@ -100,6 +100,7 @@ private:
   std::string camera_info_topic;
   std::string camera_image_topic;
   std::string output_folder;
+  std::string file_type;
 
   // Point cloud distance from mesh will be stored as image -> [0,255]
   // Distances to mesh will be mapped as follows distance -> min(max_distance,
