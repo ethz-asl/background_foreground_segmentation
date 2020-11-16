@@ -1,4 +1,5 @@
 #pragma once
+
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -19,10 +20,9 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <tf_conversions/tf_eigen.h>
+#include <unordered_set>
 
 namespace dataset_creator {
-
-typedef PointMatcher<float> PM;
 
 /*
  * Main class for the node to handle the ROS interfacing.
