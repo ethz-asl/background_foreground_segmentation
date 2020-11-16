@@ -59,12 +59,6 @@ private:
    */
   bool readParameters();
 
-  // Projects a given point cloud into the camera frame and stores labels
-  void projectPointCloud(const std::string timestamp,
-                         const cv::Mat &camera_image,
-                         const sensor_msgs::PointCloud2ConstPtr &cloud,
-                         const image_geometry::PinholeCameraModel &model);
-
   /*
    * Callback to extract information from dataset
    * @param cloud Point Cloud containing distance information
