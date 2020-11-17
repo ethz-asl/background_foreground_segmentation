@@ -83,7 +83,6 @@ class DataLoader:
         return image, label
 
     def getDataset(self):
-        # Todo return validation data set from the hive not None
         return self.getDatasetForList(self.filenames, self.labels), self.getDatasetForList(self.validationFiles, self.validationLabels)
 
         # Old code to generate random training and validation split
