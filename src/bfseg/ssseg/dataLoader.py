@@ -25,10 +25,11 @@ class DataLoader:
 
         self.filenames, self.labels = self.getImageDataFromPath(self.workingDir)
         self.validationFiles, self.validationLabels = self.getImageDataFromPath(self.validationDir)
-
         self.size = len(self.filenames)
+        self.validationSize = len(self.validationFiles)
 
     def getImageDataFromPath(self, path):
+        # returns all input images and labels stored in the given 'path' folder.
         labels = []
         imgs = []
         for root, dirs, files in os.walk(path):
