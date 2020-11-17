@@ -50,16 +50,23 @@ class DataLoader:
 
         Currently the distance label is unused
         """
+    # lists to return
     labels = []
     imgs = []
-    for image_folders in sorted(os.listdir(path)):
-      if os.path.isdir(os.path.join(path, image_folders)):
-        folder_content = sorted(os.listdir(os.path.join(path, image_folders)))
 
+    # iterate through all imgXXX folders
+    for image_folders in sorted(os.listdir(path)):
+      # make sure it is folder
+      if os.path.isdir(os.path.join(path, image_folders)):
+        # cache folder content (e.g. img.png, semseg.png)
+        folder_content = sorted(os.listdir(os.path.join(path, image_folders)))
+        # count how many semseg images (=labels) are there
         semantic_labels = [
             fileName for fileName in folder_content if "semseg" in fileName
         ]
+        # count how many original images are there
         images = [fileName for fileName in folder_content if "img" in fileName]
+
         if len(semantic_labels) == len(images):
           imgs.extend(images)
           labels.extend(labels)
