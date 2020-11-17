@@ -1,6 +1,6 @@
-###########################################################################################
-#    Contains all logic that is used to load images from the disk
-###########################################################################################
+"""
+    Contains all logic that is used to load images from the disk
+"""
 import tensorflow as tf
 import os
 import random
@@ -37,22 +37,40 @@ class DataLoader:
     self.validationSize = len(self.validationFiles)
 
   def getImageDataFromPath(self, path):
-    # returns all input images and labels stored in the given 'path' folder.
+    """ returns all input images and labels stored in the given 'path' folder.
+        The folder structure looks like this:
+        path/
+            img000/
+             - img.[png/jpg]   <- Original image
+             - semseg.png      <- Labels for Semantic Segmentation
+             - distance.png    <- Labels for depth prediction
+             - ... additional information e.g. pc, pose
+            img999/
+              ....
+
+        Currently the distance label is unused
+        """
     labels = []
     imgs = []
-    for root, dirs, files in os.walk(path):
-      for file in files:
-        if ".txt" in file:
-          break
-        if "label" in file or "semseg" in file:
-          labels.append(os.path.join(root, file))
-        elif "img" in file:
-          imgs.append(os.path.join(root, file))
+    for image_folders in sorted(os.listdir(path)):
+      if os.path.isdir(os.path.join(path, image_folders)):
+        folder_content = sorted(os.listdir(os.path.join(path, image_folders)))
+
+        semantic_labels = [
+            fileName for fileName in folder_content if "semseg" in fileName
+        ]
+        images = [fileName for fileName in folder_content if "img" in fileName]
+        if len(semantic_labels) == len(images):
+          imgs.extend(images)
+          labels.extend(labels)
+        else:
+          print("WARNING! Label / Image missmatch in folder:",
+                path + "image_folders")
 
     return imgs, labels
 
   def parse_function(self, filename, label):
-    # Read image and labels. Will crash if filetype is neither jpg nor png.
+    """ Read image and labels. Will crash if filetype is neither jpg nor png. """
     if tf.io.is_jpeg(filename):
       image = tf.image.decode_jpeg(tf.io.read_file(filename), channels=3)
     else:
@@ -69,16 +87,37 @@ class DataLoader:
                                                           method="nearest")
 
   def cropImageToInputSize(self, image, size, method="bilinear"):
-    # Crop image. Removes a little bit from the top of the image, as any won't have labels for this area
+    """ Crop image. Removes a little bit from the top of the image, as any won't have labels for this area """
+
     # TODO do not hardcode, make image size dependant
-    print(tf.shape(image))
+    # image_w, image_h, _ = tf.unstack(tf.shape(image))
+    # image_w = int(image_w)
+    # image_h = int(image_h)
+    # # Remove top 10 and bottom 10%
+    # cut_top = int(image_h * 0.1)
+    # crop_height = int((1 - 0.2) * image_h)
+    #
+    # # Calculate width of cropped image to have the right shape
+    # rel_scale = crop_height / size[0]
+    # crop_width = int(image_w * rel_scale)
+    # cut_left = int((image_w - crop_width) / 2)
+
     image = tf.image.resize(image, [600, 900], method=method)
-    print(tf.shape(image))
+
     cropped_image = tf.image.crop_to_bounding_box(image, 100, 0, 480, 640)
     # Resize it to desired input size of the network
     return tf.image.resize(cropped_image, size, method=method)
 
   def train_preprocess(self, image, label):
+    """
+         Args:
+             image: keras tensor containing rgb image
+             label: keras tensor containing label image (1 channel)
+
+         Returns: randomly augmented image
+
+         """
+
     # random data augmentation can be uncommented here
 
     # # Flip left right
@@ -94,35 +133,20 @@ class DataLoader:
     return image, label
 
   def getDataset(self):
-    return self.getDatasetForList(self.filenames,
-                                  self.labels), self.getDatasetForList(
-                                      self.validationFiles,
-                                      self.validationLabels)
+    """
+        Returns two tf.data.Datasets.
+        First one contains images width self supervised labels generated from the pointcloud
+        Second one contains images width ground truth annotations
+        """
 
-    # Old code to generate random training and validation split
-    # seed = random.randint(0, 100)
-    #
-    # filenames = [self.workingDir + f + "/img.png" for f in os.listdir(self.workingDir) if ".txt" not in f]
-    # random.seed(seed)
-    # random.shuffle(filenames)
-    #
-    # labels = [self.workingDir + f + "/semseg.png" for f in os.listdir(self.workingDir) if ".txt" not in f]
-    # random.seed(seed)
-    # random.shuffle(labels)
-    #
-    # split_point = int(self.train_valid_split * len(filenames))
-    #
-    # filenames_train = filenames[0:split_point]
-    # filenames_valid = filenames[split_point + 1:]
-    #
-    # labels_train = labels[0:split_point]
-    # labels_valid = labels[split_point + 1:]
-    #
-    # return self.getDatasetForList(filenames_train, labels_train), self.getDatasetForList(filenames_valid,
-    #                                                                                      labels_valid)
+    return self.getDatasetForList(self.filenames,
+                                  self.labels), \
+           self.getDatasetForList(
+               self.validationFiles,
+               self.validationLabels)
 
   def getDatasetForList(self, imgs, labels):
-    # Returns a tensorflow dataset based on list of filenames
+    """ Returns a tensorflow dataset based on list of filenames """
     return tf.data.Dataset.from_tensor_slices((imgs, labels)) \
         .shuffle(len(imgs)) \
         .map(self.parse_function, num_parallel_calls=4) \
