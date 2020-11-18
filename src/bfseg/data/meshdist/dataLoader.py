@@ -40,12 +40,12 @@ class DataLoader:
     """ returns all input images and labels stored in the given 'path' folder.
         The folder structure looks like this:
         path/
-            img000/
-             - img.[png/jpg]   <- Original image
-             - semseg.png      <- Labels for Semantic Segmentation
-             - distance.png    <- Labels for depth prediction
+            img_0000/
+             - img_0000__img.[png/jpg]   <- Original image
+             - img_0000_semseg.png      <- Labels for Semantic Segmentation
+             - img_0000distance.png    <- Labels for depth prediction
              - ... additional information e.g. pc, pose
-            img999/
+            img_9999/
               ....
 
         Currently the distance label is unused
@@ -61,18 +61,20 @@ class DataLoader:
       if os.path.isdir(image_folder_path):
         # cache folder content (e.g. img.png, semseg.png)
         folder_content = sorted(os.listdir(image_folder_path))
+        #print(folder_content)
         # count how many semseg images (=labels) are there
         semantic_labels = [
             os.path.join(image_folder_path, fileName)
             for fileName in folder_content
-            if "semseg" in fileName
+            if image_folder + "_semseg" in fileName
         ]
         # count how many original images are there
         images = [
             os.path.join(image_folder_path, fileName)
             for fileName in folder_content
-            if "img" in fileName
+            if image_folder + "_img" in fileName
         ]
+
         if len(semantic_labels) == len(images):
           imgs.extend(images)
           labels.extend(semantic_labels)
