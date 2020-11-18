@@ -55,21 +55,27 @@ class DataLoader:
     imgs = []
 
     # iterate through all imgXXX folders
-    for image_folders in sorted(os.listdir(path)):
+    for image_folder in sorted(os.listdir(path)):
+      image_folder_path = os.path.join(path, image_folder)
       # make sure it is folder
-      if os.path.isdir(os.path.join(path, image_folders)):
+      if os.path.isdir(image_folder_path):
         # cache folder content (e.g. img.png, semseg.png)
-        folder_content = sorted(os.listdir(os.path.join(path, image_folders)))
+        folder_content = sorted(os.listdir(image_folder_path))
         # count how many semseg images (=labels) are there
         semantic_labels = [
-            fileName for fileName in folder_content if "semseg" in fileName
+            os.path.join(image_folder_path, fileName)
+            for fileName in folder_content
+            if "semseg" in fileName
         ]
         # count how many original images are there
-        images = [fileName for fileName in folder_content if "img" in fileName]
-
+        images = [
+            os.path.join(image_folder_path, fileName)
+            for fileName in folder_content
+            if "img" in fileName
+        ]
         if len(semantic_labels) == len(images):
           imgs.extend(images)
-          labels.extend(labels)
+          labels.extend(semantic_labels)
         else:
           print("WARNING! Label / Image missmatch in folder:",
                 path + "image_folders")
@@ -95,23 +101,22 @@ class DataLoader:
 
   def cropImageToInputSize(self, image, size, method="bilinear"):
     """ Crop image. Removes a little bit from the top of the image, as any won't have labels for this area """
+    image_h, image_w, _ = tf.unstack(tf.shape(image))
+    image_w = tf.cast(image_w, tf.float64)
+    image_h = tf.cast(image_h, tf.float64)
+    # Remove top 10 and bottom 10%
+    cut_top = tf.cast(image_h * 0.1, tf.int32)
+    crop_height = tf.cast(0.8 * image_h, tf.int32)
 
-    # TODO do not hardcode, make image size dependant
-    # image_w, image_h, _ = tf.unstack(tf.shape(image))
-    # image_w = int(image_w)
-    # image_h = int(image_h)
-    # # Remove top 10 and bottom 10%
-    # cut_top = int(image_h * 0.1)
-    # crop_height = int((1 - 0.2) * image_h)
-    #
-    # # Calculate width of cropped image to have the right shape
-    # rel_scale = crop_height / size[0]
-    # crop_width = int(image_w * rel_scale)
-    # cut_left = int((image_w - crop_width) / 2)
+    # Calculate width of cropped image to have the right shape
+    aspect_ratio = size[1] / size[0]
+    crop_width = tf.cast(
+        tf.cast(crop_height, tf.float32) * aspect_ratio, tf.int32)
+    cut_left = tf.cast((image_w - tf.cast(crop_width, tf.float64)) / 2.,
+                       tf.int32)
 
-    image = tf.image.resize(image, [600, 900], method=method)
-
-    cropped_image = tf.image.crop_to_bounding_box(image, 100, 0, 480, 640)
+    cropped_image = tf.image.crop_to_bounding_box(image, cut_top, cut_left,
+                                                  crop_height, crop_width)
     # Resize it to desired input size of the network
     return tf.image.resize(cropped_image, size, method=method)
 
