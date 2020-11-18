@@ -1,11 +1,7 @@
 import gdown
 from os import path
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 from PIL import Image
 from skimage.segmentation import mark_boundaries
-from fast_slic import Slic
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -46,6 +42,7 @@ def load_gdrive_file(file_id, ending=''):
                    filename,
                    quiet=False)
   return filename
+
 
 
 """
