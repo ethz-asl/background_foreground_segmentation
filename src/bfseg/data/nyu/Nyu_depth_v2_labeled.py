@@ -135,27 +135,27 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
 #   cell.append(row)
 
 
-def count_scenes_num():
-  h5py = tfds.core.lazy_imports.h5py
-  f=h5py.File('nyu_depth_v2_labeled.mat','r')
-  refs = f['#refs#']
-  cell = []
-  for ref in f['sceneTypes']:
-    row = []
-    for r in ref:
-        entry = refs.get(r)
-        row.append(convert_mat(entry))
-    cell.append(row)
-  scene_type_list = ['kitchen', 'office', 'bathroom', 'living_room', 'bedroom', 'bookstore', 'cafe', 'furniture_store', \
-                'study_room', 'classroom', 'computer_lab', 'conference_room', 'dinette', 'excercise_room', 'foyer', \
-                'home_office', 'home_storage', 'indoor_balcony', 'laundry_room', 'office_kitchen', 'playroom', \
-                'printer_room', 'reception_room', 'study', 'basement', 'dining_room', 'student_lounge']
-                 #[225.,  78., 121., 221., 383.,  36.,   5.,  27.,  \
-                  #7.,  49.,   6., 5.,   4.,   3.,   4., \
-                  # 50.,   5.,   2.,   3.,  10.,  31.,   \
-                  # 3., 17.,  25.,   7., 117.,   5.]
-  cnt = np.zeros(len(scene_type_list))
-  for i, scene_type in enumerate(scene_type_list):
-    for j in cell[0]:
-      if j==scene_type:
-        cnt[i]+=1
+# def count_scenes_num():
+#   h5py = tfds.core.lazy_imports.h5py
+#   f=h5py.File('nyu_depth_v2_labeled.mat','r')
+#   refs = f['#refs#']
+#   cell = []
+#   for ref in f['sceneTypes']:
+#     row = []
+#     for r in ref:
+#         entry = refs.get(r)
+#         row.append(convert_mat(entry))
+#     cell.append(row)
+#   scene_type_list = ['kitchen', 'office', 'bathroom', 'living_room', 'bedroom', 'bookstore', 'cafe', 'furniture_store', \
+#                 'study_room', 'classroom', 'computer_lab', 'conference_room', 'dinette', 'excercise_room', 'foyer', \
+#                 'home_office', 'home_storage', 'indoor_balcony', 'laundry_room', 'office_kitchen', 'playroom', \
+#                 'printer_room', 'reception_room', 'study', 'basement', 'dining_room', 'student_lounge']
+#                  #[225.,  78., 121., 221., 383.,  36.,   5.,  27.,  \
+#                   #7.,  49.,   6., 5.,   4.,   3.,   4., \
+#                   # 50.,   5.,   2.,   3.,  10.,  31.,   \
+#                   # 3., 17.,  25.,   7., 117.,   5.]
+#   cnt = np.zeros(len(scene_type_list))
+#   for i, scene_type in enumerate(scene_type_list):
+#     for j in cell[0]:
+#       if j==scene_type:
+#         cnt[i]+=1
