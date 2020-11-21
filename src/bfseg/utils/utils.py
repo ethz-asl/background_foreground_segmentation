@@ -1,12 +1,5 @@
 import gdown
 from os import path
-from PIL import Image
-from skimage.segmentation import mark_boundaries
-import numpy as np
-import matplotlib.pyplot as plt
-import skimage
-from skimage.segmentation import watershed
-
 
 def crop_multiple(data, multiple_of=16):
   """Force the array dimension to be multiple of the given factor.
