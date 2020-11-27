@@ -6,4 +6,4 @@ setup(name='bfseg',
           'yapf', 'pylint', 'tensorflow==2.3.1', 'tensorflow-datasets',
           'segmentation-models'
       ],
-      packages=['bfseg', 'bfseg.data', 'bfseg.data.nyu'])
+      packages=['bfseg', 'bfseg.data', 'bfseg.data.nyu', 'bfseg.utils'])
