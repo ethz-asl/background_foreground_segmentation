@@ -19,6 +19,7 @@ class IgnorantBalancedAccuracyMetric(tf.keras.metrics.Metric):
   def update_state(self, y_true, y_pred, sample_weight=None):
     return _accuracy(y_true, y_pred, True, self.class_to_ignore, self.class_cnt,
                      self.k_acc)
+
   def result(self):
     return self.k_acc.result()
 
