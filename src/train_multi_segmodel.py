@@ -2,9 +2,12 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 from bfseg.data.nyu.Nyu_depth_v2_labeled import NyuDepthV2Labeled
 import segmentation_models as sm
+from bfseg.utils.metrics import IgnorantAccuracyMetric
 from tensorflow import keras
 import tensorflow.keras.preprocessing.image as Image
 import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 @tf.function
@@ -83,10 +86,7 @@ def main():
   BACKBONE = "vgg16"
   # preprocess_input = sm.get_preprocessing(BACKBONE)
 
-  model = sm.Unet(BACKBONE,
-                  input_shape=(480, 640, 3),
-                  classes=2,
-                  activation='sigmoid')
+  model = sm.Unet(BACKBONE, input_shape=(480, 640, 3), classes=2)
   # model = tf.keras.models.Sequential([
   # 		tf.keras.layers.Flatten(input_shape=(48, 64, 3)),
   # 		tf.keras.layers.Dense(1024,activation='relu'),
@@ -99,7 +99,7 @@ def main():
       # loss=sm.losses.CategoricalFocalLoss(),
       optimizer=tf.keras.optimizers.Adam(0.0001),
       # metrics=metrics,
-      metrics='accuracy',
+      metrics=IgnorantAccuracyMetric,
   )
 
   model.fit(

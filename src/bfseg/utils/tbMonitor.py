@@ -72,11 +72,11 @@ class TensorBoardImage(tf.keras.callbacks.Callback):
 
 
 class TensorBoardMonitor:
-    def __init__(self, training_ds, validation_ds, model, log_dir="./logs"):
+    def __init__(self, training_ds, validation_ds, model, log_dir="./logs", tag = ""):
         self.callbacks = []
-        self.callbacks.append(tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1))
+        logdir = log_dir + "/train_data/" + tag + "_" + datetime.now().strftime("%Y%m%d-%H%M%S")
+        self.callbacks.append(tf.keras.callbacks.TensorBoard(log_dir=logdir, histogram_freq=1))
 
-        logdir = log_dir + "/train_data/" + datetime.now().strftime("%Y%m%d-%H%M%S")
         # Creates a file writer for the log directory.
         file_writer = tf.summary.create_file_writer(logdir)
 

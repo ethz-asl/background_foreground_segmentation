@@ -131,3 +131,10 @@ dmypy.json
 # local python environment
 py3/**
 
+/src/logs/
+/src/models/
+*.h5
+.idea
+.vscode
+cmake-build-debug/
+logs

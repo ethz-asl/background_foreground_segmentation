@@ -7,17 +7,20 @@ import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 from bfseg.data.meshdist.dataLoader import DataLoader
-from bfseg.utils.losses import  ignorant_cross_entropy_loss
+from bfseg.utils.losses import ignorant_cross_entropy_loss
 from bfseg.utils.tbMonitor import TensorBoardMonitor
 import segmentation_models as sm
 import tensorflow as tf
+from bfseg.utils.metrics import weighted_ignorant_accuracy, ignorant_accuracy, IgnorantAccuracyMetric
 
 # Tweak GPU settings for local use
 gpus = tf.config.experimental.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(gpus[0], True)
 
+
 def main():
   workingdir = "/home/rene/cla_dataset/watershed/"
+  summary = "watershed_15ep"
 
   # Desired image shape. Input images will be cropped + scaled to this shape
   image_w = 720
@@ -33,12 +36,14 @@ def main():
 
   model.compile(loss=ignorant_cross_entropy_loss,
                 optimizer=tf.keras.optimizers.Adam(0.01),
-                metrics=['accuracy'])
+                metrics=[
+                    IgnorantAccuracyMetric(),
+                ])
 
   # Training callbacks
   callbacks = []
   # Set up tensorboard to monitor progess
-  monitor = TensorBoardMonitor(train_ds, test_ds, model)
+  monitor = TensorBoardMonitor(train_ds, test_ds, model, tag=summary)
   monitor.startTensorboard()
   callbacks = [
       tf.keras.callbacks.ModelCheckpoint(
