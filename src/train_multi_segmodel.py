@@ -28,7 +28,7 @@ def create_mask(pred_mask):
 
 
 def main():
-  batch_size = 8
+  batch_size = 4
   # train_ds, train_info = tfds.load('NyuDepthV2Labeled', split='train[:80%]',shuffle_files=True, as_supervised=True, with_info=True,)
   # test_ds, test_info = tfds.load('NyuDepthV2Labeled', split='train[80%:]',shuffle_files=False, as_supervised=True, with_info=True,)
   train_ds, train_info = tfds.load(
