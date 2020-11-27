@@ -160,11 +160,11 @@ class DataLoader:
     # random data augmentation can be uncommented here
 
     # # Flip left right
-    # image = tf.image.random_flip_left_right(image)
+    image = tf.image.random_flip_left_right(image)
     # # Change brightness
-    # image = tf.image.random_brightness(image, max_delta=32.0 / 255.0)
+    image = tf.image.random_brightness(image, max_delta=32.0 / 255.0)
     # # Change saturation
-    # image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
+    image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
 
     # Make sure the image is still in [0, 1]
     image = tf.clip_by_value(image, 0.0, 1.0)
@@ -199,7 +199,6 @@ class DataLoader:
     return tf.data.Dataset.from_tensor_slices((self.validationFiles, self.validationLabels)) \
         .shuffle(self.validationSize) \
         .map(self.parse_function, num_parallel_calls=4) \
-        .map(self.train_preprocess, num_parallel_calls=4) \
         .map(self.reduce_validation_labels, num_parallel_calls=4) \
         .batch(4) \
         .prefetch(tf.data.experimental.AUTOTUNE)
