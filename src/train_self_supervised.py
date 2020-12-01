@@ -1,7 +1,6 @@
 ###########################################################################################
 #    Main entry point to train model
 ###########################################################################################
-import os
 
 # disable GPU if needed
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -13,26 +12,83 @@ import segmentation_models as sm
 import tensorflow as tf
 from bfseg.utils.metrics import IgnorantBalancedAccuracyMetric
 
+from sacred import Experiment
+from sacred.observers import MongoObserver
+
+import loadBaselineData as BaselineData
+
+ex = Experiment('Self_Supervised_BF_seg')
+
+ex.observers.append(
+    MongoObserver(
+        url=
+        'mongodb://bfseg_runner:y5jL6uTnHN3W4AZo5oCiG3iX@data.asl.ethz.ch/bfseg',
+        db_name='bfseg'))
+
 # Tweak GPU settings for local use
 # gpus = tf.config.experimental.list_physical_devices('GPU')
 # tf.config.experimental.set_memory_growth(gpus[0], True)
 
 
-def main():
+@ex.config
+def dnn_config():
+  input_dim = 100
+  output_dim = 20
+  neurons = 64
+  activation = 'relu'
+  dropout = 0.4
+
+
+def pretrainOnNyu(model):
+  batchSize = 4
+  train_ds, train_info, valid_ds, valid_info, test_ds, test_info = BaselineData.getDataSets(
+      batchSize)
+
+  model.compile(
+      loss='sparse_categorical_crossentropy',
+      optimizer=tf.keras.optimizers.Adam(0.001),
+      metrics='accuracy',
+  )
+  callbacks = [
+      tf.keras.callbacks.ModelCheckpoint('./best_model.h5',
+                                         save_weights_only=True,
+                                         save_best_only=True,
+                                         mode='min'),
+      tf.keras.callbacks.ReduceLROnPlateau(),
+  ]
+
+  model.fit(
+      train_ds,
+      # steps_per_epoch=int(train_info.splits['train'].num_examples*0.8)//batch_size,
+      steps_per_epoch=train_info.splits['train'].num_examples // batchSize,
+      epochs=10,
+      validation_data=test_ds,
+      callbacks=callbacks,
+  )
+
+
+@ex.automain
+def main(_run):
   workingdir = "/home/rene/cla_dataset/watershed/"
   summary = "watershed_30ep_augmentation_PSPNET_vgg16"
 
   # Desired image shape. Input images will be cropped + scaled to this shape
   image_w = 720
   image_h = 480
+  trainFromScratch = True
 
   dataLoader = DataLoader(workingdir, [image_h, image_w],
                           validationDir='/home/rene/hiveLabels/',
-                          validationMode="CLA")
+                          validationMode="CLA",
+                          batchSize=4)
   train_ds, test_ds = dataLoader.getDataset()
 
   BACKBONE = "vgg16"
   model = sm.PSPNet(BACKBONE, input_shape=(image_h, image_w, 3), classes=2)
+
+  if trainFromScratch:
+    pretrainOnNyu(model)
+    return
 
   model.compile(loss=ignorant_cross_entropy_loss,
                 optimizer=tf.keras.optimizers.Adam(0.01),
@@ -56,15 +112,19 @@ def main():
 
   callbacks.extend(monitor.getCallbacks())
 
-  model.fit(
+  history = model.fit(
       train_ds,
       #steps_per_epoch = 5,
       epochs=30,
       validation_data=test_ds,
       callbacks=callbacks)
 
+  # Save validation loss or other metric in sacred
+  for idx, loss in enumerate(history.history['val_loss']):
+    _run.log_scalar("validation.loss", loss, idx)
+
 
 if __name__ == "__main__":
   sm.set_framework('tf.keras')
   main()
-  input("Press enter to stop")
+  # input("Press enter to stop")

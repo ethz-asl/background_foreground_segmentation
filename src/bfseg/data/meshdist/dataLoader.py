@@ -181,8 +181,7 @@ class DataLoader:
         Returns: image, processed labels
         """
 
-    label = tf.math.multiply(
-        tf.cast(tf.math.logical_not(tf.cast(label, tf.bool)), tf.int32), 2)
+    label = tf.math.multiply(tf.cast(tf.cast(label, tf.bool), tf.int32), 2)
     return image, label
 
   def getDataset(self):
@@ -200,7 +199,7 @@ class DataLoader:
         .shuffle(self.validationSize) \
         .map(self.parse_function, num_parallel_calls=4) \
         .map(self.reduce_validation_labels, num_parallel_calls=4) \
-        .batch(4) \
+        .batch(self.batchSize) \
         .prefetch(tf.data.experimental.AUTOTUNE)
 
   def getTrainingDataset(self):
@@ -209,5 +208,5 @@ class DataLoader:
         .shuffle(self.size) \
         .map(self.parse_function, num_parallel_calls=4) \
         .map(self.train_preprocess, num_parallel_calls=4) \
-        .batch(4) \
+        .batch(self.batchSize) \
         .prefetch(tf.data.experimental.AUTOTUNE)
