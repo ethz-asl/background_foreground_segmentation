@@ -79,7 +79,7 @@ class NyuDataLoader():
         as_supervised=True,
         with_info=True,
     )
-    train_ds = train_ds.map(normalize_img,
+    train_ds = train_ds.map(self.normalize_img,
                             num_parallel_calls=tf.data.experimental.AUTOTUNE)
     train_ds = train_ds.cache()
     train_ds = train_ds.shuffle(
