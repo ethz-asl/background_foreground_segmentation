@@ -32,9 +32,12 @@ workingdir = "/cluster/scratch/zrene/cla_dataset/watershed/"
 validationDir = '/cluster/scratch/zrene/cla_dataset/hiveLabels/'
 baselinePath = "././baseline_model.h5"
 
-if os.environ['local']:
-  workingdir = "/home/rene/cla_dataset/watershed/"
-  validationDir = '/home/rene/hiveLabels/'
+try:
+  if os.environ['local']:
+    workingdir = "/home/rene/cla_dataset/watershed/"
+    validationDir = '/home/rene/hiveLabels/'
+except:
+  print("Running on cluster")
 
 # Desired image shape. Input images will be cropped + scaled to this shape
 image_w = 720
