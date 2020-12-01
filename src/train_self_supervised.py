@@ -69,7 +69,10 @@ def pretrainOnNyu(model):
 
 @ex.automain
 def main(_run):
-  workingdir = "/home/rene/cla_dataset/watershed/"
+  # workingdir = "/home/rene/cla_dataset/watershed/"
+  workingdir = "/cluster/scratch/zrene/cla_dataset/watershed/"
+  # validationDir = '/home/rene/hiveLabels/'
+  validationDir = '/cluster/scratch/zrene/cla_dataset/hiveLabels/'
   summary = "watershed_30ep_augmentation_PSPNET_vgg16"
 
   # Desired image shape. Input images will be cropped + scaled to this shape
@@ -78,7 +81,7 @@ def main(_run):
   trainFromScratch = True
 
   dataLoader = DataLoader(workingdir, [image_h, image_w],
-                          validationDir='/home/rene/hiveLabels/',
+                          validationDir=validationDir,
                           validationMode="CLA",
                           batchSize=4)
   train_ds, test_ds = dataLoader.getDataset()
