@@ -106,7 +106,7 @@ def pretrainOnNyu(model, batchSize=4, epochs=10):
 @ex.automain
 def run(batch, number_epochs, learning_rate, summary):
   # Do not use pretrained weights but generate new ones by training on nyu
-  trainFromScratch = False
+  trainFromScratch = True
 
   model = sm.PSPNet("vgg16", input_shape=(image_h, image_w, 3), classes=2)
 
