@@ -17,7 +17,8 @@ class IgnorantBalancedAccuracyMetric(tf.keras.metrics.Metric):
     self.class_cnt = class_cnt
 
   def update_state(self, y_true, y_pred, sample_weight=None):
-    return _accuracy(y_true, y_pred, True, self.class_to_ignore, self.class_cnt, self.k_acc)
+    return _accuracy(y_true, y_pred, True, self.class_to_ignore, self.class_cnt,
+                     self.k_acc)
 
   def result(self):
     return self.k_acc.result()
@@ -30,6 +31,7 @@ class IgnorantAccuracyMetric(tf.keras.metrics.Metric):
   """
   Accuracy function that ignores a class with a given label
   """
+
   def __init__(self, class_to_ignore=1, class_cnt=3):
     super().__init__()
     self.k_acc = tf.keras.metrics.Accuracy()
@@ -37,7 +39,8 @@ class IgnorantAccuracyMetric(tf.keras.metrics.Metric):
     self.class_cnt = class_cnt
 
   def update_state(self, y_true, y_pred, sample_weight=None):
-    return _accuracy(y_true, y_pred, False, self.class_to_ignore, self.class_cnt, self.k_acc)
+    return _accuracy(y_true, y_pred, False, self.class_to_ignore,
+                     self.class_cnt, self.k_acc)
 
   def result(self):
     return self.k_acc.result()
