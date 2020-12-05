@@ -5,12 +5,13 @@
 # disable GPU if needed
 import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["SM_FRAMEWORK"] = "tf.keras"
 
 from bfseg.data.meshdist.dataLoader import DataLoader
 from bfseg.utils.losses import ignorant_cross_entropy_loss
 import segmentation_models as sm
 import tensorflow as tf
-from bfseg.utils.metrics import IgnorantBalancedAccuracyMetric, IgnorantAccuracyMetric
+from bfseg.utils.metrics import IgnorantBalancedAccuracyMetric, IgnorantAccuracyMetric, IgnorantBalancedMeanIoU, IgnorantMeanIoU
 
 from bfseg.utils import NyuDataLoader
 from sacred import Experiment
@@ -30,7 +31,7 @@ ex.observers.append(
 
 workingdir = "/cluster/scratch/zrene/cla_dataset/watershed/"
 validationDir = '/cluster/scratch/zrene/cla_dataset/hiveLabels/'
-baselinePath = "././baseline_model.h5"
+baselinePath = "./baseline_model.h5"
 
 try:
   if os.environ['local']:
@@ -62,11 +63,11 @@ def my_metrics(_run, logs):
 @ex.config
 def cfg():
   batch = 4
-  number_epochs = 25
+  number_epochs = 30
   image_size = (image_w, image_h)
   model_loss = 'categorical_crossentropy'
   optimizer = 'Adam'
-  learning_rate = 0.01
+  learning_rate = 0.001
   model = "VGG16_PSP"
   summary = "watershed_30ep_augmentation_PSPNET_vgg16"
 
@@ -106,7 +107,7 @@ def pretrainOnNyu(model, batchSize=4, epochs=10):
 @ex.automain
 def run(batch, number_epochs, learning_rate, summary):
   # Do not use pretrained weights but generate new ones by training on nyu
-  trainFromScratch = True
+  trainFromScratch = False
 
   model = sm.PSPNet("vgg16", input_shape=(image_h, image_w, 3), classes=2)
 
@@ -125,8 +126,10 @@ def run(batch, number_epochs, learning_rate, summary):
       loss=ignorant_cross_entropy_loss,
       optimizer=tf.keras.optimizers.Adam(learning_rate),
       metrics=[IgnorantBalancedAccuracyMetric(),
-               IgnorantAccuracyMetric()])
-
+               IgnorantAccuracyMetric(),
+               IgnorantMeanIoU(),
+               IgnorantBalancedMeanIoU(),
+            ])
   train_ds, test_ds = DataLoader(workingdir, [image_h, image_w],
                                  validationDir=validationDir,
                                  validationMode="CLA",
