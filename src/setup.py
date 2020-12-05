@@ -1,9 +1,12 @@
 from setuptools import setup
+import os
+
+with open(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                 '../requirements.txt')) as f:
+  requirements = f.read().splitlines()
 
 setup(name='bfseg',
       version='0.0',
-      install_requries=[
-          'yapf', 'pylint', 'tensorflow==2.3.1', 'tensorflow-datasets',
-          'segmentation-models'
-      ],
-      packages=['bfseg', 'bfseg.data', 'bfseg.data.nyu', 'bfseg.data.meshdist','bfseg.utils'])
+      install_requries=requirements,
+      packages=['bfseg', 'bfseg.data', 'bfseg.data.nyu', 'bfseg.utils'])
