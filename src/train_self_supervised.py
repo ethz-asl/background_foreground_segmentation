@@ -134,10 +134,11 @@ def pretrainOnNyu(model, batchSize=4, epochs=10):
   )
 
 
-@ex.automain
+@ex.main
 def run(config):
   # Do not use pretrained weights but generate new ones by training on nyu
   trainFromScratch = False
+  print("running")
 
   model = sm.PSPNet("vgg16", input_shape=(image_h, image_w, 3), classes=2)
 
@@ -189,6 +190,6 @@ def run(config):
             callbacks=callbacks)
 
 
-# if __name__ == "__main__":
-#   run()
+if __name__ == "__main__":
+    ex.run()
 # input("Press enter to stop")
