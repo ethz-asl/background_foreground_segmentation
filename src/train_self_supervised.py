@@ -16,8 +16,44 @@ from bfseg.utils.metrics import IgnorantBalancedAccuracyMetric, IgnorantAccuracy
 from bfseg.utils import NyuDataLoader
 from sacred import Experiment
 from sacred.observers import MongoObserver
+import argparse
 
-ex = Experiment('Watershed_pretrained_ep_25_lr_0_01_VGG_PSP')
+import argparse
+import json
+
+
+# TODO move to function
+parser = argparse.ArgumentParser(
+        add_help=True,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+
+parser.add_argument(
+    '--name_prefix', type=str, help='Name Prefix', default = "")
+parser.add_argument(
+    '--train_path', type=str, help='Path to dataset', default = "/cluster/scratch/zrene/cla_dataset/watershed/")
+parser.add_argument(
+    '--validation_path', type=str, help='Path to dataset', default ="/cluster/scratch/zrene/cla_dataset/hiveLabels/")
+parser.add_argument(
+    '--validation_mode', type=str, help='Validation Mode <CLA,ARCHE>', default = "CLA")
+parser.add_argument(
+    '--num_epochs', type=int, default=30, help='Number of training epochs')
+parser.add_argument(
+    '--batch_size', type=int, default=4, help='Number of samples in a batch for training')
+parser.add_argument(
+    '--optimizer_lr', type=float, default=0.001, help='Learning rate at start of training')
+parser.add_argument(
+    '--model_name', type=str, default='PSP', choices=['PSP'], help='CNN architecture')
+parser.add_argument(
+    '--backbone', type=str, default='vgg16', choices=["vgg16","vgg19","resnet18","resnet34","resnet50","resnet101","resnet152","seresnet18","seresnet34","seresnet50","seresnet101","seresnet152","resnext50","resnext101","seresnext50","seresnext101","senet154","densenet121","densenet169","densenet201","inceptionv3","inceptionresnetv2","mobilenet","mobilenetv2","efficientnetb0","efficientnetb1","efficientnetb2","efficientnetb3","efficientnetb4","efficientnetb5"," efficientnetb7"], help='CNN architecture')
+
+args = parser.parse_args()
+experiment_name = "{}_{}_{}_{}lr_{}bs_{}ep".format(args.name_prefix,args.backbone, args.model_name, args.optimizer_lr, args.batch_size, args.num_epochs)
+
+print(experiment_name)
+print(json.dumps(args.__dict__, indent=4, sort_keys=True))
+
+ex = Experiment(experiment_name)
 
 ex.observers.append(
     MongoObserver(
@@ -29,16 +65,16 @@ ex.observers.append(
 # gpus = tf.config.experimental.list_physical_devices('GPU')
 # tf.config.experimental.set_memory_growth(gpus[0], True)
 
-workingdir = "/cluster/scratch/zrene/cla_dataset/watershed/"
-validationDir = '/cluster/scratch/zrene/cla_dataset/hiveLabels/'
-baselinePath = "./baseline_model.h5"
-
-try:
-  if os.environ['local']:
-    workingdir = "/home/rene/cla_dataset/watershed/"
-    validationDir = '/home/rene/hiveLabels/'
-except:
-  print("Running on cluster")
+# workingdir = "/cluster/scratch/zrene/cla_dataset/watershed/"
+# validationDir = '/cluster/scratch/zrene/cla_dataset/hiveLabels/'
+# baselinePath = "./baseline_model.h5"
+#
+# try:
+#   if os.environ['local']:
+#     workingdir = "/home/rene/cla_dataset/watershed/"
+#     validationDir = '/home/rene/hiveLabels/'
+# except:
+#   print("Running on cluster")
 
 # Desired image shape. Input images will be cropped + scaled to this shape
 image_w = 720
@@ -62,14 +98,8 @@ def my_metrics(_run, logs):
 
 @ex.config
 def cfg():
-  batch = 4
-  number_epochs = 30
-  image_size = (image_w, image_h)
-  model_loss = 'categorical_crossentropy'
-  optimizer = 'Adam'
-  learning_rate = 0.001
-  model = "VGG16_PSP"
-  summary = "watershed_30ep_augmentation_PSPNET_vgg16"
+  config = args
+  config.image_size = (image_w, image_h)
 
 
 def pretrainOnNyu(model, batchSize=4, epochs=10):
@@ -105,7 +135,7 @@ def pretrainOnNyu(model, batchSize=4, epochs=10):
 
 
 @ex.automain
-def run(batch, number_epochs, learning_rate, summary):
+def run(config):
   # Do not use pretrained weights but generate new ones by training on nyu
   trainFromScratch = False
 
@@ -124,16 +154,16 @@ def run(batch, number_epochs, learning_rate, summary):
 
   model.compile(
       loss=ignorant_cross_entropy_loss,
-      optimizer=tf.keras.optimizers.Adam(learning_rate),
+      optimizer=tf.keras.optimizers.Adam(config.optimizer_lr),
       metrics=[IgnorantBalancedAccuracyMetric(),
                IgnorantAccuracyMetric(),
                IgnorantMeanIoU(),
                IgnorantBalancedMeanIoU(),
             ])
-  train_ds, test_ds = DataLoader(workingdir, [image_h, image_w],
-                                 validationDir=validationDir,
+  train_ds, test_ds = DataLoader(config.train_path, [image_h, image_w],
+                                 validationDir=config.validation_path,
                                  validationMode="CLA",
-                                 batchSize=batch).getDataset()
+                                 batchSize=config.batch_size).getDataset()
   # Training callbacks
   # callbacks = []
   # Set up tensorboard to monitor progess
@@ -154,7 +184,7 @@ def run(batch, number_epochs, learning_rate, summary):
   # callbacks.extend(monitor.getCallbacks())
 
   model.fit(train_ds,
-            epochs=number_epochs,
+            epochs=config.num_epochs,
             validation_data=test_ds,
             callbacks=callbacks)
 
