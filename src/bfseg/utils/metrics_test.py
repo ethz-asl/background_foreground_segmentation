@@ -12,7 +12,7 @@ def test_numeric_accuracy():
 
   prediction_cat = tf.constant([0, 0, 0, 0, 0, 1, 1, 1, 1], shape=(1, 3, 3, 1))
   prediction_one_hot = tf.squeeze(tf.keras.backend.one_hot(prediction_cat, 2))
-  ignorant_accuracy.update_state(labels, prediction_one_hot)
+  ignorant_accuracy.update_state(tf.squeeze(labels), prediction_one_hot)
   acc_correct = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
   assert acc_correct == 1
@@ -20,7 +20,7 @@ def test_numeric_accuracy():
   prediction_wrong = tf.squeeze(
       tf.keras.backend.one_hot(
           tf.constant([1, 1, 1, 1, 0, 0, 0, 0, 0], shape=(1, 3, 3, 1)), 2))
-  ignorant_accuracy.update_state(labels, prediction_wrong)
+  ignorant_accuracy.update_state(tf.squeeze(labels), prediction_wrong)
   acc_wrong = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
   assert acc_wrong == 0
@@ -28,7 +28,7 @@ def test_numeric_accuracy():
   prediction_not_correct = tf.squeeze(
       tf.keras.backend.one_hot(
           tf.constant([0, 0, 0, 1, 0, 1, 1, 0, 1], shape=(1, 3, 3, 1)), 2))
-  ignorant_accuracy.update_state(labels, prediction_not_correct)
+  ignorant_accuracy.update_state(tf.squeeze(labels), prediction_not_correct)
   acc_not_correct = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
   assert acc_not_correct == 6 / 8
@@ -44,7 +44,8 @@ def test_numeric_accuracy_weighted():
 
   prediction_cat = tf.constant([0, 0, 0, 0, 0, 1, 1, 1, 1], shape=(1, 3, 3, 1))
   prediction_one_hot = tf.squeeze(tf.keras.backend.one_hot(prediction_cat, 2))
-  weighted_ignorant_accuracy.update_state(labels, prediction_one_hot)
+  weighted_ignorant_accuracy.update_state(tf.squeeze(labels),
+                                          prediction_one_hot)
   acc_correct = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
   assert acc_correct == 1
@@ -52,7 +53,7 @@ def test_numeric_accuracy_weighted():
   prediction_wrong = tf.squeeze(
       tf.keras.backend.one_hot(
           tf.constant([1, 1, 1, 1, 0, 0, 0, 0, 0], shape=(1, 3, 3, 1)), 2))
-  weighted_ignorant_accuracy.update_state(labels, prediction_wrong)
+  weighted_ignorant_accuracy.update_state(tf.squeeze(labels), prediction_wrong)
   acc_wrong = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
   assert acc_wrong == 0
@@ -60,7 +61,7 @@ def test_numeric_accuracy_weighted():
   prediction_not_correct = tf.squeeze(
       tf.keras.backend.one_hot(
           tf.constant([0, 0, 0, 1, 0, 1, 1, 0, 1], shape=(1, 3, 3, 1)), 2))
-  acc_not_correct = weighted_ignorant_accuracy(labels,
+  acc_not_correct = weighted_ignorant_accuracy(tf.squeeze(labels),
                                                prediction_not_correct).numpy()
   assert acc_not_correct == 6 / 8
 
@@ -76,7 +77,8 @@ def test_numeric_accuracy_weighted_unbalanced():
 
   prediction_cat = tf.constant([0, 0, 0, 0, 0, 0, 1, 1, 1], shape=(1, 3, 3, 1))
   prediction_one_hot = tf.squeeze(tf.keras.backend.one_hot(prediction_cat, 2))
-  weighted_ignorant_accuracy.update_state(labels, prediction_one_hot)
+  weighted_ignorant_accuracy.update_state(tf.squeeze(labels),
+                                          prediction_one_hot)
   acc_correct = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
   assert acc_correct == 1
@@ -84,7 +86,7 @@ def test_numeric_accuracy_weighted_unbalanced():
   prediction_wrong = tf.squeeze(
       tf.keras.backend.one_hot(
           tf.constant([1, 1, 1, 1, 1, 1, 0, 0, 0], shape=(1, 3, 3, 1)), 2))
-  weighted_ignorant_accuracy.update_state(labels, prediction_wrong)
+  weighted_ignorant_accuracy.update_state(tf.squeeze(labels), prediction_wrong)
   acc_wrong = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
   assert acc_wrong == 0
@@ -92,14 +94,16 @@ def test_numeric_accuracy_weighted_unbalanced():
   prediction_minority_correct = tf.squeeze(
       tf.keras.backend.one_hot(
           tf.constant([1, 1, 1, 1, 1, 1, 0, 0, 1], shape=(1, 3, 3, 1)), 2))
-  weighted_ignorant_accuracy.update_state(labels, prediction_minority_correct)
+  weighted_ignorant_accuracy.update_state(tf.squeeze(labels),
+                                          prediction_minority_correct)
   acc_minority_correct = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
 
   prediction_majority_correct = tf.squeeze(
       tf.keras.backend.one_hot(
           tf.constant([0, 1, 1, 1, 1, 1, 0, 0, 0], shape=(1, 3, 3, 1)), 2))
-  weighted_ignorant_accuracy.update_state(labels, prediction_majority_correct)
+  weighted_ignorant_accuracy.update_state(tf.squeeze(labels),
+                                          prediction_majority_correct)
   acc_majority_correct = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
 
@@ -123,7 +127,7 @@ def test_ignorant_accuracy():
 
   # accuracy for this prediction
 
-  ignorant_accuracy.update_state(labels, prediction)
+  ignorant_accuracy.update_state(tf.squeeze(labels), prediction)
   random_acc = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
 
@@ -144,21 +148,21 @@ def test_ignorant_accuracy():
   new_prediction_2 = tf.stack(
       [new_prediction_class_bg, new_prediction_class_fg], axis=-1)
 
-  ignorant_accuracy.update_state(labels, new_prediction_2)
+  ignorant_accuracy.update_state(tf.squeeze(labels), new_prediction_2)
   random_acc_preturbed = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
   assert random_acc == random_acc_preturbed
 
   true_prediction = tf.stack(
       [labels_as_tensor[..., 0], labels_as_tensor[..., 2]], axis=-1)
-  ignorant_accuracy.update_state(labels, true_prediction)
+  ignorant_accuracy.update_state(tf.squeeze(labels), true_prediction)
   true_acc = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
   assert true_acc == 1
 
   wrong_prediction = tf.stack(
       [labels_as_tensor[..., 2], labels_as_tensor[..., 0]], axis=-1)
-  ignorant_accuracy.update_state(labels, wrong_prediction)
+  ignorant_accuracy.update_state(tf.squeeze(labels), wrong_prediction)
   wrong_acc = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
   assert wrong_acc == 0
@@ -180,7 +184,7 @@ def test_weighted_ignorant_accuracy():
 
   # accuracy for this prediction
 
-  weighted_ignorant_accuracy.update_state(labels, prediction)
+  weighted_ignorant_accuracy.update_state(tf.squeeze(labels), prediction)
   random_acc = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
 
@@ -201,7 +205,7 @@ def test_weighted_ignorant_accuracy():
   new_prediction_2 = tf.stack(
       [new_prediction_class_bg, new_prediction_class_fg], axis=-1)
 
-  weighted_ignorant_accuracy.update_state(labels, new_prediction_2)
+  weighted_ignorant_accuracy.update_state(tf.squeeze(labels), new_prediction_2)
   random_acc_preturbed = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
 
@@ -209,14 +213,14 @@ def test_weighted_ignorant_accuracy():
 
   true_prediction = tf.stack(
       [labels_as_tensor[..., 0], labels_as_tensor[..., 2]], axis=-1)
-  weighted_ignorant_accuracy.update_state(labels, true_prediction)
+  weighted_ignorant_accuracy.update_state(tf.squeeze(labels), true_prediction)
   true_acc = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
   assert true_acc == 1
 
   wrong_prediction = tf.stack(
       [labels_as_tensor[..., 2], labels_as_tensor[..., 0]], axis=-1)
-  weighted_ignorant_accuracy.update_state(labels, wrong_prediction)
+  weighted_ignorant_accuracy.update_state(tf.squeeze(labels), wrong_prediction)
   wrong_acc = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
   assert wrong_acc == 0
@@ -233,11 +237,12 @@ def test_weighted_ignorant_accuracy():
                                   tf.zeros_like(prediction_all_zeros),
                                   prediction_all_zeros)
 
-  weighted_ignorant_accuracy.update_state(labels_unbalanced,
+  weighted_ignorant_accuracy.update_state(tf.squeeze(labels_unbalanced),
                                           prediction_all_zeros)
   acc_all_zeros_predict_weighted = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
-  ignorant_accuracy.update_state(labels_unbalanced, prediction_all_zeros)
+  ignorant_accuracy.update_state(tf.squeeze(labels_unbalanced),
+                                 prediction_all_zeros)
   acc_all_zeros_predict_unweighted = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
 
@@ -249,12 +254,13 @@ def test_weighted_ignorant_accuracy():
                                  2 * tf.ones_like(prediction_all_twos),
                                  prediction_all_twos)
 
-  weighted_ignorant_accuracy.update_state(labels_unbalanced,
+  weighted_ignorant_accuracy.update_state(tf.squeeze(labels_unbalanced),
                                           prediction_all_twos)
   acc_all_twos_predict_weighted = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
 
-  ignorant_accuracy.update_state(labels_unbalanced, prediction_all_twos)
+  ignorant_accuracy.update_state(tf.squeeze(labels_unbalanced),
+                                 prediction_all_twos)
   acc_all_twos_predict_unweighted = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
 

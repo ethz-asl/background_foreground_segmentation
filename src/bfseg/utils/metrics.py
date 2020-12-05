@@ -15,8 +15,7 @@ class IgnorantMetricsWrapper(tf.keras.metrics.Metric):
 
   def update_state(self, y_true, y_pred, sample_weight=None):
     # convert true labels to one hot encoded images
-    labels_one_hot = tf.squeeze(tf.keras.backend.one_hot(y_true, 3))
-
+    labels_one_hot = tf.keras.backend.one_hot(y_true, 3)
     # Remove class that should be ignored from one hot encoding
     y_true_one_hot_no_ignore = tf.stack([
         labels_one_hot[..., _class]
@@ -38,9 +37,10 @@ class IgnorantMetricsWrapper(tf.keras.metrics.Metric):
           self.class_to_ignore,
       )
 
-    return self.metric.update_state(tf.squeeze(y_true_back),
-                                    tf.squeeze(tf.argmax(y_pred, axis=-1)),
-                                    sample_weight=tf.squeeze(weights))
+    return self.metric.update_state(y_true_back,
+                                    tf.expand_dims(tf.argmax(y_pred, axis=-1),
+                                                   -1),
+                                    sample_weight=weights)
 
   def result(self):
     return self.metric.result()
@@ -85,7 +85,8 @@ class IgnorantAccuracyMetric(IgnorantMetricsWrapper):
 
 def getBalancedWeight(labels, labels_one_hot, class_to_ignore, num_classes):
   weight_tensor = tf.cast(tf.zeros_like(labels), tf.float32)
-
+  # print(labels.shape)
+  # print("begin for")
   for i in range(num_classes):
     if i == class_to_ignore:
       continue
@@ -93,9 +94,14 @@ def getBalancedWeight(labels, labels_one_hot, class_to_ignore, num_classes):
     frequency = tf.math.scalar_mul(
         1 / tf.reduce_sum(tf.cast(labels == i, tf.float32)), labels_one_hot[...,
                                                                             i])
-    frequency = tf.expand_dims(frequency, -1)
+    # print(frequency.shape)
+    # print(weight_tensor.shape)
+    # print("XX")
+    #frequency = tf.expand_dims(tf.expand_dims(frequency, -1), -1)
     # add to weight tensor
     weight_tensor = tf.math.add(weight_tensor, frequency)
+  # print("end for")
+  # print(weight_tensor.shape)
   return weight_tensor
 
 
