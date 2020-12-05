@@ -46,6 +46,9 @@ parser.add_argument(
     '--model_name', type=str, default='PSP', choices=['PSP'], help='CNN architecture')
 parser.add_argument(
     '--backbone', type=str, default='vgg16', choices=["vgg16","vgg19","resnet18","resnet34","resnet50","resnet101","resnet152","seresnet18","seresnet34","seresnet50","seresnet101","seresnet152","resnext50","resnext101","seresnext50","seresnext101","senet154","densenet121","densenet169","densenet201","inceptionv3","inceptionresnetv2","mobilenet","mobilenetv2","efficientnetb0","efficientnetb1","efficientnetb2","efficientnetb3","efficientnetb4","efficientnetb5"," efficientnetb7"], help='CNN architecture')
+parser.add_argument(
+    '--baselinePath', type=str, default='./baseline_model.h5')
+
 
 args = parser.parse_args()
 experiment_name = "{}_{}_{}_{}lr_{}bs_{}ep".format(args.name_prefix,args.backbone, args.model_name, args.optimizer_lr, args.batch_size, args.num_epochs)
@@ -147,7 +150,7 @@ def run(config):
     pretrainOnNyu(model)
   else:
     try:
-      model.load_weights(baselinePath)
+      model.load_weights(config.baselinePath)
     except:
       print(
           "Could not load model weights. Starting with random initialized model"
