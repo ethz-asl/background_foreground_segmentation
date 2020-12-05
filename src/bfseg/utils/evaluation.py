@@ -1,3 +1,8 @@
+from bfseg.utils.metrics import IgnorantBalancedMeanIoU, IgnorantMeanIoU, IgnorantBalancedAccuracyMetric, IgnorantAccuracyMetric
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+
 def oneMetricIteration(metric, label, pred):
   """ Helper function to get the result from one prediction """
   metric.update_state(label, pred)
@@ -29,7 +34,8 @@ def scoreAndPlotPredictions(imageCallback, dataLoader, plot=True):
   TNM = tf.keras.metrics.TrueNegatives()
   TPM = tf.keras.metrics.TruePositives()
 
-  MIOUM = tf.keras.metrics.MeanIoU(num_classes=2)
+  MIOUM_B = IgnorantBalancedMeanIoU()
+  MIOUM = IgnorantMeanIoU()
 
   # Valid metrices accumulate results over whole validation set.
   # Other metrices are only used to calculate results for every image.
@@ -42,15 +48,15 @@ def scoreAndPlotPredictions(imageCallback, dataLoader, plot=True):
   iam_valid = IgnorantAccuracyMetric()
   ibm_valid = IgnorantBalancedAccuracyMetric()
 
-  MIOUM_valid = tf.keras.metrics.MeanIoU(num_classes=2)
+  MIOUM_B_valid = IgnorantBalancedMeanIoU()
+  MIOUM_valid = IgnorantMeanIoU()
 
   train_ds, test_ds = dataLoader.getDataset()
   batches = dataLoader.validationSize // 5 - 1
   cnt = 0
   for test_img, test_label in test_ds.take(batches):
     pred = imageCallback(test_img)
-
-    for i in range(5):
+    for i in range(pred.shape[0]):
       if plot:
         plt.subplot(batches, 5, i + cnt * batches + 1)
         plt.imshow(tf.argmax(pred[i], axis=-1))
@@ -65,15 +71,10 @@ def scoreAndPlotPredictions(imageCallback, dataLoader, plot=True):
       TN = oneMetricIteration(TNM, test_label[i] > 0, tf.argmax(pred[i],
                                                                 axis=-1))
 
-      mIoU = oneMetricIteration(MIOUM, test_label[i] > 0,
-                                tf.argmax(pred[i], axis=-1))
-
       FPM_valid.update_state(test_label[i] > 0, tf.argmax(pred[i], axis=-1))
       FNM_valid.update_state(test_label[i] > 0, tf.argmax(pred[i], axis=-1))
       TNM_valid.update_state(test_label[i] > 0, tf.argmax(pred[i], axis=-1))
       TPM_valid.update_state(test_label[i] > 0, tf.argmax(pred[i], axis=-1))
-
-      MIOUM_valid.update_state(test_label[i] > 0, tf.argmax(pred[i], axis=-1))
 
       # Update Accuracy metrics
       iam_value = oneMetricIteration(iam, test_label[i, ...], pred[i, ...])
@@ -81,12 +82,19 @@ def scoreAndPlotPredictions(imageCallback, dataLoader, plot=True):
       iam_valid.update_state(test_label[i, ...], pred[i, ...])
       ibm_valid.update_state(test_label[i, ...], pred[i, ...])
 
+      mIoU = oneMetricIteration(MIOUM, test_label[i, ...], pred[i, ...])
+      mIoU_B = oneMetricIteration(MIOUM_B, test_label[i, ...], pred[i, ...])
+
+      # mIoU_B = oneMetricIteration(MIOUM_B,test_label[i,...], pred[i,...])
+      MIOUM_valid.update_state(test_label[i, ...], pred[i, ...])
+      MIOUM_B_valid.update_state(test_label[i, ...], pred[i, ...])
+
       if plot:
         plt.title("IAM:" + str(round(iam_value, 4)) + ", IBM:" +
                   str(round(ibm_value, 4)) + "\n " + "TPR:" +
                   str(round(TP / (FP + FN), 4)) + " TNR:" +
                   str(round(TN / (TN + FP), 4)) + "\n " + " mIoU: " +
-                  str(round(mIoU, 4)))
+                  str(round(mIoU, 4)) + " mIoU_B: " + str(round(mIoU_B, 4)))
 
     cnt += 1
 
@@ -97,6 +105,7 @@ def scoreAndPlotPredictions(imageCallback, dataLoader, plot=True):
 
   print("Accuracy on validation set:", iam_valid.result().numpy())
   print("mIoU on validation set:", MIOUM_valid.result().numpy())
+  print("Balanced mIoU on validation set:", MIOUM_B_valid.result().numpy())
   print("Balanced Accuracy on validation set:", ibm_valid.result().numpy())
   print("Positive = Foreground, Negative = Background")
   print("TPR on validation set:", TP / (TP + FN))

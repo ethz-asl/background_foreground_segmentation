@@ -181,8 +181,7 @@ class DataLoader:
         Returns: image, processed labels
         """
 
-    label = tf.math.multiply(
-        tf.cast(tf.math.logical_not(tf.cast(label, tf.bool)), tf.int32), 2)
+    label = tf.math.multiply(tf.cast((tf.cast(label, tf.bool)), tf.int32), 2)
     return image, label
 
   def getDataset(self):
