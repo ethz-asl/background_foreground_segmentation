@@ -111,7 +111,7 @@ def cfg():
   config.image_size = (image_w, image_h)
 
 
-def pretrainOnNyu(model, config, batchSize=4, epochs=10):
+def pretrainOnNyu(model, config, batchSize=4, epochs=30):
   """
   Pretrain this model on the nyu dataset
   """

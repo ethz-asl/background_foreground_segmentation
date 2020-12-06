@@ -116,9 +116,9 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         # Label_expand = np.expand_dims(Labels[:,:,i], axis=2)
         if cell[0][i] == scene_type:
           label = Labels[:, :, i]
-          combine_label = np.logical_or(
+          combine_label = np.logical_not(np.logical_or(
               label == 4,
-              (np.logical_or(label == 11, label == 21))).astype(np.uint8)
+              (np.logical_or(label == 11, label == 21)))).astype(np.uint8)
           yield str(i).zfill(4), {
               'image': Images[:, :, :, i],
               # 'depth':Depths[:,:,i],
