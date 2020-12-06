@@ -83,7 +83,7 @@ class IgnorantAccuracyMetric(IgnorantMetricsWrapper):
     super().__init__(tf.keras.metrics.Accuracy())
 
 
-def getBalancedWeight(labels, labels_one_hot, class_to_ignore, num_classes):
+def getBalancedWeight(labels, labels_one_hot, class_to_ignore, num_classes, normalize = True):
   weight_tensor = tf.cast(tf.zeros_like(labels), tf.float32)
   # print(labels.shape)
   # print("begin for")
@@ -99,6 +99,8 @@ def getBalancedWeight(labels, labels_one_hot, class_to_ignore, num_classes):
     # print("XX")
     #frequency = tf.expand_dims(tf.expand_dims(frequency, -1), -1)
     # add to weight tensor
+    if not normalize:
+        frequency *=  tf.reduce_sum(tf.cast(labels, tf.float32))
     weight_tensor = tf.math.add(weight_tensor, frequency)
   # print("end for")
   # print(weight_tensor.shape)

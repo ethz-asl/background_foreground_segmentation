@@ -61,8 +61,8 @@ print(experiment_name)
 print(json.dumps(args.__dict__, indent=4, sort_keys=True))
 
 ex = Experiment(experiment_name)
-outFolder = experiment_name + + "_" + datetime.datetime.now().strftime('%Y%m%d_%H-%M-%S')
-os.mkdir(experiment_name + + "_" + datetime.datetime.now().strftime('%Y%m%d_%H-%M-%S'))
+outFolder = experiment_name + "_" + datetime.datetime.now().strftime('%Y%m%d_%H-%M-%S')
+os.mkdir(experiment_name +  "_" + datetime.datetime.now().strftime('%Y%m%d_%H-%M-%S'))
 
 ex.observers.append(
     MongoObserver(

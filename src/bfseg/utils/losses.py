@@ -45,6 +45,7 @@ def ignorant_cross_entropy_loss(y_true,
   weights = getIgnoreWeight(
           labels_one_hot,
           class_to_ignore,
+
       )
 
   scce = tf.keras.losses.SparseCategoricalCrossentropy()
@@ -81,7 +82,7 @@ def ignorant_balanced_cross_entropy_loss(y_true,
 
 
   weights = getBalancedWeight(y_true, labels_one_hot, class_to_ignore,
-                                  num_of_classes)
+                                  num_of_classes, normalize = False)
 
   scce = tf.keras.losses.SparseCategoricalCrossentropy()
   return scce(y_true_back, y_pred, sample_weight=weights)
