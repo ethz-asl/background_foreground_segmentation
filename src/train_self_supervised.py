@@ -125,7 +125,7 @@ def pretrainOnNyu(model, batchSize=4, epochs=10):
   )
 
   callbacks = [
-      tf.keras.callbacks.ModelCheckpoint(baselinePath,
+      tf.keras.callbacks.ModelCheckpoint(config.baselinePath,
                                          save_weights_only=True,
                                          save_best_only=True,
                                          mode='min'),
