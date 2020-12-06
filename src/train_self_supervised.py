@@ -146,7 +146,7 @@ def pretrainOnNyu(model, batchSize=4, epochs=10):
 @ex.main
 def run(config):
 
-  model = sm.PSPNet("vgg16", input_shape=(image_h, image_w, 3), classes=2)
+  model = sm.PSPNet(config.backbone, input_shape=(image_h, image_w, 3), classes=2)
 
   if config.train_from_scratch:
     # pretrain model on Nyu dataset
