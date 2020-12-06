@@ -3,12 +3,12 @@
 ###########################################################################################
 
 # disable GPU if needed
-import os
+import os, datetime
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 os.environ["SM_FRAMEWORK"] = "tf.keras"
 
 from bfseg.data.meshdist.dataLoader import DataLoader
-from bfseg.utils.losses import ignorant_cross_entropy_loss
+from bfseg.utils.losses import ignorant_cross_entropy_loss, ignorant_balanced_cross_entropy_loss
 import segmentation_models as sm
 import tensorflow as tf
 from bfseg.utils.metrics import IgnorantBalancedAccuracyMetric, IgnorantAccuracyMetric, IgnorantBalancedMeanIoU, IgnorantMeanIoU
@@ -48,6 +48,10 @@ parser.add_argument(
     '--backbone', type=str, default='vgg16', choices=["vgg16","vgg19","resnet18","resnet34","resnet50","resnet101","resnet152","seresnet18","seresnet34","seresnet50","seresnet101","seresnet152","resnext50","resnext101","seresnext50","seresnext101","senet154","densenet121","densenet169","densenet201","inceptionv3","inceptionresnetv2","mobilenet","mobilenetv2","efficientnetb0","efficientnetb1","efficientnetb2","efficientnetb3","efficientnetb4","efficientnetb5"," efficientnetb7"], help='CNN architecture')
 parser.add_argument(
     '--baselinePath', type=str, default='./baseline_model.h5')
+parser.add_argument(
+    '--train_from_scratch', type=bool, default=False)
+parser.add_argument(
+    '--loss_balanced', type=bool, default=False)
 
 
 args = parser.parse_args()
@@ -57,6 +61,8 @@ print(experiment_name)
 print(json.dumps(args.__dict__, indent=4, sort_keys=True))
 
 ex = Experiment(experiment_name)
+outFolder = experiment_name + + "_" + datetime.datetime.now().strftime('%Y%m%d_%H-%M-%S')
+os.mkdir(experiment_name + + "_" + datetime.datetime.now().strftime('%Y%m%d_%H-%M-%S'))
 
 ex.observers.append(
     MongoObserver(
@@ -139,13 +145,10 @@ def pretrainOnNyu(model, batchSize=4, epochs=10):
 
 @ex.main
 def run(config):
-  # Do not use pretrained weights but generate new ones by training on nyu
-  trainFromScratch = False
-  print("running")
 
   model = sm.PSPNet("vgg16", input_shape=(image_h, image_w, 3), classes=2)
 
-  if trainFromScratch:
+  if config.train_from_scratch:
     # pretrain model on Nyu dataset
     pretrainOnNyu(model)
   else:
@@ -157,7 +160,7 @@ def run(config):
       )
 
   model.compile(
-      loss=ignorant_cross_entropy_loss,
+      loss=ignorant_balanced_cross_entropy_loss if config.loss_balanced else ignorant_cross_entropy_loss,
       optimizer=tf.keras.optimizers.Adam(config.optimizer_lr),
       metrics=[IgnorantBalancedAccuracyMetric(),
                IgnorantAccuracyMetric(),
@@ -166,7 +169,7 @@ def run(config):
             ])
   train_ds, test_ds = DataLoader(config.train_path, [image_h, image_w],
                                  validationDir=config.validation_path,
-                                 validationMode="CLA",
+                                 validationMode=config.validation_mode,
                                  batchSize=config.batch_size).getDataset()
   # Training callbacks
   # callbacks = []
@@ -176,7 +179,7 @@ def run(config):
 
   callbacks = [
       tf.keras.callbacks.ModelCheckpoint(
-          './model.{epoch:02d}-{val_loss:.2f}.h5',
+          './' + outFolder + '/model.{epoch:02d}-{val_loss:.2f}.h5',
           save_weights_only=True,
           save_best_only=False,
           mode='min'),
