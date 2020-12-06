@@ -74,7 +74,7 @@ class NyuDataLoader():
     )
     test_ds, test_info = tfds.load(
         'NyuDepthV2Labeled',
-        split='train[:10%]',
+        split='test',
         shuffle_files=False,
         as_supervised=True,
         with_info=True,
