@@ -159,6 +159,15 @@ def run(config):
           "Could not load model weights. Starting with random initialized model"
       )
 
+  dl = DataLoader(config.train_path, [image_h, image_w],
+                                 validationDir=config.validation_path,
+                                 validationMode=config.validation_mode,
+                                 batchSize=config.batch_size)
+  train_ds, test_ds = dl.getDataset()
+
+  from bfseg.utils.evaluation import scoreAndPlotPredictions
+  scoreAndPlotPredictions(lambda img: model.predict(img), dl, plot=False)
+
   model.compile(
       loss=ignorant_balanced_cross_entropy_loss if config.loss_balanced else ignorant_cross_entropy_loss,
       optimizer=tf.keras.optimizers.Adam(config.optimizer_lr),
@@ -167,10 +176,6 @@ def run(config):
                IgnorantMeanIoU(),
                IgnorantBalancedMeanIoU(),
             ])
-  train_ds, test_ds = DataLoader(config.train_path, [image_h, image_w],
-                                 validationDir=config.validation_path,
-                                 validationMode=config.validation_mode,
-                                 batchSize=config.batch_size).getDataset()
   # Training callbacks
   # callbacks = []
   # Set up tensorboard to monitor progess
