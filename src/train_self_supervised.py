@@ -111,7 +111,7 @@ def cfg():
   config.image_size = (image_w, image_h)
 
 
-def pretrainOnNyu(model, batchSize=4, epochs=10):
+def pretrainOnNyu(model, config, batchSize=4, epochs=10):
   """
   Pretrain this model on the nyu dataset
   """
@@ -150,7 +150,7 @@ def run(config):
 
   if config.train_from_scratch:
     # pretrain model on Nyu dataset
-    pretrainOnNyu(model)
+    pretrainOnNyu(model, config)
   else:
     try:
       model.load_weights(config.baselinePath)
