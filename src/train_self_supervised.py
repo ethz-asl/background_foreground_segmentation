@@ -43,7 +43,7 @@ parser.add_argument(
 parser.add_argument(
     '--optimizer_lr', type=float, default=0.001, help='Learning rate at start of training')
 parser.add_argument(
-    '--model_name', type=str, default='PSP', choices=['PSP'], help='CNN architecture')
+    '--model_name', type=str, default='PSP', choices=['PSP', 'UNET'], help='CNN architecture')
 parser.add_argument(
     '--backbone', type=str, default='vgg16', choices=["vgg16","vgg19","resnet18","resnet34","resnet50","resnet101","resnet152","seresnet18","seresnet34","seresnet50","seresnet101","seresnet152","resnext50","resnext101","seresnext50","seresnext101","senet154","densenet121","densenet169","densenet201","inceptionv3","inceptionresnetv2","mobilenet","mobilenetv2","efficientnetb0","efficientnetb1","efficientnetb2","efficientnetb3","efficientnetb4","efficientnetb5"," efficientnetb7"], help='CNN architecture')
 parser.add_argument(
@@ -86,7 +86,7 @@ ex.observers.append(
 #   print("Running on cluster")
 
 # Desired image shape. Input images will be cropped + scaled to this shape
-image_w = 720
+image_w = 736
 image_h = 480
 
 
@@ -146,7 +146,10 @@ def pretrainOnNyu(model, config, batchSize=4, epochs=30):
 @ex.main
 def run(config):
 
-  model = sm.PSPNet(config.backbone, input_shape=(image_h, image_w, 3), classes=2)
+  if config.model_name == "PSP":
+    model = sm.PSPNet(config.backbone, input_shape=(image_h, image_w, 3), classes=2)
+  elif config.model_name == "UNET":
+    model = sm.Unet(config.backbone, input_shape=(image_h, image_w, 3), classes=2)
 
   if config.train_from_scratch:
     # pretrain model on Nyu dataset
