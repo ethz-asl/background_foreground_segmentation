@@ -86,7 +86,7 @@ ex.observers.append(
 #   print("Running on cluster")
 
 # Desired image shape. Input images will be cropped + scaled to this shape
-image_w = 736
+image_w = 720
 image_h = 480
 
 
@@ -149,8 +149,9 @@ def run(config):
   if config.model_name == "PSP":
     model = sm.PSPNet(config.backbone, input_shape=(image_h, image_w, 3), classes=2)
   elif config.model_name == "UNET":
-    model = sm.Unet(config.backbone, input_shape=(image_h, image_w, 3), classes=2)
+    image_w = 736 # need to by /32 for unet
 
+    model = sm.Unet(config.backbone, input_shape=(image_h, image_w, 3), classes=2)
   if config.train_from_scratch:
     # pretrain model on Nyu dataset
     pretrainOnNyu(model, config)
