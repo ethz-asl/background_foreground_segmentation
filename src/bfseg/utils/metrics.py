@@ -14,19 +14,19 @@ class IgnorantMetricsWrapper(tf.keras.metrics.Metric):
     self.balanced = balanced
 
   def update_state(self, y_true, y_pred, sample_weight=None):
+
     # convert true labels to one hot encoded images
     labels_one_hot = tf.keras.backend.one_hot(y_true, 3)
-    # Remove class that should be ignored from one hot encoding
-    y_true_one_hot_no_ignore = tf.stack([
-        labels_one_hot[..., _class]
-        for _class in range(self.num_of_classes)
-        if _class != self.class_to_ignore
-    ],
-                                        axis=-1)
-
+    # Remove "unknown" class from groundtruth
+    classes_to_keep = tf.constant([
+        idx_class for idx_class in range(self.num_of_classes)
+        if idx_class != self.class_to_ignore
+    ])
+    y_true_one_hot_no_ignore = tf.gather(labels_one_hot,
+                                         classes_to_keep,
+                                         axis=-1)
     # Transform one hot encoding back to categorical
-    y_true_back = tf.cast(tf.math.argmax(y_true_one_hot_no_ignore, axis=-1),
-                          tf.int64)
+    y_true_no_unknown = tf.math.argmax(y_true_one_hot_no_ignore, axis=-1)
 
     if self.balanced:
       weights = getBalancedWeight(y_true, labels_one_hot, self.class_to_ignore,
@@ -37,7 +37,7 @@ class IgnorantMetricsWrapper(tf.keras.metrics.Metric):
           self.class_to_ignore,
       )
 
-    return self.metric.update_state(y_true_back,
+    return self.metric.update_state(y_true_no_unknown,
                                     tf.expand_dims(tf.argmax(y_pred, axis=-1),
                                                    -1),
                                     sample_weight=weights)
@@ -85,8 +85,6 @@ class IgnorantAccuracyMetric(IgnorantMetricsWrapper):
 
 def getBalancedWeight(labels, labels_one_hot, class_to_ignore, num_classes):
   weight_tensor = tf.cast(tf.zeros_like(labels), tf.float32)
-  # print(labels.shape)
-  # print("begin for")
   for i in range(num_classes):
     if i == class_to_ignore:
       continue
@@ -94,14 +92,9 @@ def getBalancedWeight(labels, labels_one_hot, class_to_ignore, num_classes):
     frequency = tf.math.scalar_mul(
         1 / tf.reduce_sum(tf.cast(labels == i, tf.float32)), labels_one_hot[...,
                                                                             i])
-    # print(frequency.shape)
-    # print(weight_tensor.shape)
-    # print("XX")
-    #frequency = tf.expand_dims(tf.expand_dims(frequency, -1), -1)
     # add to weight tensor
     weight_tensor = tf.math.add(weight_tensor, frequency)
-  # print("end for")
-  # print(weight_tensor.shape)
+
   return weight_tensor
 
 
