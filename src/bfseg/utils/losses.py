@@ -86,3 +86,25 @@ def ignorant_balanced_cross_entropy_loss(y_true,
 
   scce = tf.keras.losses.SparseCategoricalCrossentropy()
   return scce(y_true_back, y_pred, sample_weight=weights)
+
+def combined_loss(pseudo_label_weight, threshold):
+    def loss(y_true, y_pred):
+        p_labels = pseudo_labels(y_true, y_pred, threshold)
+        p_labels_loss = ignorant_cross_entropy_loss(p_labels, y_pred)
+
+        meshdist_loss = ignorant_cross_entropy_loss(y_true,y_pred)
+
+        return pseudo_label_weight* p_labels_loss + (1-pseudo_label_weight)*meshdist_loss
+    return loss
+
+def pseudo_labels(y_true, y_pred, threshold):
+    """ Converts a given prediction into pseudo labels, classes that have a prediction smaller than the provided threshold
+    will be assigned the 1 (ignore) label. """
+    # Boolean mask. one where prediction is above threshold, false where it is not
+    believe = tf.greater_equal(tf.reduce_max(y_pred, axis=-1), threshold)
+    # Convert prediction into labels. [0,2]
+    assignment = tf.scalar_mul(2,tf.argmax(y_pred, axis=-1))
+    # Assign 1 to all predictions where the prediction was not certain enough
+    pseudo_labels = tf.where(believe, assignment, tf.ones_like(assignment))
+    return pseudo_labels
+
