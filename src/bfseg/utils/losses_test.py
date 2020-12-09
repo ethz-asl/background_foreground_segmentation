@@ -13,8 +13,6 @@ def test_ignorant_loss():
   # Loss for this prediction
   loss1 = ignorant_cross_entropy_loss(labels, prediction).numpy()
 
-  print("ign loss")
-  print(tf.keras.backend.one_hot(labels, 3).shape)
   # Get labels as one hot encoded tensor
   labels_as_tensor = tf.keras.backend.one_hot(labels, 3)
 
