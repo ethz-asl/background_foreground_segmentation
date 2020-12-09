@@ -192,7 +192,7 @@ def run(config):
       tf.keras.callbacks.ModelCheckpoint(
           './' + outFolder + '/model.{epoch:02d}-{val_loss:.2f}.h5',
           save_weights_only=True,
-          save_best_only=False,
+          save_best_only=True,
           mode='min'),
       tf.keras.callbacks.ReduceLROnPlateau(),
       # Log metrics to sacred
