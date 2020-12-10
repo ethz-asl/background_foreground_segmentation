@@ -1,3 +1,4 @@
+# %load ../src/bfseg/utils/image_enhancement.py
 from PIL import Image
 from skimage.segmentation import mark_boundaries
 import numpy as np
@@ -37,43 +38,31 @@ def reduce_superpixel(seeds_bg,
             - Use Absolute distance of points, points that are closer to us have higher information value than points that are further away
         """
   # How many superpixels are there
-  max_points = np.max(assignment) + 1
+  num_points = np.max(assignment) + 1
 
   # For each superpixel, store how many foreground - background votes it received
-  accounting = np.zeros(max_points)
+  accounting = np.zeros(num_points)
   # Store standard deviation of pixels inside superpixel
-  distSquared = np.zeros(max_points)
-  distSum = np.zeros(max_points)
-  distCounter = np.zeros(max_points)
-
-  for pointX, pointY in seeds_bg:
-    # Get Superpixel
-    superpixel_label = assignment[pointX, pointY]
-    # Increase Vote by 1
-    accounting[superpixel_label] = accounting[superpixel_label] + 1
-
-    # Get Distance of this point
-    dist = distance[pointX, pointY] * 10 / 255
-    distCounter[superpixel_label] = distCounter[superpixel_label] + 1
-    distSum[superpixel_label] += dist
-    distSquared[superpixel_label] += dist * dist
-
-  for pointX, pointY in seeds_fg:
-    # Get superpixel
-    superpixel_label = assignment[pointX, pointY]
-    # Decrease Vote by 1
-    accounting[superpixel_label] = accounting[superpixel_label] - 1
-
-    dist = distance[pointX, pointY] * 10 / 255
-    distCounter[superpixel_label] = distCounter[superpixel_label] + 1
-    distSum[superpixel_label] = distSum[superpixel_label] + dist
-    distSquared[superpixel_label] = distSquared[superpixel_label] + dist * dist
+  distSquared = np.zeros(num_points)
+  distSum = np.zeros(num_points)
+  distCounter = np.zeros(num_points)
+  for seed, vote in [(seeds_bg, 1), (seeds_fg, -1)]:
+    for pointX, pointY in seed:
+      # Get Superpixel
+      superpixel_label = assignment[pointX, pointY]
+      # Increase Vote by 1
+      accounting[superpixel_label] = accounting[superpixel_label] + vote
+      # Get Distance of this point
+      dist = distance[pointX, pointY] * 10 / 255
+      distCounter[superpixel_label] = distCounter[superpixel_label] + 1
+      distSum[superpixel_label] += dist
+      distSquared[superpixel_label] += dist * dist
 
   mean = distSum / distCounter
   stdDev = (distSquared / distCounter) - (mean * mean)
   stdDev[np.isnan(stdDev)] = 0
 
-  for i in range(max_points):
+  for i in range(num_points):
     label = np.sign(accounting[i]) + 1
     if stdDev[i] > stdDevThreshold:
       label = 1
