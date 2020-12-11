@@ -5,4 +5,4 @@ import bfseg.experiments.SemSegWithPseudoLabels as experimentWrapper
 from train_experiment import train
 
 if __name__ == "__main__":
-    train(experimentWrapper.SemSegWithPseudoLabelsExperiment())
+  train(experimentWrapper.SemSegWithPseudoLabelsExperiment())
