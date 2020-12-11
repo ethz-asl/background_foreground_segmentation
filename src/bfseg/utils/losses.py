@@ -87,12 +87,16 @@ def ignorant_balanced_cross_entropy_loss(y_true,
   scce = tf.keras.losses.SparseCategoricalCrossentropy()
   return scce(y_true_back, y_pred, sample_weight=weights)
 
-def combined_loss(pseudo_label_weight, threshold):
+def combined_loss(pseudo_label_weight, threshold, balanced):
     def loss(y_true, y_pred):
         p_labels = pseudo_labels(y_true, y_pred, threshold)
-        p_labels_loss = ignorant_cross_entropy_loss(p_labels, y_pred)
 
-        meshdist_loss = ignorant_cross_entropy_loss(y_true,y_pred)
+        if balanced:
+            p_labels_loss = ignorant_cross_entropy_loss(p_labels, y_pred)
+            meshdist_loss = ignorant_cross_entropy_loss(y_true,y_pred)
+        else:
+            p_labels_loss = ignorant_balanced_cross_entropy_loss(p_labels, y_pred)
+            meshdist_loss = ignorant_balanced_cross_entropy_loss(y_true, y_pred)
 
         return pseudo_label_weight* p_labels_loss + (1-pseudo_label_weight)*meshdist_loss
     return loss

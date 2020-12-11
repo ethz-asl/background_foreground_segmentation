@@ -1,34 +1,38 @@
+import os
+os.environ["SM_FRAMEWORK"] = "tf.keras"
+
+import tensorflow as tf
 import argparse
-from bfseg.utils.utils import str2bool
 import segmentation_models as sm
 
-from bfseg.data.meshdist.dataLoader import DataLoader
+from bfseg.utils.utils import str2boolr
 from bfseg.utils import NyuDataLoader
-import os
+from bfseg.utils.metrics import IgnorantBalancedAccuracyMetric, IgnorantAccuracyMetric, IgnorantBalancedMeanIoU, \
+    IgnorantMeanIoU
+from bfseg.utils.losses import ignorant_cross_entropy_loss, ignorant_balanced_cross_entropy_loss
+from bfseg.data.meshdist.dataLoader import DataLoade
+from bfseg.experiments.Experiment import Experiment
 
-class SemSegExpirement():
+class SemSegExperiment(Experiment):
+    """ Experiment to train ForegroundBackground Semantic Segmentation on meshdist train data """
     def __init__(self):
-        self.config = self.getConfig();
-
+        super(SemSegExperiment, self).__init__()
+        # Ugly solution to not always change paths. Should be removed before merging into master
         if os.environ['local']:
             self.config.train_path = "/home/rene/cla_dataset/watershed/"
             self.config.validation_path = '/home/rene/hiveLabels/'
 
-    def getConfig(self):
-        """
-        Arguements for this experiment
-        """
-        parser = argparse.ArgumentParser(
-            add_help=True,
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter
-        )
-        self._addArguments(parser)
-
-        return parser.parse_args()
+        # Get a dataloader to load training images
+        self.dl = DataLoader(self.config.train_path, [self.config.image_h, self.config.image_w],
+                             validationDir=self.config.validation_path,
+                             validationMode=self.config.validation_mode,
+                             batchSize=self.config.batch_size)
+        self.numTestImages = self.dl.validationSize
 
     def _addArguments(self, parser):
-        parser.add_argument(
-            '--name_prefix', type=str, help='Name Prefix', default="")
+        """ Add custom arguments that are needed for this experiment """
+        super(SemSegExperiment, self)._addArguments(parser)
+
         parser.add_argument(
             '--train_path', type=str, help='Path to dataset',
             default="/cluster/scratch/zrene/cla_dataset/watershed/")
@@ -72,26 +76,26 @@ class SemSegExpirement():
         parser.add_argument(
             '--nyu_epochs', type=int, default=20)
 
-
-
     def getNyuTrainData(self):
+        """ Return training data from NYU. In order to scale the images to the right format, a custom dataloader
+            with map function was implemented """
         train_ds, train_info, valid_ds, valid_info, test_ds, test_info = NyuDataLoader.NyuDataLoader(
             self.config.nyu_batchsize, (self.config.image_w, self.config.image_h)).getDataSets()
 
-        return train_ds, valids_ds
+        steps_per_epoch = train_info.splits['train'].num_examples // self.config.nyu_batchsize
+        return train_ds, valid_ds, steps_per_epoch
 
     def getTrainData(self):
-        dl = DataLoader(self.config.train_path, [self.config.image_h, self.config.image_w],
-                        validationDir=self.config.validation_path,
-                        validationMode=self.config.validation_mode,
-                        batchSize=self.config.batch_size)
-        return dl.getDataset()
+        """ return train_ds, test_ds """
+        return self.dl.getDataset()
 
     def getModel(self):
         if self.config.model_name == "PSP":
-            model = sm.PSPNet(self.config.backbone, input_shape=(self.config.image_h, self.config.image_w, 3), classes=2)
+            model = sm.PSPNet(self.config.backbone, input_shape=(self.config.image_h, self.config.image_w, 3),
+                              classes=2)
         elif self.config.model_name == "UNET":
             model = sm.Unet(self.config.backbone, input_shape=(self.config.image_h, self.config.image_w, 3), classes=2)
+
         elif self.config.model_name == "DEEPLAB":
             from bfseg.models.deeplab import Deeplabv3
             model = Deeplabv3(input_shape=(self.config.image_h, self.config.image_w, 3), classes=2)
@@ -100,16 +104,22 @@ class SemSegExpirement():
 
     def compileModel(self, model):
         model.compile(
-            loss=ignorant_balanced_cross_entropy_loss if self.config.loss_balanced else ignorant_cross_entropy_loss,
-            optimizer=tf.keras.optimizers.Adam(config.optimizer_lr),
-            metrics=[IgnorantBalancedAccuracyMetric(),
-                     IgnorantAccuracyMetric(),
-                     IgnorantMeanIoU(),
-                     IgnorantBalancedMeanIoU(),
-                     ])
+            loss=self.getLoss(),
+            optimizer=tf.keras.optimizers.Adam(self.config.optimizer_lr),
+            metrics=self.getMetrics())
 
     def compileNyuModel(self, model):
         model.compile(
             loss='sparse_categorical_crossentropy',
             optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr),
             metrics='accuracy')
+
+    def getLoss(self):
+        return ignorant_balanced_cross_entropy_loss if self.config.loss_balanced else ignorant_cross_entropy_loss
+
+    def getMetrics(self):
+        return [IgnorantBalancedAccuracyMetric(),
+                IgnorantAccuracyMetric(),
+                IgnorantMeanIoU(),
+                IgnorantBalancedMeanIoU(),
+                ]
