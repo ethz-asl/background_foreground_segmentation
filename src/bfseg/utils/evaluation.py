@@ -67,15 +67,15 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True):
       # True false label needed for True Positive, False Negatives, ....
       label_true_false = test_label[i] > 0
 
-      FN = oneMetricIteration(FNM, label_true_false > 0, pred_categorical)
-      FP = oneMetricIteration(FPM, label_true_false > 0, pred_categorical)
-      TP = oneMetricIteration(TPM, label_true_false > 0, pred_categorical)
-      TN = oneMetricIteration(TNM, label_true_false > 0, pred_categorical)
+      FN = oneMetricIteration(FNM, label_true_false, pred_categorical)
+      FP = oneMetricIteration(FPM, label_true_false, pred_categorical)
+      TP = oneMetricIteration(TPM, label_true_false, pred_categorical)
+      TN = oneMetricIteration(TNM, label_true_false, pred_categorical)
 
-      FPM_valid.update_state(label_true_false > 0, pred_categorical)
-      FNM_valid.update_state(label_true_false > 0, pred_categorical)
-      TNM_valid.update_state(label_true_false > 0, pred_categorical)
-      TPM_valid.update_state(label_true_false > 0, pred_categorical)
+      FPM_valid.update_state(label_true_false, pred_categorical)
+      FNM_valid.update_state(label_true_false, pred_categorical)
+      TNM_valid.update_state(label_true_false, pred_categorical)
+      TPM_valid.update_state(label_true_false, pred_categorical)
 
       # Update Accuracy metrics
       iam_value = oneMetricIteration(iam, test_label[i, ...], pred[i, ...])
