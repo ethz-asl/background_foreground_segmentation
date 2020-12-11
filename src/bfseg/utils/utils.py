@@ -1,5 +1,6 @@
 import gdown
 from os import path
+import argparse
 
 
 def crop_multiple(data, multiple_of=16):
@@ -32,4 +33,15 @@ def load_gdrive_file(file_id, ending=''):
                    quiet=False)
   return filename
 
+
+
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
