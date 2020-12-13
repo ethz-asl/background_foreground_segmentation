@@ -89,7 +89,7 @@ def runExperiment(config, experiment, metricCallback, outFolder):
 
   weightsFolder = "./pretrained_nyu_weights_" + config.backbone + "_" + config.model_name
 
-  if config.train_from_scratch:
+  if config.train_from_scratch or True:
     # pretrain model on nyu data
     pretrainNyu(model, config, weightsFolder, experiment)
   else:

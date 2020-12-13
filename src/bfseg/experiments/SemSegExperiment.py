@@ -5,12 +5,12 @@ import tensorflow as tf
 import argparse
 import segmentation_models as sm
 
-from bfseg.utils.utils import str2boolr
+from bfseg.utils.utils import str2bool
 from bfseg.utils import NyuDataLoader
 from bfseg.utils.metrics import IgnorantBalancedAccuracyMetric, IgnorantAccuracyMetric, IgnorantBalancedMeanIoU, \
     IgnorantMeanIoU
 from bfseg.utils.losses import ignorant_cross_entropy_loss, ignorant_balanced_cross_entropy_loss
-from bfseg.data.meshdist.dataLoader import DataLoade
+from bfseg.data.meshdist.dataLoader import DataLoader
 from bfseg.experiments.Experiment import Experiment
 
 
@@ -20,7 +20,7 @@ class SemSegExperiment(Experiment):
   def __init__(self):
     super(SemSegExperiment, self).__init__()
     # Ugly solution to not always change paths. Should be removed before merging into master
-    if os.environ['local']:
+    if "local" in os.environ or True:
       self.config.train_path = "/home/rene/cla_dataset/watershed/"
       self.config.validation_path = '/home/rene/hiveLabels/'
 
@@ -30,6 +30,9 @@ class SemSegExperiment(Experiment):
                          validationDir=self.config.validation_path,
                          validationMode=self.config.validation_mode,
                          batchSize=self.config.batch_size)
+
+    self.nyuLoader = NyuDataLoader.NyuDataLoader( self.config.nyu_batchsize, (self.config.image_w, self.config.image_h))
+
     self.numTestImages = self.dl.validationSize
 
   def _addArguments(self, parser):
@@ -84,9 +87,9 @@ class SemSegExperiment(Experiment):
     parser.add_argument('--baselinePath',
                         type=str,
                         default='./baseline_model.h5')
-    parser.add_argument('--train_from_scratch', type=str2bool, default=False)
+    parser.add_argument('--train_from_scratch', type=str2bool, default=True)
     parser.add_argument('--loss_balanced', type=str2bool, default=False)
-    parser.add_argument('--image_w', type=int, default=720)
+    parser.add_argument('--image_w', type=int, default=480)
     parser.add_argument('--image_h', type=int, default=480)
     parser.add_argument('--nyu_batchsize', type=int, default=4)
     parser.add_argument('--nyu_lr', type=float, default=0.001)
@@ -95,9 +98,7 @@ class SemSegExperiment(Experiment):
   def getNyuTrainData(self):
     """ Return training data from NYU. In order to scale the images to the right format, a custom dataloader
             with map function was implemented """
-    train_ds, train_info, valid_ds, valid_info, test_ds, test_info = NyuDataLoader.NyuDataLoader(
-        self.config.nyu_batchsize,
-        (self.config.image_w, self.config.image_h)).getDataSets()
+    train_ds, train_info, valid_ds, valid_info, test_ds, test_info = self.nyuLoader.getDataSets()
 
     steps_per_epoch = train_info.splits[
         'train'].num_examples // self.config.nyu_batchsize

@@ -290,7 +290,7 @@ void Creator::projectPointCloud(
   cv::imwrite(output_folder + timestamp + "/labels.png", labels_img);
   cv::imwrite(output_folder + timestamp + "/distance.png", distance_img);
   // Save pointcloud
-  pcl::io::savePCDFile(output_folder + timestamp + "/pcl.pcd", camera_frame_pc);
+  // pcl::io::savePCDFile(output_folder + timestamp + "/pcl.pcd", camera_frame_pc);
 }
 
 } // namespace dataset_creator

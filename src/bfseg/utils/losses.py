@@ -1,6 +1,43 @@
 import tensorflow as tf
 
 from bfseg.utils.metrics import  getBalancedWeight, getIgnoreWeight
+
+
+
+
+# def smooth_consistency_loss(y_true_depth, y_pred_depth, y_pred_semseg):
+#     """
+#     https://openaccess.thecvf.com/content_CVPR_2019/papers/Chen_Towards_Scene_Understanding_Unsupervised_Monocular_Depth_Estimation_With_Semantic-Aware_Representation_CVPR_2019_paper.pdf
+#     Args:
+#         y_true_depth:
+#         y_pred_depth:
+#         y_pred_semseg:
+#
+#     Returns:
+#
+#     """
+
+def reduceGroundTruth(y_true, class_to_ignore=1, num_of_classes=3):
+     # convert true labels to one hot encoded images
+     labels_one_hot = tf.keras.backend.one_hot(y_true, 3)
+     # Remove class that should be ignored from one hot encoding
+     y_true_one_hot_no_ignore = tf.stack([
+         labels_one_hot[..., _class]
+         for _class in range(num_of_classes)
+         if _class != class_to_ignore
+     ],
+         axis=-1)
+
+     # Transform one hot encoding back to categorical
+     y_true_back = tf.cast(tf.math.argmax(y_true_one_hot_no_ignore, axis=-1),
+                           tf.int64)
+
+     weights = getIgnoreWeight(
+             labels_one_hot,
+             class_to_ignore,
+         )
+     return y_true_back, weights
+
 def ignorant_cross_entropy_loss(y_true,
                                 y_pred,
                                 class_to_ignore=1,

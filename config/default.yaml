@@ -4,12 +4,12 @@ ignorePointcloud: false
 cloudTopic: /distance_pc
 # In which frame is the cloud published?
 cloudFrame: /map
-cameraImageTopic: /camera_stick/cam0/image
-cameraInfoTopic: /camera_stick/cam0/camera_info
-cameraFrame: /cam0
-outputTopic: /cam0_labels
+cameraImageTopic: /rgb/image_raw
+cameraInfoTopic: /rgb/camera_info
+cameraFrame: /rgb_camera_link
+outputTopic: /cam_labels
 # Output folder of the dataset. Must end with a '/'
-outputFolder: /home/rene/cla_dataset/
+outputFolder: /home/rene/vicon_dataset
 # Max distance from a point to the groundtruth mesh. If a point has i bigger distance, it will be replaced with this value
 maxDistance: 0.5 #[m]
 # Max distance of a lidar point from the camera. If a point has i bigger distance, it will be replaced with this value

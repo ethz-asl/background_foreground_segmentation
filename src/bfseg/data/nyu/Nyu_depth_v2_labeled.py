@@ -44,6 +44,7 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
   # MANUAL_DOWNLOAD_INSTRUCTIONS = 1
 
   def _info(self) -> tfds.core.DatasetInfo:
+    print("gemnINFO")
     """Returns the dataset metadata."""
     # TODO(Nyu_depth_v2_labeled): Specifies the tfds.core.DatasetInfo object
     return tfds.core.DatasetInfo(
@@ -51,8 +52,7 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         description=_DESCRIPTION,
         features=tfds.features.FeaturesDict({
             'image': tfds.features.Image(shape=(480, 640, 3), dtype=tf.uint8),
-            # 'depth': tfds.features.Tensor(shape=(480, 640), dtype=tf.float16),
-            'label': tfds.features.Tensor(shape=(480, 640), dtype=tf.uint8),
+            'label': tfds.features.Tensor(shape=(480, 640,2), dtype=tf.int64),
         }),
         # features=tfds.features.FeaturesDict({
         #   'image': tfds.features.Image(shape=(48, 64, 3), dtype=tf.uint8),
@@ -73,6 +73,7 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
     # dl_manager is a tfds.download.DownloadManager that can be used to
     # download and extract URLs
     download_dir = dl_manager.download(_URL)
+    print("split gen")
     return [
         tfds.core.SplitGenerator(
             name=tfds.Split.TRAIN,
@@ -93,8 +94,10 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         ),
     ]
 
+
   def _generate_examples(self, dataset_path, scene_type):
     """Yields examples."""
+    tf.print("genX")
     # TODO(Nyu_depth_v2_labeled): Yields (key, example) tuples from the dataset
     h5py = tfds.core.lazy_imports.h5py
     with h5py.File(dataset_path, 'r') as f:
@@ -102,7 +105,7 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
       # Depths = f['depths']
       Labels = f['labels']
       Images = np.array(f['images'], dtype=f['images'].dtype).T.squeeze()
-      # Depths=np.array(f['depths'],dtype=f['images'].dtype).T.squeeze()
+      Depths = np.array(f['depths'], dtype=f['depths'].dtype).T.squeeze()
       Labels = np.array(f['labels'], dtype=f['labels'].dtype).T.squeeze()
       refs = f['#refs#']
       cell = []
@@ -116,18 +119,21 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         # Label_expand = np.expand_dims(Labels[:,:,i], axis=2)
         if cell[0][i] == scene_type:
           label = Labels[:, :, i]
-          combine_label = np.logical_not(np.logical_or(
-              label == 4,
-              (np.logical_or(label == 11, label == 21)))).astype(np.uint8)
+          # print(label)
+          print(Depths[:, :, i])
+          combine_label = np.logical_not(
+              np.logical_or(label == 4,
+                            (np.logical_or(label == 11, label == 21)))).astype(
+                                int)
           yield str(i).zfill(4), {
               'image': Images[:, :, :, i],
-              # 'depth':Depths[:,:,i],
+              # 'depth': Depths[:, :, i],
               # 'label':mask}
-              'label': combine_label
+              #'label': combine_label
+              'label': np.stack([combine_label, (Depths[:, :, i]*100).astype(int)],axis = -1)
           }
         # yield str(i).zfill(4), {'image':Image_resize,
         #         'label':Label_resize}
-
 
 # h5py = tfds.core.lazy_imports.h5py
 # f=h5py.File('nyu_depth_v2_labeled.mat','r')
