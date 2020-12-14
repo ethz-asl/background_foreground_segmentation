@@ -20,8 +20,9 @@ class SemSegExperiment(Experiment):
   def __init__(self):
     super(SemSegExperiment, self).__init__()
     # Ugly solution to not always change paths. Should be removed before merging into master
-    if "local" in os.environ or True:
-      self.config.train_path = "/home/rene/cla_dataset/watershed/"
+    if "local" in os.environ:
+      # self.config.train_path = "/home/rene/cla_dataset/watershed/"
+      self.config.train_path = "/home/rene/vicon_dataset/rotated/"
       self.config.validation_path = '/home/rene/hiveLabels/'
 
     # Get a dataloader to load training images
@@ -29,9 +30,9 @@ class SemSegExperiment(Experiment):
                          [self.config.image_h, self.config.image_w],
                          validationDir=self.config.validation_path,
                          validationMode=self.config.validation_mode,
-                         batchSize=self.config.batch_size)
+                         batchSize=self.config.batch_size, loadDepth=False)
 
-    self.nyuLoader = NyuDataLoader.NyuDataLoader( self.config.nyu_batchsize, (self.config.image_w, self.config.image_h))
+    self.nyuLoader = NyuDataLoader.NyuDataLoader( self.config.nyu_batchsize, (self.config.image_w, self.config.image_h), loadDepth = False)
 
     self.numTestImages = self.dl.validationSize
 
@@ -62,7 +63,7 @@ class SemSegExperiment(Experiment):
                         help='Number of samples in a batch for training')
     parser.add_argument('--optimizer_lr',
                         type=float,
-                        default=0.001,
+                        default=0.0001,
                         help='Learning rate at start of training')
     parser.add_argument('--model_name',
                         type=str,
@@ -89,7 +90,7 @@ class SemSegExperiment(Experiment):
                         default='./baseline_model.h5')
     parser.add_argument('--train_from_scratch', type=str2bool, default=True)
     parser.add_argument('--loss_balanced', type=str2bool, default=False)
-    parser.add_argument('--image_w', type=int, default=480)
+    parser.add_argument('--image_w', type=int, default=720)
     parser.add_argument('--image_h', type=int, default=480)
     parser.add_argument('--nyu_batchsize', type=int, default=4)
     parser.add_argument('--nyu_lr', type=float, default=0.001)

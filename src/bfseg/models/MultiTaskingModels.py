@@ -2,6 +2,7 @@ import segmentation_models as sm
 import tensorflow as tf
 
 from bfseg.utils.losses import ignorant_cross_entropy_loss
+from bfseg.utils.metrics import IgnorantAccuracyMetric
 
 
 class MultiTaskModel(tf.keras.Model):
@@ -10,7 +11,8 @@ class MultiTaskModel(tf.keras.Model):
 
         self.semsegLossTracker = tf.keras.metrics.Mean(name="semsegLoss")
         self.depthLossTracker = tf.keras.metrics.Mean(name="depthLoss")
-        self.semsegAcc = tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")
+        #self.semsegAcc = tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")
+        self.semsegAcc = IgnorantAccuracyMetric()
 
         self.useIgnorantLosses = False
 
@@ -26,12 +28,14 @@ class MultiTaskModel(tf.keras.Model):
             y_pred_semseg = y_pred[1]
 
             # Loss for depth error, remove zero
-            y_pred_depth_ignorant = tf.math.multiply(y_pred_depth, tf.cast(tf.math.equal(depth_label, tf.constant(1000, dtype=tf.float32)), tf.float32))
+            #y_pred_depth_ignorant = tf.math.multiply(y_pred_depth, tf.cast(tf.math.equal(depth_label, tf.constant(1000, dtype=tf.float32)), tf.float32))
 
+            y_pred_depth_ignorant = tf.where(tf.equal(depth_label, tf.constant(1000, dtype=tf.float32)), tf.constant(1000, dtype=tf.float32), y_pred_depth)
             depthLoss = tf.keras.losses.mean_squared_error(depth_label, y_pred_depth_ignorant)
 
-            if self.useIgnorantLosses:
+            if self.useIgnorantLosses or True:
                 # Loss for SemSeg Error
+                print(semseg_label, y_pred_semseg, y_pred_depth)
                 semsegLoss = ignorant_cross_entropy_loss(semseg_label, y_pred_semseg)
             else:
                 # Loss for SemSeg Error

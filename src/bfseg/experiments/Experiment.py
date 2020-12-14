@@ -1,5 +1,5 @@
 import argparse
-
+from bfseg.utils.evaluation import scoreAndPlotPredictions
 
 class Experiment():
   """
@@ -20,7 +20,7 @@ class Experiment():
             Load config from argparser
         """
     parser = argparse.ArgumentParser(
-        add_help=True, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        add_help=True, formatter_class=argparse.ArgumentDefaultsHelpFormatter, conflict_handler="resolve")
     self._addArguments(parser)
 
     return parser.parse_args()
@@ -63,3 +63,9 @@ class Experiment():
         Compile the model with a nyu specific loss and metric function
         """
     raise NotImplementedError()
+
+  def scoreModel(self, model, test_ds):
+    scoreAndPlotPredictions(lambda img: model.predict(img),
+                            test_ds,
+                            self.numTestImages,
+                            plot=False)

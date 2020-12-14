@@ -89,7 +89,7 @@ def runExperiment(config, experiment, metricCallback, outFolder):
 
   weightsFolder = "./pretrained_nyu_weights_" + config.backbone + "_" + config.model_name
 
-  if config.train_from_scratch or True:
+  if config.train_from_scratch:
     # pretrain model on nyu data
     pretrainNyu(model, config, weightsFolder, experiment)
   else:
@@ -104,10 +104,8 @@ def runExperiment(config, experiment, metricCallback, outFolder):
 
   # Score and plot model for pretrained weights. Can also be removed, but shows if our training improves the model
   print("Scoring pretrained model")
-  scoreAndPlotPredictions(lambda img: model.predict(img),
-                          test_ds,
-                          experiment.numTestImages,
-                          plot=False)
+  experiment.scoreModel(model, test_ds)
+
 
   print("Training model")
   # Compile model to be trained on training dataset
@@ -128,10 +126,7 @@ def runExperiment(config, experiment, metricCallback, outFolder):
             validation_data=test_ds,
             callbacks=callbacks)
 
-  scoreAndPlotPredictions(lambda img: model.predict(img),
-                          test_ds,
-                          experiment.numTestImages,
-                          plot=False)
+  experiment.scoreModel(model, test_ds)
 
 
 def pretrainNyu(model, config, weightsFolder, experiment):
@@ -162,6 +157,7 @@ def pretrainNyu(model, config, weightsFolder, experiment):
                                          mode='min'),
       tf.keras.callbacks.ReduceLROnPlateau()
   ]
+
   model.fit(train_nyu_ds,
             steps_per_epoch=steps_per_epoch,
             epochs=config.nyu_epochs,

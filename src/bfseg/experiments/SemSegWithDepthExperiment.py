@@ -35,6 +35,9 @@ class SemSegWithDepthExperiment(SemSegExperiment):
   def _addArguments(self, parser):
     """ Add custom arguments that are needed for this experiment """
     super(SemSegWithDepthExperiment, self)._addArguments(parser)
+    # Change default image size since we are now using the kinect
+    parser.add_argument('--image_w', type=int, default=480)
+    parser.add_argument('--image_h', type=int, default=480)
 
   def getNyuTrainData(self):
     """ Return training data from NYU. In order to scale the images to the right format, a custom dataloader
@@ -50,7 +53,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     return self.dl.getDataset()
 
   def getModel(self):
-    if self.config.model_name == "PSP" and False:
+    if self.config.model_name == "PSP":
       #input = tf.keras.layers.Input(shape = (self.config.image_h, self.config.image_w, 3), name="image")
       model = mtm.PSPNet(self.config.backbone,
                         input_shape=(self.config.image_h, self.config.image_w,
@@ -72,10 +75,12 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     #
     # return tf.keras.models.Model(inputs = inp, outputs= [out1, out2])
 
-  # def compileModel(self, model):
-  #   model.compile(loss=self.getLoss(),
-  #                 optimizer=tf.keras.optimizers.Adam(self.config.optimizer_lr),
-  #                 metrics=self.getMetrics())
+  def compileModel(self, model):
+      super(SemSegWithDepthExperiment, self).compileModel(model)
+      model.useIgnorantLoss = True
+      #   model.compile(loss=self.getLoss(),
+      #                 optimizer=tf.keras.optimizers.Adam(self.config.optimizer_lr),
+      #                 metrics=self.getMetrics())
 
   def compileNyuModel(self, model):
     model.compile(loss= self.loss(),#{'depth': self.lossMSE(), 'semseg': self.loss()},

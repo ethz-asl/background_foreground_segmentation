@@ -10,10 +10,10 @@ import os
 
 class NyuDataLoader():
 
-    def __init__(self, batch_size, shape, removeDepth=True):
+    def __init__(self, batch_size, shape, loadDepth=False):
         self.batch_size = batch_size
         self.shape = shape
-        self.removeDepth = removeDepth
+        self.loadDepth = loadDepth
 
     @tf.function
     def normalize_img(self, image, labels):
@@ -34,7 +34,7 @@ class NyuDataLoader():
         labels_cropped = self.cropImageToInputSize(label, input_size, method="nearest")
         image_cropped = self.cropImageToInputSize(image, input_size);
 
-        if self.removeDepth:
+        if not self.loadDepth:
             return image_cropped, labels_cropped
 
         depth_cropped = self.cropImageToInputSize(depth, input_size, method="nearest");

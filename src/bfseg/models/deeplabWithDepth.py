@@ -487,7 +487,7 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
     if activation in {'softmax', 'sigmoid'}:
         semseg = tf.keras.layers.Activation(activation)(semseg)
     from bfseg.models.MultiTaskingModels import MultiTaskModel
-    return MultiTaskModel(inputs = inputs, outputs= [semseg, depth], name="deeplabv3plusMultiTask")
+    return MultiTaskModel(inputs = inputs, outputs= [depth, semseg], name="deeplabv3plusMultiTask")
 
 
 
