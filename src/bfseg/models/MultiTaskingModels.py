@@ -41,6 +41,36 @@ class MultiTaskModel(tf.keras.Model):
         self.useIgnorantLosses = False
 
 
+    def test_step(self, data):
+        # only use semseg
+        x, semseg_label = data
+
+        if not tf.is_tensor(semseg_label):
+            semseg_label = semseg_label['semseg']
+
+        y_pred = self(x, training=False)  # Forward pass
+        y_pred_depth = y_pred[0]
+        y_pred_semseg = y_pred[1]
+        y_pred_semseg_categorical = tf.expand_dims(tf.argmax(y_pred_semseg, axis=-1), axis=-1)
+
+        if self.useIgnorantLosses:
+            # Loss for SemSeg Error
+            semsegLoss = ignorant_cross_entropy_loss(semseg_label, y_pred_semseg)
+        else:
+            # Loss for SemSeg Error
+            semsegLoss = tf.keras.losses.sparse_categorical_crossentropy(semseg_label, y_pred_semseg)
+
+        loss = semsegLoss
+
+
+        # Compute our own metrics
+        self.lossTracker.update_state(loss)
+        self.semsegLossTracker.update_state(semsegLoss)
+        self.semsegAcc(semseg_label, y_pred_semseg)
+
+        return {"loss": self.lossTracker.result(), "semsegLoss": self.semsegLossTracker.result(),
+                "accuracy": self.semsegAcc.result()}
+
     def train_step(self, data):
         x, y = data
         depth_label = y['depth']
