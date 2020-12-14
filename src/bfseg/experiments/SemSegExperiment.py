@@ -20,7 +20,7 @@ class SemSegExperiment(Experiment):
   def __init__(self):
     super(SemSegExperiment, self).__init__()
     # Ugly solution to not always change paths. Should be removed before merging into master
-    if "local" in os.environ:
+    if "local" in os.environ or True:
       # self.config.train_path = "/home/rene/cla_dataset/watershed/"
       self.config.train_path = "/home/rene/vicon_dataset/rotated/"
       self.config.validation_path = '/home/rene/hiveLabels/'
@@ -88,7 +88,7 @@ class SemSegExperiment(Experiment):
     parser.add_argument('--baselinePath',
                         type=str,
                         default='./baseline_model.h5')
-    parser.add_argument('--train_from_scratch', type=str2bool, default=True)
+    parser.add_argument('--train_from_scratch', type=str2bool, default=False)
     parser.add_argument('--loss_balanced', type=str2bool, default=False)
     parser.add_argument('--image_w', type=int, default=720)
     parser.add_argument('--image_h', type=int, default=480)

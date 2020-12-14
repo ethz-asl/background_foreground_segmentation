@@ -4,7 +4,19 @@ from bfseg.utils.metrics import  getBalancedWeight, getIgnoreWeight
 
 
 
+def smooth_consistency_loss(gt_depth, y_pred_semantic, class_number = 0):
+    phi = tf.cast(tf.math.equal(y_pred_semantic, class_number), dtype=tf.float32)
+    phi_x = tf.roll(phi, 1, axis=-3)
+    phi_y = tf.roll(phi, 1, axis=-2)
+    depth_x = tf.roll(gt_depth, 1, axis=-3)
+    depth_y = tf.roll(gt_depth, 1, axis=-2)
+    diffx = tf.multiply(tf.math.abs(gt_depth - depth_x), 1 - tf.math.abs((phi - phi_x)))
+    diffx_no_nan = tf.where(tf.math.is_nan(diffx), tf.zeros_like(diffx), diffx)
 
+    diffy = tf.multiply(tf.math.abs(gt_depth - depth_y), 1 - tf.math.abs((phi - phi_y)))
+    diffy_no_nan = tf.where(tf.math.is_nan(diffy), tf.zeros_like(diffy), diffy)
+
+    return tf.keras.backend.mean(diffx_no_nan + diffy_no_nan)
 # def smooth_consistency_loss(y_true_depth, y_pred_depth, y_pred_semseg):
 #     """
 #     https://openaccess.thecvf.com/content_CVPR_2019/papers/Chen_Towards_Scene_Understanding_Unsupervised_Monocular_Depth_Estimation_With_Semantic-Aware_Representation_CVPR_2019_paper.pdf

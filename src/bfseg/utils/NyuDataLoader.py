@@ -39,7 +39,7 @@ class NyuDataLoader():
 
         depth_cropped = self.cropImageToInputSize(depth, input_size, method="nearest");
         depth_norm =  (tf.cast(depth_cropped, dtype=tf.float32) - 255.0)/ 131.218
-        depth_norm_2 = tf.where(tf.equal(depth_cropped, tf.constant(0, dtype=tf.int64)), tf.constant(1000, dtype=tf.float32), depth_norm)
+        depth_norm_2 = tf.where(tf.equal(depth_cropped, tf.constant(0, dtype=tf.int64)), tf.constant(float('nan'), dtype=tf.float32), depth_norm)
         return image_cropped, {'depth': depth_norm_2,'semseg': labels_cropped}
 
     def cropImageToInputSize(self, image, size, method="bilinear"):

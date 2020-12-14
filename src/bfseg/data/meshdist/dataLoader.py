@@ -159,7 +159,7 @@ class DataLoader:
         # todo rescale
         depth_cropped = tf.cast(self.cropImageToInputSize(depths, self.outputSize, method="nearest"), dtype=tf.float32)
         depth_norm =  (tf.cast(depth_cropped, dtype=tf.float32) - 255.0)/ 131.218
-        depth_norm_2 = tf.where(tf.equal(depth_cropped, tf.constant(0, dtype=tf.float32)), tf.constant(1000, dtype=tf.float32), depth_norm)
+        depth_norm_2 = tf.where(tf.equal(depth_cropped, tf.constant(0, dtype=tf.float32)), tf.constant(float('nan'), dtype=tf.float32), depth_norm)
         return cropped_image, {'depth': depth_norm_2, 'semseg': cropped_semseg_labels}
 
     def cropImageToInputSize(self, image, size, method="bilinear"):

@@ -80,16 +80,15 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     # return tf.keras.models.Model(inputs = inp, outputs= [out1, out2])
 
   def compileModel(self, model):
+      model.useIgnorantLosses = True
       super(SemSegWithDepthExperiment, self).compileModel(model)
-      model.useIgnorantLoss = True
       #   model.compile(loss=self.getLoss(),
       #                 optimizer=tf.keras.optimizers.Adam(self.config.optimizer_lr),
       #                 metrics=self.getMetrics())
 
   def compileNyuModel(self, model):
-    model.compile(loss= self.loss(),#{'depth': self.lossMSE(), 'semseg': self.loss()},
-                  optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr),
-                  metrics={'depth' : tf.keras.metrics.MeanAbsoluteError(), 'semseg':'accuracy'})
+    model.useIgnorantLosses = False
+    model.compile(optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr))
 
   def loss(self):
       def l(*args, **kwargs):
