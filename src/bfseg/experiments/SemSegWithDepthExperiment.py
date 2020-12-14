@@ -22,19 +22,23 @@ class SemSegWithDepthExperiment(SemSegExperiment):
   def __init__(self):
     super(SemSegWithDepthExperiment, self).__init__()
     # Get a dataloader to load training images
+    # Get a dataloader to load training images
     self.dl = DataLoader(self.config.train_path,
                          [self.config.image_h, self.config.image_w],
                          validationDir=self.config.validation_path,
                          validationMode=self.config.validation_mode,
-                         batchSize=self.config.batch_size)
+                         batchSize=self.config.batch_size, loadDepth=True)
+
+    self.nyuLoader = NyuDataLoader( self.config.nyu_batchsize, (self.config.image_w, self.config.image_h), loadDepth = True)
+
     self.numTestImages = self.dl.validationSize
 
-    self.nyuLoader = NyuDataLoader( self.config.nyu_batchsize, (self.config.image_w, self.config.image_h), removeDepth=False)
 
 
   def _addArguments(self, parser):
     """ Add custom arguments that are needed for this experiment """
     super(SemSegWithDepthExperiment, self)._addArguments(parser)
+
     # Change default image size since we are now using the kinect
     parser.add_argument('--image_w', type=int, default=480)
     parser.add_argument('--image_h', type=int, default=480)
@@ -111,3 +115,6 @@ class SemSegWithDepthExperiment(SemSegExperiment):
         IgnorantMeanIoU(),
         IgnorantBalancedMeanIoU(),
     ]
+
+  def scoreModel(self, model, test_ds):
+      print("currently not implemented")

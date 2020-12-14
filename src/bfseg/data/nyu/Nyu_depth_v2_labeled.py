@@ -44,7 +44,6 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
   # MANUAL_DOWNLOAD_INSTRUCTIONS = 1
 
   def _info(self) -> tfds.core.DatasetInfo:
-    print("gemnINFO")
     """Returns the dataset metadata."""
     # TODO(Nyu_depth_v2_labeled): Specifies the tfds.core.DatasetInfo object
     return tfds.core.DatasetInfo(
@@ -73,7 +72,6 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
     # dl_manager is a tfds.download.DownloadManager that can be used to
     # download and extract URLs
     download_dir = dl_manager.download(_URL)
-    print("split gen")
     return [
         tfds.core.SplitGenerator(
             name=tfds.Split.TRAIN,
@@ -97,7 +95,6 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
 
   def _generate_examples(self, dataset_path, scene_type):
     """Yields examples."""
-    tf.print("genX")
     # TODO(Nyu_depth_v2_labeled): Yields (key, example) tuples from the dataset
     h5py = tfds.core.lazy_imports.h5py
     with h5py.File(dataset_path, 'r') as f:
@@ -119,8 +116,6 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         # Label_expand = np.expand_dims(Labels[:,:,i], axis=2)
         if cell[0][i] == scene_type:
           label = Labels[:, :, i]
-          # print(label)
-          print(Depths[:, :, i])
           combine_label = np.logical_not(
               np.logical_or(label == 4,
                             (np.logical_or(label == 11, label == 21)))).astype(
