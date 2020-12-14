@@ -20,10 +20,10 @@ class SemSegExperiment(Experiment):
   def __init__(self):
     super(SemSegExperiment, self).__init__()
     # Ugly solution to not always change paths. Should be removed before merging into master
-    if "local" in os.environ or True:
-      # self.config.train_path = "/home/rene/cla_dataset/watershed/"
-      self.config.train_path = "/home/rene/vicon_dataset/rotated/"
-      self.config.validation_path = '/home/rene/hiveLabels/'
+    # if "local" in os.environ or True:
+    #   # self.config.train_path = "/home/rene/cla_dataset/watershed/"
+    #   self.config.train_path = "/home/rene/vicon_dataset/rotated/"
+    #   self.config.validation_path = '/home/rene/hiveLabels/'
 
     # Get a dataloader to load training images
     self.dl = DataLoader(self.config.train_path,
