@@ -38,7 +38,9 @@ class DataLoader:
 
         if loadDepth:
             if len(self.depths) == 0:
-                raise ValueError("The specified dataset at " + self.workingDir + " does not provide any depth images!")
+                # raise ValueError("The specified dataset at " + self.workingDir + " does not provide any depth images!")
+                print("[WARNING] DID NOT FIND ANY DEPTH IMAGES!")
+                self.depths = None
         else:
             self.depths = None
 
@@ -127,7 +129,6 @@ class DataLoader:
                     print("WARNING! Label / Image missmatch in folder:",
                           path + "image_folders")
 
-        print(depths, "--", labels)
         return imgs, depths, labels
 
     def parse_function(self, filename, label, *args):
