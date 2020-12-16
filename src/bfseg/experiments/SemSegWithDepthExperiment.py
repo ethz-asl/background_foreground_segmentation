@@ -16,6 +16,8 @@ from bfseg.experiments.SemSegExperiment import SemSegExperiment
 import bfseg.models.MultiTaskingModels as mtm
 from bfseg.utils.NyuDataLoader import NyuDataLoader
 
+from bfseg.utils.evaluation import scoreAndPlotPredictions
+
 class SemSegWithDepthExperiment(SemSegExperiment):
   """ Experiment to train ForegroundBackground Semantic Segmentation on meshdist train data """
 
@@ -58,6 +60,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
 
   def getModel(self):
     if self.config.model_name == "PSP":
+      print("buliding PSP model")
       #input = tf.keras.layers.Input(shape = (self.config.image_h, self.config.image_w, 3), name="image")
       model = mtm.PSPNet(self.config.backbone,
                         input_shape=(self.config.image_h, self.config.image_w,
@@ -65,7 +68,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
                         classes=2)
       model.summary()
       return model
-    return mtm.Deeplabv3(input_shape=(self.config.image_h, self.config.image_w,  3),classes=2)
+    return mtm.Deeplabv3(input_shape=(self.config.image_h, self.config.image_w,  3),classes=2, activation="sigmoid")
     #
     # elif self.config.model_name == "DEEPLAB":
     #   from bfseg.models.deeplab import Deeplabv3
@@ -80,8 +83,10 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     # return tf.keras.models.Model(inputs = inp, outputs= [out1, out2])
 
   def compileModel(self, model):
-      model.useIgnorantLosses = True
-      super(SemSegWithDepthExperiment, self).compileModel(model)
+      from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss,ignorant_depth_loss
+      model.compile(loss = [ignorant_depth_loss, ignorant_balanced_cross_entropy_loss])
+      # model.useIgnorantLosses = True
+      # super(SemSegWithDepthExperiment, self).compileModel(model)
       #   model.compile(loss=self.getLoss(),
       #                 optimizer=tf.keras.optimizers.Adam(self.config.optimizer_lr),
       #                 metrics=self.getMetrics())
@@ -116,4 +121,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     ]
 
   def scoreModel(self, model, test_ds):
-      print("currently not implemented")
+      scoreAndPlotPredictions(lambda img: model.predict(img)[1],
+                              test_ds,
+                              self.numTestImages,
+                              plot=False)

@@ -60,7 +60,6 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True):
         plt.subplot(batches, 5, i + cnt * batches + 1)
         plt.imshow(tf.argmax(pred[i], axis=-1))
         plt.imshow(test_img[i], alpha=0.7)
-
       # Convert prediction to categorical form
       pred_categorical = tf.argmax(pred[i], axis=-1)
 

@@ -121,9 +121,10 @@ def runExperiment(config, experiment, metricCallback, outFolder):
       metricCallback
   ]
 
+
   model.fit(train_ds,
             epochs=config.num_epochs,
-            validation_data=test_ds,
+            # validation_data=test_ds,
             callbacks=callbacks)
 
   experiment.scoreModel(model, test_ds)

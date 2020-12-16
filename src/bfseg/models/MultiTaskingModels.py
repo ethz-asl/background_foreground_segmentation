@@ -1,8 +1,8 @@
 import segmentation_models as sm
 import tensorflow as tf
 
-from bfseg.utils.losses import ignorant_cross_entropy_loss, smooth_consistency_loss
-from bfseg.utils.metrics import IgnorantAccuracyMetric
+from bfseg.utils.losses import ignorant_cross_entropy_loss, smooth_consistency_loss,ignorant_balanced_cross_entropy_loss
+from bfseg.utils.metrics import IgnorantAccuracyMetric,IgnorantBalancedAccuracyMetric
 
 # import tf.keras.backend as K
 
@@ -36,7 +36,7 @@ class MultiTaskModel(tf.keras.Model):
         self.depthLossTracker = tf.keras.metrics.Mean(name="depthLoss")
         self.consistencyLossTracker = tf.keras.metrics.Mean(name="consistencyLoss")
         #self.semsegAcc = tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")
-        self.semsegAcc = IgnorantAccuracyMetric()
+        self.semsegAcc = IgnorantBalancedAccuracyMetric()
 
         self.useIgnorantLosses = False
 
@@ -94,13 +94,13 @@ class MultiTaskModel(tf.keras.Model):
 
             if self.useIgnorantLosses:
                 # Loss for SemSeg Error
-                semsegLoss = ignorant_cross_entropy_loss(semseg_label, y_pred_semseg)
+                semsegLoss = ignorant_balanced_cross_entropy_loss(semseg_label, y_pred_semseg)
             else:
                 # Loss for SemSeg Error
                 semsegLoss = tf.keras.losses.sparse_categorical_crossentropy(semseg_label, y_pred_semseg)
 
             loss = depthLoss + semsegLoss + consistency_loss
-
+            # tf.print(y_pred[1])
         # Compute gradients
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
@@ -184,4 +184,4 @@ def PSPNet(backbone_name='vgg16',
                                           interpolation='bilinear')(semseg)
     semseg = tf.keras.layers.Activation("softmax", name="semseg")(semseg)
 
-    return MultiTaskModel(inputs=model.input, outputs=[depth, semseg])
+    return tf.keras.models.Model(inputs=model.input, outputs=[depth, semseg])

@@ -4,6 +4,32 @@ from bfseg.utils.metrics import  getBalancedWeight, getIgnoreWeight
 
 
 
+def ignorant_depth_loss(depth_label, y_pred_depth):
+    y_pred_depth_ignorant = tf.where(tf.math.is_nan(depth_label), tf.zeros_like(depth_label), y_pred_depth)
+    depth_label = tf.where(tf.math.is_nan(depth_label), tf.zeros_like(depth_label), depth_label)
+
+    return depth_loss_function(depth_label,y_pred_depth_ignorant)  # tf.keras.losses.ber(depth_label, y_pred_depth_ignorant)
+def depth_loss_function(y_true, y_pred, theta=0.1, maxDepthVal=1000.0 / 10.0):
+    # https://github.com/ialhashim/DenseDepth/blob/master/loss.py
+    # Point-wise depth
+    l_depth =  tf.keras.backend.mean( tf.keras.backend.abs(y_pred - y_true), axis=-1)
+
+    # Edges
+    dy_true, dx_true = tf.image.image_gradients(y_true)
+    dy_pred, dx_pred = tf.image.image_gradients(y_pred)
+    l_edges =  tf.keras.backend.mean( tf.keras.backend.abs(dy_pred - dy_true) +  tf.keras.backend.abs(dx_pred - dx_true), axis=-1)
+
+    # Structural similarity (SSIM) index
+    l_ssim =  tf.keras.backend.clip((1 - tf.image.ssim(y_true, y_pred, maxDepthVal)) * 0.5, 0, 1)
+
+    # Weights
+    w1 = 1.0
+    w2 = 1.0
+    w3 = theta
+
+    return (w1 * l_ssim) + (w2 *  tf.keras.backend.mean(l_edges)) + (w3 *  tf.keras.backend.mean(l_depth))
+
+
 def smooth_consistency_loss(gt_depth, y_pred_semantic, class_number = 0):
     phi = tf.cast(tf.math.equal(y_pred_semantic, class_number), dtype=tf.float32)
     phi_x = tf.roll(phi, 1, axis=-3)

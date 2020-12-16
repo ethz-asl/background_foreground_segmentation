@@ -476,7 +476,7 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
     depth = Conv2D(1, (1, 1), padding='same', name="depth_decoder")(before_decoder_layer)
     depth = Lambda(lambda xx: tf.compat.v1.image.resize(xx,
                                                     size_before3[1:3],
-                                                    method='bilinear', align_corners=True))(depth)
+                                                    method='bilinear', align_corners=True), name="depth")(depth)
 
 
     # decoded semseg
@@ -485,9 +485,10 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
                                                     size_before3[1:3],
                                                     method='bilinear', align_corners=True))(semseg)
     if activation in {'softmax', 'sigmoid'}:
-        semseg = tf.keras.layers.Activation(activation)(semseg)
+        semseg = tf.keras.layers.Activation(activation,   name="semseg")(semseg)
     from bfseg.models.MultiTaskingModels import MultiTaskModel
-    return MultiTaskModel(inputs = inputs, outputs= [depth, semseg], name="deeplabv3plusMultiTask")
+    # return tf.keras.models.Model(inputs = inputs, outputs= [depth, semseg], name="deeplabv3plusMultiTask")
+    return tf.keras.models.Model(inputs = inputs, outputs= [depth, semseg], name="deeplabv3plusMultiTask")
 
 
 
