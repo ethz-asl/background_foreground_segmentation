@@ -84,7 +84,9 @@ class SemSegWithDepthExperiment(SemSegExperiment):
 
   def compileModel(self, model):
       from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss,ignorant_depth_loss
-      model.compile(loss = [ignorant_depth_loss, ignorant_balanced_cross_entropy_loss])
+      model.compile(loss = [ignorant_depth_loss, ignorant_balanced_cross_entropy_loss],
+                    optimizer=tf.keras.optimizers.Adam(self.config.optimizer_lr)
+                    )
       # model.useIgnorantLosses = True
       # super(SemSegWithDepthExperiment, self).compileModel(model)
       #   model.compile(loss=self.getLoss(),
@@ -93,7 +95,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
 
   def compileNyuModel(self, model):
     model.useIgnorantLosses = False
-    model.compile(optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr))
+    model.compile(loss = [ignorant_depth_loss, ignorant_balanced_cross_entropy_loss],  optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr))
 
   def loss(self):
       def l(*args, **kwargs):
