@@ -15,6 +15,7 @@ from bfseg.data.meshdist.dataLoader import DataLoader
 from bfseg.experiments.SemSegExperiment import SemSegExperiment
 import bfseg.models.MultiTaskingModels as mtm
 from bfseg.utils.NyuDataLoader import NyuDataLoader
+from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss,ignorant_depth_loss
 
 from bfseg.utils.evaluation import scoreAndPlotPredictions
 
@@ -83,7 +84,6 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     # return tf.keras.models.Model(inputs = inp, outputs= [out1, out2])
 
   def compileModel(self, model):
-      from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss,ignorant_depth_loss
       model.compile(loss = [ignorant_depth_loss, ignorant_balanced_cross_entropy_loss],
                     optimizer=tf.keras.optimizers.Adam(self.config.optimizer_lr)
                     )
