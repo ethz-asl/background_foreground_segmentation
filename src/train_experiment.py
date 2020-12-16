@@ -112,11 +112,11 @@ def runExperiment(config, experiment, metricCallback, outFolder):
   experiment.compileModel(model)
 
   callbacks = [
-      tf.keras.callbacks.ModelCheckpoint('./' + outFolder +
-                                         '/model.{epoch:02d}-{val_loss:.2f}.h5',
-                                         save_weights_only=True,
-                                         save_best_only=True,
-                                         mode='min'),
+      # tf.keras.callbacks.ModelCheckpoint('./' + outFolder +
+      #                                    '/model.{epoch:02d}-{val_loss:.2f}.h5',
+      #                                    save_weights_only=True,
+      #                                    save_best_only=True,
+      #                                    mode='min'),
       # Log metrics to sacred
       metricCallback
   ]
