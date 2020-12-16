@@ -8,7 +8,7 @@ import segmentation_models as sm
 from bfseg.utils.utils import str2bool
 from bfseg.utils import NyuDataLoader
 from bfseg.utils.metrics import IgnorantBalancedAccuracyMetric, IgnorantAccuracyMetric, IgnorantBalancedMeanIoU, \
-    IgnorantMeanIoU
+    IgnorantMeanIoU, IgnorantDepthMAPE
 from bfseg.utils.losses import ignorant_cross_entropy_loss, ignorant_balanced_cross_entropy_loss
 from bfseg.data.meshdist.dataLoader import DataLoader
 
@@ -95,7 +95,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
 
   def compileNyuModel(self, model):
     model.useIgnorantLosses = False
-    model.compile(loss = [ignorant_depth_loss, ignorant_balanced_cross_entropy_loss],  optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr))
+    model.compile(loss = [ignorant_depth_loss, ignorant_balanced_cross_entropy_loss],  optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr), metrics = {'depth': [IgnorantDepthMAPE()], 'semseg': [IgnorantBalancedAccuracyMetric(), IgnorantAccuracyMetric(), IgnorantMeanIoU(), IgnorantBalancedMeanIoU()]})
 
   def loss(self):
       def l(*args, **kwargs):
