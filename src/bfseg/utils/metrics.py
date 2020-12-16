@@ -13,7 +13,7 @@ class IgnorantDepthMAPE(tf.keras.metrics.MeanAbsolutePercentageError):
     y_pred_depth_ignorant = tf.where(tf.math.is_nan(depth_label), tf.zeros_like(depth_label), y_pred_depth)
     depth_label = tf.where(tf.math.is_nan(depth_label), tf.zeros_like(depth_label), depth_label)
 
-    return super(IgnorantDepthMAPE, self).metric.update_state(depth_label,
+    return super(IgnorantDepthMAPE, self).update_state(depth_label,
                                     y_pred_depth,
                                     sample_weight=weights)
 
@@ -21,7 +21,7 @@ class IgnorantDepthMAPE(tf.keras.metrics.MeanAbsolutePercentageError):
     return super(IgnorantDepthMAPE, self).result()
 
   def reset_states(self):
-    return super(IgnorantDepthMAPE, self).metric.reset_states()
+    return super(IgnorantDepthMAPE, self).reset_states()
 
 
 class IgnorantMetricsWrapper(tf.keras.metrics.Metric):
