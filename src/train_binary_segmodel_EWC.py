@@ -3,7 +3,6 @@ import tensorflow_datasets as tfds
 from Nyu_depth_v2_labeled.Nyu_depth_v2_labeled import NyuDepthV2Labeled
 import segmentation_models as sm
 from tensorflow import keras
-# import tensorflow.keras.preprocessing.image as Image
 import os
 import numpy as np
 import datetime
@@ -118,6 +117,7 @@ class Model:
         self.new_model = keras.Model(
             inputs=self.model.input,
             outputs=[self.encoder.output, self.model.output])
+        
         self.old_encoder, _ = sm.Unet(backbone,
                                       input_shape=(480, 640, 3),
                                       classes=2,
@@ -142,10 +142,42 @@ class Model:
                                                    dtype=tf.float32)
         self.acc_metric = keras.metrics.Accuracy('accuracy')
 
+    def create_old_params(self):
+        self.old_params = []
+        for param in self.new_model.trainable_weights:
+            old_param_name = param.name.replace(':0', '_old')
+            self.old_params.append(tf.Variable(param.value,trainable=False,name=old_param_name))
+
+    def create_fisher_params(self, dataset, num_batch):
+        self.fisher_params = []
+        log_liklihoods = []
+        for step, (x, y) in enumerate(dataset):
+            if step > num_batch:
+                break
+            with tf.GradientTape() as tape:
+                [_, pred_y] = self.new_model(x, training=True)
+                log_y = tf.log(pred_y)
+                y = tf.cast(y,log_y.dtype)
+                log_liklihood = tf.reduce_mean(y*log_y[:,:,:,1]+(1-y)*log_y[:,:,:,0],axis=[1,2])
+                log_liklihoods.append(log_liklihood)
+            log_likelihood = tf.reduce_mean(tf.concat(log_liklihoods))
+            grads = tape.gradient(log_likelihood, self.new_model.trainable_weights)
+            fisher_param_names = [param.name.replace(':0', '_fisher') for param in self.new_model.trainable_weights]
+            for param_name, param in zip(fisher_param_names, grads):
+                self.fisher_params.append(tf.Variable(tf.square(param).value,trainable=False,name=param_name))
+
+    def compute_consolidation_loss(self):
+        try:
+            losses = []
+            for i, param in enumerate(self.new_model.trainable_weights):
+                losses.append(tf.reduce_sum(self.fisher_params[i] * (param - self.old_params[i])**2)))
+            return tf.reduce_sum(losses)
+        except AttributeError:
+            return 0
+
     def train_step(self, train_x, train_y):
         with tf.GradientTape() as tape:
             [pred_feature, pred_y] = self.new_model(train_x, training=True)
-            print(pred_y.shape)
             output_loss = self.loss_ce(train_y, pred_y)
             old_feature = self.old_encoder(train_x, training=False)
             feature_loss = self.loss_mse(old_feature, pred_feature)
@@ -154,7 +186,7 @@ class Model:
         grads = tape.gradient(loss, self.new_model.trainable_weights)
         self.optimizer.apply_gradients(
             zip(grads, self.new_model.trainable_weights))
-        pred_y = keras.backend.argmax(pred_y, axis=-1)
+        pred_y = tf.math.argmax(pred_y, axis=-1)
         self.loss_tracker.update_state(loss)
         self.loss_ce_tracker.update_state(output_loss)
         self.loss_mse_tracker.update_state(feature_loss)
@@ -167,7 +199,7 @@ class Model:
         feature_loss = self.loss_mse(old_feature, pred_feature)
         loss = (1 - self.lambda_distillation
                 ) * output_loss + self.lambda_distillation * feature_loss
-        pred_y = keras.backend.argmax(pred_y, axis=-1)
+        pred_y = tf.math.argmax(pred_y, axis=-1)
         # Update val/test metrics
         self.loss_tracker.update_state(loss)
         self.loss_ce_tracker.update_state(output_loss)
@@ -175,11 +207,11 @@ class Model:
         self.acc_metric.update_state(test_y, pred_y)
 
     def on_epoch_end(self, summary_writer, epoch, mode):
-        # if mode == "Val":
-        #     self.model.save(
-        #         os.path.join(
-        #             self.model_save_dir, 'model.' + str(epoch) + '-' +
-        #             str(self.acc_metric.result().numpy())[:5] + '.h5'))
+        if mode == "Val":
+            self.model.save(
+                os.path.join(
+                    self.model_save_dir, 'model.' + str(epoch) + '-' +
+                    str(self.acc_metric.result().numpy())[:5] + '.h5'))
         with summary_writer.as_default():
             tf.summary.scalar('loss,lambda=' + str(self.lambda_distillation),
                               self.loss_tracker.result(),
@@ -220,10 +252,10 @@ def main():
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     print("Current time is "+current_time)
     log_dir = os.path.join(
-        'exp', 'lambda' + str(lambda_distillation) + "-epoch" + str(epochs),
+        'exp_EWC', 'lambda' + str(lambda_distillation) + "-epoch" + str(epochs),
         'logs', step)
     model_save_dir = os.path.join(
-        'exp', 'lambda' + str(lambda_distillation) + "-epoch" + str(epochs),
+        'exp_EWC', 'lambda' + str(lambda_distillation) + "-epoch" + str(epochs),
         'saved_model', step)
     if step == "step1":
         saved_weights_dir = None
@@ -246,6 +278,8 @@ def main():
                   backbone=BACKBONE,
                   weights=saved_weights_dir)
     #   model.new_model.summary()
+    model.create_old_params()
+    model.create_fisher_params(test_ds, num_batch=100)
     for epoch in range(epochs):
         print("\nStart of epoch %d" % (epoch, ))
         for step, (train_x, train_y) in enumerate(train_ds):
