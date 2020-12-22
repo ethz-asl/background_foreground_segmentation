@@ -3,7 +3,7 @@ ignorePointcloud: false
 # Topic where point cloud with distance information is published
 cloudTopic: /distance_pc
 # In which frame is the cloud published?
-cloudFrame: /map
+cloudFrame: /world
 cameraImageTopic: /rgb/image_raw
 cameraInfoTopic: /rgb/camera_info
 cameraFrame: /rgb_camera_link

@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-class IgnorantDepthMAPE(tf.keras.metrics.MeanAbsolutePercentageError):
+class IgnorantDepthMAPE(tf.keras.metrics.MeanAbsoluteError):
   """
   Wraps any keras metric to ignore a specific class or balance the weights
   """

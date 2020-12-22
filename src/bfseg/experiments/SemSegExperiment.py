@@ -22,7 +22,7 @@ class SemSegExperiment(Experiment):
     # Ugly solution to not always change paths. Should be removed before merging into master
     # if "local" in os.environ or True:
     #   # self.config.train_path = "/home/rene/cla_dataset/water
-    #   shed/"
+    # #   shed/"
     # self.config.train_path = "/home/rene/vicon_dataset/rotated/"
     # self.config.validation_path = '/home/rene/hiveLabels/'
 
@@ -71,6 +71,11 @@ class SemSegExperiment(Experiment):
                         default='PSP',
                         choices=['PSP', 'UNET', 'DEEPLAB'],
                         help='CNN architecture')
+
+    parser.add_argument('--output_stride',
+                        type=int,
+                        default=8,
+                        help='Output stride, only for Deeplab model')
     parser.add_argument(
         '--backbone',
         type=str,

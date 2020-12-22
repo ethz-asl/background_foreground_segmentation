@@ -17,6 +17,7 @@ import bfseg.models.MultiTaskingModels as mtm
 from bfseg.utils.NyuDataLoader import NyuDataLoader
 from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss,ignorant_depth_loss
 
+from bfseg.utils.losses import smooth_consistency_loss
 from bfseg.utils.evaluation import scoreAndPlotPredictions
 
 class SemSegWithDepthExperiment(SemSegExperiment):
@@ -25,12 +26,11 @@ class SemSegWithDepthExperiment(SemSegExperiment):
   def __init__(self):
     super(SemSegWithDepthExperiment, self).__init__()
     # Get a dataloader to load training images
-    # Get a dataloader to load training images
     self.dl = DataLoader(self.config.train_path,
                          [self.config.image_h, self.config.image_w],
                          validationDir=self.config.validation_path,
                          validationMode=self.config.validation_mode,
-                         batchSize=self.config.batch_size, loadDepth=True)
+                         batchSize=self.config.batch_size, loadDepth=True, cropOptions={'top':0, 'bottom':0})
 
     self.nyuLoader = NyuDataLoader( self.config.nyu_batchsize, (self.config.image_w, self.config.image_h), loadDepth = True)
 
@@ -43,8 +43,12 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     super(SemSegWithDepthExperiment, self)._addArguments(parser)
 
     # Change default image size since we are now using the kinect
-    parser.add_argument('--image_w', type=int, default=480)
+    parser.add_argument('--image_w', type=int, default=640)
     parser.add_argument('--image_h', type=int, default=480)
+
+    parser.add_argument('--depth_weigth', type=float, default=4)
+    parser.add_argument('--semseg_weight', type=float, default=1)
+    parser.add_argument('--consistency_weight', type=float, default=10)
 
   def getNyuTrainData(self):
     """ Return training data from NYU. In order to scale the images to the right format, a custom dataloader
@@ -69,7 +73,10 @@ class SemSegWithDepthExperiment(SemSegExperiment):
                         classes=2)
       model.summary()
       return model
-    return mtm.Deeplabv3(input_shape=(self.config.image_h, self.config.image_w,  3),classes=2, activation="sigmoid")
+
+    model =  mtm.Deeplabv3(input_shape=(self.config.image_h, self.config.image_w,  3),classes=2, OS=self.config.output_stride, activation="sigmoid")
+
+    return model
     #
     # elif self.config.model_name == "DEEPLAB":
     #   from bfseg.models.deeplab import Deeplabv3
@@ -84,12 +91,25 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     # return tf.keras.models.Model(inputs = inp, outputs= [out1, out2])
 
   def compileModel(self, model):
-      model.compile(loss = [ignorant_depth_loss, ignorant_balanced_cross_entropy_loss],
+      depth_output = model.get_layer("depth").output
+      semseg_output = model.get_layer("semseg").output
+      consistency_loss =  smooth_consistency_loss(depth_output, semseg_output, 0) + smooth_consistency_loss(depth_output, semseg_output, 1)
+      # model.add_loss(consistency_loss)
+      # depth_loss = ignorant_depth_loss()
+      # cross_entropy = ignorant_balanced_cross_entropy_loss()
+      # model.add_loss(depth_loss)
+      # model.add_loss(cross_entropy)
+
+
+      model.compile(
+                    loss = {'depth':ignorant_depth_loss, 'semseg': ignorant_balanced_cross_entropy_loss, "combined" : self.loss()},
+                    loss_weights= {'depth': self.config.depth_weigth, 'semseg': self.config.semseg_weight, 'combined': self.config.consistency_weight},
                     optimizer=tf.keras.optimizers.Adam(self.config.optimizer_lr),
                     metrics={'depth': [IgnorantDepthMAPE()],
                              'semseg': [IgnorantBalancedAccuracyMetric(), IgnorantAccuracyMetric(), IgnorantMeanIoU(),
                                         IgnorantBalancedMeanIoU()]}
       )
+      # print(model.outputs)
       # model.useIgnorantLosses = True
       # super(SemSegWithDepthExperiment, self).compileModel(model)
       #   model.compile(loss=self.getLoss(),
@@ -98,20 +118,22 @@ class SemSegWithDepthExperiment(SemSegExperiment):
 
   def compileNyuModel(self, model):
     model.useIgnorantLosses = False
-    model.compile(loss = [ignorant_depth_loss, ignorant_balanced_cross_entropy_loss],  optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr), metrics = {'depth': [IgnorantDepthMAPE()], 'semseg': [IgnorantBalancedAccuracyMetric(), IgnorantAccuracyMetric(), IgnorantMeanIoU(), IgnorantBalancedMeanIoU()]})
+    model.compile(
+                    loss = {'depth':ignorant_depth_loss, 'semseg': ignorant_balanced_cross_entropy_loss, "combined" : ignorant_balanced_cross_entropy_loss}, optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr), metrics = {'depth': [IgnorantDepthMAPE()], 'semseg': [IgnorantBalancedAccuracyMetric(), IgnorantAccuracyMetric(), IgnorantMeanIoU(), IgnorantBalancedMeanIoU()]})
 
   def loss(self):
-      def l(*args, **kwargs):
-          print(args)
-          print(kwargs)
-          return 0#tf.keras.losses.sparse_categorical_crossentropy(y_true, y_pred)
+      def l(y_true = None, y_pred = None):
+          depth_pred  = y_pred[..., 0]
+          semseg_pred  = tf.argmax(tf.gather(y_pred, tf.constant([1,2]) ,axis = -1), axis = -1)
+          consistency_loss =  smooth_consistency_loss(depth_pred, semseg_pred, 0) + smooth_consistency_loss(depth_pred, semseg_pred, 1)
+          return consistency_loss
       return l
 
   def lossMSE(self):
-      def l(y_true, y_pred):
-          print(y_pred, "mse")
-          print(y_true, "mse")
-          return tf.keras.losses.mean_squared_logarithmic_error(y_true, y_pred)
+      def l(depth, semseg):
+          print(depth, "mse")
+          print(semseg, "mse")
+          return smooth_consistency_loss(depth, semseg, 0) + smooth_consistency_loss(depth, semseg, 1)
 
       return l
   def getLoss(self):

@@ -16,13 +16,15 @@ class DataLoader:
                  batchSize=4,
                  shuffleBufferSize=64,
                  validationMode="all",
-                 loadDepth = True):
+                 loadDepth = True,
+                 cropOptions = {'top': 0.1, 'bottom':0.1}):
 
         self.workingDir = workingDir
         self.batchSize = batchSize
         self.shuffleBufferSize = shuffleBufferSize
         self.inputSize = inputSize
         self.loadDepth = loadDepth
+        self.cropOptions = cropOptions
 
         if outputSize is None:
             self.outputSize = inputSize
@@ -159,18 +161,23 @@ class DataLoader:
 
         # todo rescale
         depth_cropped = tf.cast(self.cropImageToInputSize(depths, self.outputSize, method="nearest"), dtype=tf.float32)
+        # Zero mean unit variance distribution
         depth_norm =  (tf.cast(depth_cropped, dtype=tf.float32) - 255.0)/ 131.218
         depth_norm_2 = tf.where(tf.equal(depth_cropped, tf.constant(0, dtype=tf.float32)), tf.constant(float('nan'), dtype=tf.float32), depth_norm)
-        return cropped_image, {'depth': depth_norm_2, 'semseg': cropped_semseg_labels}
+        return cropped_image, {'depth': depth_norm_2, 'semseg': cropped_semseg_labels, 'combined': cropped_semseg_labels}
 
     def cropImageToInputSize(self, image, size, method="bilinear"):
         """ Crop image. Removes a little bit from the top of the image, as any won't have labels for this area """
         image_h, image_w, _ = tf.unstack(tf.shape(image))
         image_w = tf.cast(image_w, tf.float64)
         image_h = tf.cast(image_h, tf.float64)
+
+        top_percentage = self.cropOptions['top']
+        bot_percentage = self.cropOptions['bottom']
+
         # Remove top 10 and bottom 10%
-        cut_top = tf.cast(image_h * 0.1, tf.int32)
-        crop_height = tf.cast(0.8 * image_h, tf.int32)
+        cut_top = tf.cast(image_h * top_percentage, tf.int32)
+        crop_height = tf.cast((1-top_percentage - bot_percentage) * image_h, tf.int32)
 
         # Calculate width of cropped image to have the right shape
         aspect_ratio = size[1] / size[0]

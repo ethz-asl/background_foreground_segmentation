@@ -486,9 +486,14 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
                                                     method='bilinear', align_corners=True))(semseg)
     if activation in {'softmax', 'sigmoid'}:
         semseg = tf.keras.layers.Activation(activation,   name="semseg")(semseg)
-    from bfseg.models.MultiTaskingModels import MultiTaskModel
-    # return tf.keras.models.Model(inputs = inputs, outputs= [depth, semseg], name="deeplabv3plusMultiTask")
-    return tf.keras.models.Model(inputs = inputs, outputs= [depth, semseg], name="deeplabv3plusMultiTask")
+
+    # Pseudo output only used for smooth consistency loss
+    combined = tf.keras.layers.concatenate([depth, semseg], axis = -1, name = "combined")
+    model =  tf.keras.models.Model(inputs = inputs, outputs= [depth, semseg, combined], name="deeplabv3plusMultiTask")
+
+
+
+    return model
 
 
 
