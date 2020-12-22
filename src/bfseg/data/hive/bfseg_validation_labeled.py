@@ -1,11 +1,17 @@
+<<<<<<< HEAD
 """Nyu_depth_v2_labeled dataset."""
+=======
+>>>>>>> origin/feature/hiveValidationDataset
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import numpy as np
 import os
 
 from bfseg.utils.utils import load_gdrive_file
+<<<<<<< HEAD
 from skimage.transform import resize
+=======
+>>>>>>> origin/feature/hiveValidationDataset
 
 _DESCRIPTION = """
 This dataset contains data from the ARCHE as well as the CLA building.
@@ -24,11 +30,16 @@ class BfsegValidationLabeled(tfds.core.GeneratorBasedBuilder):
   VERSION = tfds.core.Version('1.0.0')
   RELEASE_NOTES = {'1.0.0': 'Initial release.'}
 
+<<<<<<< HEAD
   # MANUAL_DOWNLOAD_INSTRUCTIONS = 1
 
   def _info(self) -> tfds.core.DatasetInfo:
     """Returns the dataset metadata."""
     # TODO(Nyu_depth_v2_labeled): Specifies the tfds.core.DatasetInfo object
+=======
+  def _info(self) -> tfds.core.DatasetInfo:
+    """Returns the dataset metadata."""
+>>>>>>> origin/feature/hiveValidationDataset
     return tfds.core.DatasetInfo(
         builder=self,
         description=_DESCRIPTION,
