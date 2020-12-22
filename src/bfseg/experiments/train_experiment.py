@@ -88,8 +88,10 @@ def runExperiment(config, experiment, metricCallback, outFolder):
   model = experiment.getModel()
 
   weightsFolder = "./pretrained_nyu_weights_" + config.backbone + "_" + config.model_name
+  if isinstance(experiment, SemSegWithDepthExperiment):
+      weightsFolder = weightsFolder +  "_with_depth"
 
-  if config.train_from_scratch:
+  if config.train_from_scratch or not os.path.exists(weightsFolder):
     # pretrain model on nyu data
     pretrainNyu(model, config, weightsFolder, experiment)
   else:

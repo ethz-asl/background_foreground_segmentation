@@ -1,4 +1,5 @@
 import os
+
 os.environ["SM_FRAMEWORK"] = "tf.keras"
 
 import tensorflow as tf
@@ -15,140 +16,139 @@ from bfseg.data.meshdist.dataLoader import DataLoader
 from bfseg.experiments.SemSegExperiment import SemSegExperiment
 import bfseg.models.MultiTaskingModels as mtm
 from bfseg.utils.NyuDataLoader import NyuDataLoader
-from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss,ignorant_depth_loss
+from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss, ignorant_depth_loss
 
 from bfseg.utils.losses import smooth_consistency_loss
 from bfseg.utils.evaluation import scoreAndPlotPredictions
 
+
 class SemSegWithDepthExperiment(SemSegExperiment):
-  """ Experiment to train ForegroundBackground Semantic Segmentation on meshdist train data """
+    """ Experiment to train ForegroundBackground Semantic Segmentation on meshdist train data """
 
-  def __init__(self):
-    super(SemSegWithDepthExperiment, self).__init__()
-    # Get a dataloader to load training images
-    self.dl = DataLoader(self.config.train_path,
-                         [self.config.image_h, self.config.image_w],
-                         validationDir=self.config.validation_path,
-                         validationMode=self.config.validation_mode,
-                         batchSize=self.config.batch_size, loadDepth=True, cropOptions={'top':0, 'bottom':0})
+    def __init__(self):
+        super(SemSegWithDepthExperiment, self).__init__()
+        # Get a dataloader to load training images
+        self.dl = DataLoader(self.config.train_path,
+                             [self.config.image_h, self.config.image_w],
+                             validationDir=self.config.validation_path,
+                             validationMode=self.config.validation_mode,
+                             batchSize=self.config.batch_size,
+                             loadDepth=True,
+                             cropOptions={
+                                 'top': 0,
+                                 'bottom': 0
+                             })
 
-    self.nyuLoader = NyuDataLoader( self.config.nyu_batchsize, (self.config.image_w, self.config.image_h), loadDepth = True)
+        self.nyuLoader = NyuDataLoader(self.config.nyu_batchsize,
+                                       (self.config.image_w, self.config.image_h),
+                                       loadDepth=True)
 
-    self.numTestImages = self.dl.validationSize
+        self.numTestImages = self.dl.validationSize
 
+    def _addArguments(self, parser):
+        """ Add custom arguments that are needed for this experiment """
+        super(SemSegWithDepthExperiment, self)._addArguments(parser)
 
+        # Change default image size since we are now using the kinect
+        parser.add_argument('--image_w', type=int, default=640)
+        parser.add_argument('--image_h', type=int, default=480)
+        parser.add_argument('--depth_weigth', type=float, default=4)
+        parser.add_argument('--semseg_weight', type=float, default=1)
+        parser.add_argument('--use_consistency_loss', type=str2bool, default=False)
+        parser.add_argument('--consistency_weight', type=float, default=10)
+        parser.add_argument('--model_name', type=str, default="DEEPLAB")
 
-  def _addArguments(self, parser):
-    """ Add custom arguments that are needed for this experiment """
-    super(SemSegWithDepthExperiment, self)._addArguments(parser)
+        parser.add_argument(
+            '--backbone',
+            type=str,
+            default='xception',
+            choices=[
+                "xception", "mobile"
+            ],
+            help='CNN architecture')
 
-    # Change default image size since we are now using the kinect
-    parser.add_argument('--image_w', type=int, default=640)
-    parser.add_argument('--image_h', type=int, default=480)
+    def getNyuTrainData(self):
+        """ Return training data from NYU. In order to scale the images to the right format, a custom dataloader
+                with map function was implemented """
+        train_ds, train_info, valid_ds, _, _, _ = self.nyuLoader.getDataSets()
 
-    parser.add_argument('--depth_weigth', type=float, default=4)
-    parser.add_argument('--semseg_weight', type=float, default=1)
-    parser.add_argument('--consistency_weight', type=float, default=10)
+        steps_per_epoch = train_info.splits[
+                              'train'].num_examples // self.config.nyu_batchsize
+        return train_ds, valid_ds, steps_per_epoch
 
-  def getNyuTrainData(self):
-    """ Return training data from NYU. In order to scale the images to the right format, a custom dataloader
-            with map function was implemented """
-    train_ds, train_info, valid_ds, valid_info, test_ds, test_info = self.nyuLoader.getDataSets()
+    def getTrainData(self):
+        """ return train_ds, test_ds """
+        return self.dl.getDataset()
 
-    steps_per_epoch = train_info.splits[
-        'train'].num_examples // self.config.nyu_batchsize
-    return train_ds, valid_ds, steps_per_epoch
+    def getModel(self):
+        if self.config.model_name != "DEEPLAB":
+            raise ValueError("Only DEEPLAB is supported as model for depth prediction")
 
-  def getTrainData(self):
-    """ return train_ds, test_ds """
-    return self.dl.getDataset()
+        model = mtm.Deeplabv3(input_shape=(self.config.image_h, self.config.image_w, 3),
+                              classes=2,
+                              OS=self.config.output_stride,
+                              activation="sigmoid")
 
-  def getModel(self):
-    if self.config.model_name == "PSP":
-      print("buliding PSP model")
-      #input = tf.keras.layers.Input(shape = (self.config.image_h, self.config.image_w, 3), name="image")
-      model = mtm.PSPNet(self.config.backbone,
-                        input_shape=(self.config.image_h, self.config.image_w,
-                                     3),
-                        classes=2)
-      model.summary()
-      return model
+        return model
 
-    model =  mtm.Deeplabv3(input_shape=(self.config.image_h, self.config.image_w,  3),classes=2, OS=self.config.output_stride, activation="sigmoid")
+    def compileModel(self, model):
+        loss_weights = {
+            'depth': self.config.depth_weigth,
+            'semseg': self.config.semseg_weight
+        }
 
-    return model
-    #
-    # elif self.config.model_name == "DEEPLAB":
-    #   from bfseg.models.deeplab import Deeplabv3
-    #   model = Deeplabv3(input_shape=(self.config.image_h, self.config.image_w,
-    #                                  3),
-    #                     classes=2)
-    #
-    # inp = tf.keras.layers.Input(shape = (self.config.image_h, self.config.image_w, 3))
-    # out1 = tf.keras.backend.argmax(model(inp), axis = -1)
-    # out2 = model(inp)
-    #
-    # return tf.keras.models.Model(inputs = inp, outputs= [out1, out2])
+        if self.config.use_consistency_loss:
+            loss_weights['combined'] = self.config.consistency_weight
 
-  def compileModel(self, model):
-      depth_output = model.get_layer("depth").output
-      semseg_output = model.get_layer("semseg").output
-      consistency_loss =  smooth_consistency_loss(depth_output, semseg_output, 0) + smooth_consistency_loss(depth_output, semseg_output, 1)
-      # model.add_loss(consistency_loss)
-      # depth_loss = ignorant_depth_loss()
-      # cross_entropy = ignorant_balanced_cross_entropy_loss()
-      # model.add_loss(depth_loss)
-      # model.add_loss(cross_entropy)
+        model.compile(loss=self.getLoss(), loss_weights=loss_weights,
+                      optimizer=tf.keras.optimizers.Adam(self.config.optimizer_lr),
+                      metrics=self.getMetrics())
 
+    def compileNyuModel(self, model):
+        model.useIgnorantLosses = False
+        model.compile(loss={
+            'depth': ignorant_depth_loss,
+            'semseg': ignorant_balanced_cross_entropy_loss
+        },
+            optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr),
+            metrics=self.getMetrics())
 
-      model.compile(
-                    loss = {'depth':ignorant_depth_loss, 'semseg': ignorant_balanced_cross_entropy_loss, "combined" : self.loss()},
-                    loss_weights= {'depth': self.config.depth_weigth, 'semseg': self.config.semseg_weight, 'combined': self.config.consistency_weight},
-                    optimizer=tf.keras.optimizers.Adam(self.config.optimizer_lr),
-                    metrics={'depth': [IgnorantDepthMAPE()],
-                             'semseg': [IgnorantBalancedAccuracyMetric(), IgnorantAccuracyMetric(), IgnorantMeanIoU(),
-                                        IgnorantBalancedMeanIoU()]}
-      )
-      # print(model.outputs)
-      # model.useIgnorantLosses = True
-      # super(SemSegWithDepthExperiment, self).compileModel(model)
-      #   model.compile(loss=self.getLoss(),
-      #                 optimizer=tf.keras.optimizers.Adam(self.config.optimizer_lr),
-      #                 metrics=self.getMetrics())
+    def consistency_loss(self):
+        def loss(y_true=None, y_pred=None):
+            depth_pred = y_pred[..., 0]
+            semseg_pred = tf.argmax(tf.gather(y_pred, tf.constant([1, 2]), axis=-1),
+                                    axis=-1)
+            consistency_loss = smooth_consistency_loss(depth_pred, semseg_pred,
+                                                       0) + smooth_consistency_loss(
+                depth_pred, semseg_pred, 1)
+            return consistency_loss
 
-  def compileNyuModel(self, model):
-    model.useIgnorantLosses = False
-    model.compile(
-                    loss = {'depth':ignorant_depth_loss, 'semseg': ignorant_balanced_cross_entropy_loss, "combined" : ignorant_balanced_cross_entropy_loss}, optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr), metrics = {'depth': [IgnorantDepthMAPE()], 'semseg': [IgnorantBalancedAccuracyMetric(), IgnorantAccuracyMetric(), IgnorantMeanIoU(), IgnorantBalancedMeanIoU()]})
+        return loss
 
-  def loss(self):
-      def l(y_true = None, y_pred = None):
-          depth_pred  = y_pred[..., 0]
-          semseg_pred  = tf.argmax(tf.gather(y_pred, tf.constant([1,2]) ,axis = -1), axis = -1)
-          consistency_loss =  smooth_consistency_loss(depth_pred, semseg_pred, 0) + smooth_consistency_loss(depth_pred, semseg_pred, 1)
-          return consistency_loss
-      return l
+    def getLoss(self):
+        losses = {
+            'depth': ignorant_depth_loss,
+            'semseg': ignorant_balanced_cross_entropy_loss if self.config.loss_balanced else ignorant_cross_entropy_loss()
+        }
 
-  def lossMSE(self):
-      def l(depth, semseg):
-          print(depth, "mse")
-          print(semseg, "mse")
-          return smooth_consistency_loss(depth, semseg, 0) + smooth_consistency_loss(depth, semseg, 1)
+        if self.config.use_consistency_loss:
+            losses['combined'] = self.consistency_loss()
 
-      return l
-  def getLoss(self):
-    return ignorant_balanced_cross_entropy_loss if self.config.loss_balanced else ignorant_cross_entropy_loss
+        return losses
 
-  def getMetrics(self):
-    return [
-        IgnorantBalancedAccuracyMetric(),
-        IgnorantAccuracyMetric(),
-        IgnorantMeanIoU(),
-        IgnorantBalancedMeanIoU(),
-    ]
+    def getMetrics(self):
+        return {
+            'depth': [IgnorantDepthMAPE()],
+            'semseg': [
+                IgnorantBalancedAccuracyMetric(),
+                IgnorantAccuracyMetric(),
+                IgnorantMeanIoU(),
+                IgnorantBalancedMeanIoU()
+            ]
+        }
 
-  def scoreModel(self, model, test_ds):
-      scoreAndPlotPredictions(lambda img: model.predict(img)[1],
-                              test_ds,
-                              self.numTestImages,
-                              plot=False)
+    def scoreModel(self, model, test_ds):
+        scoreAndPlotPredictions(lambda img: model.predict(img)[1],
+                                test_ds,
+                                self.numTestImages,
+                                plot=False)

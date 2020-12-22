@@ -95,7 +95,7 @@ class SemSegExperiment(Experiment):
                         type=str,
                         default='./baseline_model.h5')
     parser.add_argument('--train_from_scratch', type=str2bool, default=False)
-    parser.add_argument('--loss_balanced', type=str2bool, default=False)
+    parser.add_argument('--loss_balanced', type=str2bool, default=True)
     parser.add_argument('--image_w', type=int, default=720)
     parser.add_argument('--image_h', type=int, default=480)
     parser.add_argument('--nyu_batchsize', type=int, default=4)
