@@ -8,7 +8,7 @@ from sacred.observers import MongoObserver
 import tensorflow as tf
 import shutil
 from bfseg.utils.evaluation import scoreAndPlotPredictions
-
+from bfseg.experiments.SemSegWithDepthExperiment import SemSegWithDepthExperiment
 
 def train(experiment):
   """
