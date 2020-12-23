@@ -31,6 +31,10 @@ class Experiment():
                         type=str,
                         help='Name Prefix',
                         default="")
+    parser.add_argument('--output_path',
+                        type=str,
+                        help='Output Path',
+                        default="")
 
   def getNyuTrainData(self):
     """

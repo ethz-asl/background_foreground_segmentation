@@ -42,8 +42,8 @@ def train(experiment):
           db_name='bfseg'))
 
   # Folder where model checkpoints are stored
-  outFolder = experiment_name + "_" + datetime.datetime.now().strftime(
-      '%Y%m%d_%H-%M-%S')
+  outFolder = os.path.join(args.output_path, experiment_name + "_" + datetime.datetime.now().strftime(
+      '%Y%m%d_%H-%M-%S'))
   os.mkdir(experiment_name + "_" +
            datetime.datetime.now().strftime('%Y%m%d_%H-%M-%S'))
 
