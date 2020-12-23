@@ -44,8 +44,7 @@ def train(experiment):
   # Folder where model checkpoints are stored
   outFolder = os.path.join(args.output_path, experiment_name + "_" + datetime.datetime.now().strftime(
       '%Y%m%d_%H-%M-%S'))
-  os.mkdir(experiment_name + "_" +
-           datetime.datetime.now().strftime('%Y%m%d_%H-%M-%S'))
+  os.mkdir(outFolder)
 
   class LogMetrics(tf.keras.callbacks.Callback):
     """
