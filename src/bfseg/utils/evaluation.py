@@ -105,7 +105,8 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True, batch
 
         if exportPredictions:
           imgs_folder = os.path.join(outFolder, "imgs")
-          os.mkdir(imgs_folder)
+          if not os.path.exists(imgs_folder):
+            os.mkdir(imgs_folder)
 
           Image.fromarray(np.uint8(tf.argmax(pred[i], axis=-1)), 'L').save(os.path.join(imgs_folder, "pred_" + img_name))
           Image.fromarray(np.uint8(np.squeeze(test_label[i])), 'L').save(os.path.join(imgs_folder, "gt_" + img_name))
