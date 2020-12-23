@@ -130,6 +130,7 @@ def runExperiment(config, experiment, metricCallback, outFolder):
             callbacks=callbacks)
 
   experiment.scoreModel(model, test_ds)
+  print("Scored model. Finished")
 
 
 def pretrainNyu(model, config, weightsFolder, experiment):

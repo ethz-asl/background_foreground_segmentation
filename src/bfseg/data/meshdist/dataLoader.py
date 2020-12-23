@@ -170,8 +170,8 @@ class DataLoader:
                                                       self.outputSize,
                                                       method="nearest"),
                             dtype=tf.float32)
-    # Zero mean unit variance distribution
-    depth_norm = (tf.cast(depth_cropped, dtype=tf.float32) - 255.0) / 131.218
+    # Convert depth [0,255] to real distance [0m, 10m]
+    depth_norm = ((tf.cast(depth_cropped, dtype=tf.float32) - 1.0) / 25.4)
     depth_norm_2 = tf.where(
         tf.equal(depth_cropped, tf.constant(0, dtype=tf.float32)),
         tf.constant(float('nan'), dtype=tf.float32), depth_norm)

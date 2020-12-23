@@ -16,7 +16,7 @@ from bfseg.data.meshdist.dataLoader import DataLoader
 from bfseg.experiments.SemSegExperiment import SemSegExperiment
 import bfseg.models.MultiTaskingModels as mtm
 from bfseg.utils.NyuDataLoader import NyuDataLoader
-from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss, ignorant_depth_loss
+from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss, ignorant_depth_loss, depth_loss_function
 
 from bfseg.utils.losses import smooth_consistency_loss
 from bfseg.utils.evaluation import scoreAndPlotPredictions
@@ -107,11 +107,11 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     def compileNyuModel(self, model):
         model.useIgnorantLosses = False
         model.compile(loss={
-            'depth': ignorant_depth_loss,
-            'semseg': ignorant_balanced_cross_entropy_loss
+            'depth': depth_loss_function,
+            'semseg': tf.keras.losses.sparse_categorical_crossentropy
         },
             optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr),
-            metrics=self.getMetrics())
+            metrics= [tf.keras.metrics.MeanAbsoluteError(), tf.keras.metrics.SparseCategoricalAccuracy()])
 
     def consistency_loss(self):
         def loss(y_true=None, y_pred=None):
