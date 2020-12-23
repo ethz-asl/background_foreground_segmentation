@@ -82,7 +82,7 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True, batch
 
       # Update Accuracy metrics
       iam_value = oneMetricIteration(iam, test_label[i, ...], pred[i, ...])
-      ibm_value = oneMetricIteration(iam, test_label[i, ...], pred[i, ...])
+      ibm_value = oneMetricIteration(ibm, test_label[i, ...], pred[i, ...])
       iam_valid.update_state(test_label[i, ...], pred[i, ...])
       ibm_valid.update_state(test_label[i, ...], pred[i, ...])
 
