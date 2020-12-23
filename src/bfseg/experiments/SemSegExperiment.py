@@ -23,8 +23,8 @@ class SemSegExperiment(Experiment):
     # if "local" in os.environ or True:
     #   # self.config.train_path = "/home/rene/cla_dataset/water
     # #   shed/"
-    # self.config.train_path = "/home/rene/vicon_dataset/rotated/"
-    # self.config.validation_path = '/home/rene/hiveLabels/'
+    self.config.train_path = "/home/rene/vicon_dataset/rotated/"
+    self.config.validation_path = '/home/rene/hiveLabels/'
 
     # Get a dataloader to load training images
     self.dl = DataLoader(self.config.train_path,
@@ -60,7 +60,7 @@ class SemSegExperiment(Experiment):
                         help='Number of training epochs')
     parser.add_argument('--batch_size',
                         type=int,
-                        default=4,
+                        default=1,
                         help='Number of samples in a batch for training')
     parser.add_argument('--optimizer_lr',
                         type=float,
@@ -74,7 +74,7 @@ class SemSegExperiment(Experiment):
 
     parser.add_argument('--output_stride',
                         type=int,
-                        default=8,
+                        default=16,
                         help='Output stride, only for Deeplab model')
     parser.add_argument(
         '--backbone',

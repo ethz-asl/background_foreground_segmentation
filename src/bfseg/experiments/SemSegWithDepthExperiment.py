@@ -159,18 +159,20 @@ class SemSegWithDepthExperiment(SemSegExperiment):
             ]
         }
 
-    def scoreModel(self, model):
+    def scoreModel(self, model, outFolder = None, exportImages = False, tag = ""):
         print("=========== Evaluating Model on CLA =========")
         scoreAndPlotPredictions(lambda img: model.predict(img)[1],
                                 self.dl.getValidationDataset(),
                                 self.dl.validationSize,
                                 plot=False,
-                                batchSize = self.config.batch_size)
+                                batchSize = self.config.batch_size,
+                                outFolder=outFolder, tag = tag + "CLA", exportPredictions = exportImages)
 
         print("=========== Evaluating Model on ARCHE ===========")
         scoreAndPlotPredictions(lambda img: model.predict(img)[1],
                                 self.dl.getValidationDataset(),
                                 self.dl_arche.validationSize,
                                 plot=False,
-                                batchSize = self.config.batch_size)
+                                batchSize = self.config.batch_size,
+                                outFolder=outFolder, tag=tag + "ARCHE",  exportPredictions = exportImages)
 

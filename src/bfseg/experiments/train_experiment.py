@@ -106,7 +106,7 @@ def runExperiment(config, experiment, metricCallback, outFolder):
 
   # Score and plot model for pretrained weights. Can also be removed, but shows if our training improves the model
   print("Scoring pretrained model")
-  experiment.scoreModel(model)
+  experiment.scoreModel(model, outFolder, tag = "nyu")
 
 
   print("Training model")
@@ -128,8 +128,9 @@ def runExperiment(config, experiment, metricCallback, outFolder):
             epochs=config.num_epochs,
             # validation_data=test_ds,
             callbacks=callbacks)
+  model.save(outFolder + "/model.h5")
 
-  experiment.scoreModel(model)
+  experiment.scoreModel(model, outFolder, exportImages = True, tag = "vicon")
   print("Scored model. Finished")
 
 

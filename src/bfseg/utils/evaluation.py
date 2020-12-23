@@ -1,7 +1,9 @@
 from bfseg.utils.metrics import IgnorantBalancedMeanIoU, IgnorantMeanIoU, IgnorantBalancedAccuracyMetric, IgnorantAccuracyMetric
 import tensorflow as tf
 import matplotlib.pyplot as plt
-
+import os
+from PIL import Image
+import numpy as np
 
 def oneMetricIteration(metric, label, pred):
   """ Helper function to get the result from one prediction """
@@ -11,7 +13,7 @@ def oneMetricIteration(metric, label, pred):
   return res
 
 
-def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True, batchSize = 5):
+def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True, batchSize = 5, outFolder = None, tag = "", exportPredictions = False):
   """
   Calculates different metrices for the validation set provided by the dataloader.
   Also plots predictions if plot = True
@@ -55,11 +57,13 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True, batch
   cnt = 0
   for test_img, test_label in test_ds.take(batches):
     pred = imageCallback(test_img)
+
     for i in range(pred.shape[0]):
       if plot:
         plt.subplot(batches, 5, i + cnt * batches + 1)
         plt.imshow(tf.argmax(pred[i], axis=-1))
         plt.imshow(test_img[i], alpha=0.7)
+
       # Convert prediction to categorical form
       pred_categorical = tf.argmax(pred[i], axis=-1)
 
@@ -93,6 +97,20 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True, batch
             f"mIoU: {mIoU:.4f}, mIoU_B: {mIoU_B:.4f}\nIAM: {iam_value:.4f}, IBM: {ibm_value:.4f}\nTPR: {TP / (FP + FN):.4f}, TNR {TN / (TN + FP):.4f} "
         )
 
+      if outFolder is not None:
+        img_name = tag + "_" + str(i + cnt * batches).zfill(3) + ".png"
+
+        with open(os.path.join(outFolder, "results_one_by_one_" + tag + ".csv"), "a+") as f:
+          f.write(f"{img_name},{iam_value:.4f},{ibm_value:.4f},{mIoU:.4f},{mIoU_B:.4f}\n")
+
+        if exportPredictions:
+          imgs_folder = os.path.join(outFolder, "imgs")
+          os.mkdir(imgs_folder)
+
+          Image.fromarray(np.uint8(tf.argmax(pred[i], axis=-1)), 'L').save(os.path.join(imgs_folder, "pred_" + img_name))
+          Image.fromarray(np.uint8(np.squeeze(test_label[i])), 'L').save(os.path.join(imgs_folder, "gt_" + img_name))
+          Image.fromarray(np.uint8(test_img[i]*255)).save(os.path.join(imgs_folder, "img_" + img_name))
+
     cnt += 1
 
   FP = FPM_valid.result().numpy()
@@ -100,11 +118,21 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True, batch
   TN = TNM_valid.result().numpy()
   TP = TPM_valid.result().numpy()
 
-  print("Accuracy on validation set:", iam_valid.result().numpy())
-  print("mIoU on validation set:", MIOUM_valid.result().numpy())
-  print("Balanced mIoU on validation set:", MIOUM_B_valid.result().numpy())
-  print("Balanced Accuracy on validation set:", ibm_valid.result().numpy())
+  iam_valid_value = iam_valid.result().numpy()
+  MIOUM_valid_value = MIOUM_valid.result().numpy()
+  ibm_valid_value = ibm_valid.result().numpy()
+  MIOUM_B_valid_value = MIOUM_B_valid.result().numpy()
+
+  print("Accuracy on validation set:", iam_valid_value)
+  print("Balanced Accuracy on validation set:", ibm_valid_value)
+  print("mIoU on validation set:", MIOUM_valid_value)
+  print("Balanced mIoU on validation set:", MIOUM_B_valid_value)
+
   print("Positive = Foreground, Negative = Background")
   print("TPR on validation set:", TP / (TP + FN))
   print("TNR on validation set:", TN / (TN + FP))
   print("Precision  on validation set:", TP / (TP + FP))
+
+  if outFolder is not None:
+    with open(os.path.join(outFolder,"results.csv"), "a+") as f:
+      f.write(f"{tag},{iam_valid_value:.4f},{ibm_valid_value:.4f},{MIOUM_valid_value:.4f},{MIOUM_B_valid_value:.4f}\n")
