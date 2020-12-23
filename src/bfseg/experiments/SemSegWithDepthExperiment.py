@@ -31,7 +31,19 @@ class SemSegWithDepthExperiment(SemSegExperiment):
         self.dl = DataLoader(self.config.train_path,
                              [self.config.image_h, self.config.image_w],
                              validationDir=self.config.validation_path,
-                             validationMode=self.config.validation_mode,
+                             validationMode= "CLA",
+                             batchSize=self.config.batch_size,
+                             loadDepth=True,
+                             cropOptions={
+                                 'top': 0,
+                                 'bottom': 0
+                             })
+
+        # Get a dataloader to load training images
+        self.dl_arche = DataLoader(self.config.train_path,
+                             [self.config.image_h, self.config.image_w],
+                             validationDir=self.config.validation_path,
+                             validationMode="ARCHE",
                              batchSize=self.config.batch_size,
                              loadDepth=True,
                              cropOptions={
@@ -147,8 +159,18 @@ class SemSegWithDepthExperiment(SemSegExperiment):
             ]
         }
 
-    def scoreModel(self, model, test_ds):
+    def scoreModel(self, model):
+        print("=========== Evaluating Model on CLA =========")
         scoreAndPlotPredictions(lambda img: model.predict(img)[1],
-                                test_ds,
-                                self.numTestImages,
-                                plot=False)
+                                self.dl.getValidationDataset(),
+                                self.dl.validationSize,
+                                plot=False,
+                                batchSize = self.config.batch_size)
+
+        print("=========== Evaluating Model on ARCHE ===========")
+        scoreAndPlotPredictions(lambda img: model.predict(img)[1],
+                                self.dl.getValidationDataset(),
+                                self.dl_arche.validationSize,
+                                plot=False,
+                                batchSize = self.config.batch_size)
+

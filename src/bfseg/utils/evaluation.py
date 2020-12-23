@@ -11,7 +11,7 @@ def oneMetricIteration(metric, label, pred):
   return res
 
 
-def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True):
+def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True, batchSize = 5):
   """
   Calculates different metrices for the validation set provided by the dataloader.
   Also plots predictions if plot = True
@@ -51,7 +51,7 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True):
   MIOUM_B_valid = IgnorantBalancedMeanIoU()
   MIOUM_valid = IgnorantMeanIoU()
 
-  batches = num_images // 5 - 1
+  batches = num_images // batchSize #- 1
   cnt = 0
   for test_img, test_label in test_ds.take(batches):
     pred = imageCallback(test_img)
