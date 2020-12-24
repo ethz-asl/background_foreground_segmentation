@@ -39,7 +39,10 @@ class Experiment():
       # pretrain model on nyu data
       self.pretrainNyu(model, self.weightsFolder)
     else:
-      model.load_weights(weightsFolder + '/weights.h5')
+      try:
+        model.load_weights(weightsFolder + '/weights.h5')
+      except Exception as e:
+          print("Could not load pretrained weights. Starting with random ones.", e)
 
     # Get custom training data from experiment
     train_ds, test_ds = self.getTrainData()

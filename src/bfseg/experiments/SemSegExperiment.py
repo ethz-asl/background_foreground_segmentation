@@ -141,7 +141,7 @@ class SemSegExperiment(Experiment):
                       classes=2)
 
     elif self.config.model_name == "DEEPLAB":
-      from bfseg.models.deeplab import Deeplabv3
+      from bfseg.models.DeeplaabV3Plus import Deeplabv3
       model = Deeplabv3(input_shape=(self.config.image_h, self.config.image_w,
                                      3),
                         classes=2)

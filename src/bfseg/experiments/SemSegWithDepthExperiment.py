@@ -11,11 +11,11 @@ from bfseg.utils.metrics import IgnorantBalancedAccuracyMetric, IgnorantAccuracy
 from bfseg.utils.losses import ignorant_cross_entropy_loss, ignorant_balanced_cross_entropy_loss
 from bfseg.data.meshdist.dataLoader import DataLoader
 from bfseg.experiments.SemSegExperiment import SemSegExperiment
-import bfseg.models.MultiTaskingModels as mtm
 from bfseg.utils.NyuDataLoader import NyuDataLoader
 from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss, ignorant_depth_loss, depth_loss_function
 from bfseg.utils.losses import smooth_consistency_loss
 from bfseg.utils.evaluation import scoreAndPlotPredictions
+from bfseg.models.DeeplaabV3Plus import Deeplabv3
 
 
 class SemSegWithDepthExperiment(SemSegExperiment):
@@ -92,11 +92,11 @@ class SemSegWithDepthExperiment(SemSegExperiment):
       raise ValueError(
           "Only DEEPLAB is supported as model for depth prediction")
 
-    model = mtm.Deeplabv3(input_shape=(self.config.image_h, self.config.image_w,
+    model = Deeplabv3(input_shape=(self.config.image_h, self.config.image_w,
                                        3),
                           classes=2,
                           OS=self.config.output_stride,
-                          activation="sigmoid")
+                          activation="sigmoid", add_depth_prediction=True)
 
     return model
 
