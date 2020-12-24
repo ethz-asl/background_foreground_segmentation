@@ -86,7 +86,8 @@ class SemSegWithDepthExperiment(SemSegExperiment):
 
   def getTrainData(self):
     """ return train_ds, test_ds """
-    return self.dl.getDataset(), None
+    train, test = self.dl.getDataset()
+    return train, None
 
   def getModel(self):
     if self.config.model_name != "DEEPLAB":
