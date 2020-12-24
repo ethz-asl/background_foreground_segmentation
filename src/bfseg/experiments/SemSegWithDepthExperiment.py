@@ -81,11 +81,12 @@ class SemSegWithDepthExperiment(SemSegExperiment):
 
     steps_per_epoch = train_info.splits[
         'train'].num_examples // self.config.nyu_batchsize
-    return train_ds, valid_ds, steps_per_epoch
+    # return train_ds, valid_ds, steps_per_epoch
+    return train_ds, None, steps_per_epoch
 
   def getTrainData(self):
     """ return train_ds, test_ds """
-    return self.dl.getDataset()
+    return self.dl.getDataset(), None
 
   def getModel(self):
     if self.config.model_name != "DEEPLAB":
