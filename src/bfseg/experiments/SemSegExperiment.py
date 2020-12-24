@@ -47,6 +47,7 @@ class SemSegExperiment(Experiment):
         type=str,
         help='Path to dataset',
         default="/cluster/scratch/zrene/cla_dataset/hiveLabels/")
+
     parser.add_argument('--validation_mode',
                         type=str,
                         help='Validation Mode <CLA,ARCHE>',

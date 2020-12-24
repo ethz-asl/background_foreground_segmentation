@@ -166,6 +166,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
 
   def scoreModel(self, model, outFolder=None, exportImages=False, tag=""):
     print("=========== Evaluating Model on CLA =========")
+    model.summary()
     scoreAndPlotPredictions(lambda img: model.predict(img)[1],
                             self.dl.getValidationDataset(),
                             self.dl.validationSize,

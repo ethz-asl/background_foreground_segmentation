@@ -40,7 +40,7 @@ class Experiment():
       self.pretrainNyu(model, self.weightsFolder)
     else:
       try:
-        model.load_weights(weightsFolder + '/weights.h5')
+        model.load_weights(self.weightsFolder + '/weights.h5')
       except Exception as e:
         print("Could not load pretrained weights. Starting with random ones.",
               e)
