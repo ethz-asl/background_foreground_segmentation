@@ -21,6 +21,20 @@ class DataLoader:
                    'top': 0.1,
                    'bottom': 0.1
                }):
+    """
+      Dataloader to load datasets create with the datset creator
+      Args:
+          workingDir: Path to dataset images
+          inputSize: Shape of the input image
+          outputSize: Shape of the output image (labels)
+          validationDir: Path to the validation images
+          batchSize: Batch size to use
+          shuffleBufferSize: Shuffle buffer batchsize
+          validationMode: <all,CLA,ARCHE> which validation dataset to load
+          loadDepth: whether to also load depth images
+          cropOptions: Dict specifing how much the image should be cropped. Numbers are treated as percentages
+            e.g.: {top:0.1, bottom:0.5} crops the top 10% and bottom 50% of the image.
+      """
 
     self.workingDir = workingDir
     self.batchSize = batchSize
@@ -44,7 +58,6 @@ class DataLoader:
 
     if loadDepth:
       if len(self.depths) == 0:
-        # raise ValueError("The specified dataset at " + self.workingDir + " does not provide any depth images!")
         print("[WARNING] DID NOT FIND ANY DEPTH IMAGES!")
         self.depths = None
     else:
@@ -106,7 +119,6 @@ class DataLoader:
       if os.path.isdir(image_folder_path):
         # cache folder content (e.g. img.png, semseg.png)
         folder_content = sorted(os.listdir(image_folder_path))
-        # print(folder_content)
         # count how many semseg images (=labels) are there
         semantic_labels = [
             os.path.join(image_folder_path, fileName)
@@ -165,7 +177,6 @@ class DataLoader:
     if depth is None:
       return cropped_image, cropped_semseg_labels
 
-    # todo rescale
     depth_cropped = tf.cast(self.cropImageToInputSize(depths,
                                                       self.outputSize,
                                                       method="nearest"),
