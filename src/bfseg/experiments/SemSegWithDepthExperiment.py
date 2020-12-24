@@ -92,11 +92,11 @@ class SemSegWithDepthExperiment(SemSegExperiment):
       raise ValueError(
           "Only DEEPLAB is supported as model for depth prediction")
 
-    model = Deeplabv3(input_shape=(self.config.image_h, self.config.image_w,
-                                       3),
-                          classes=2,
-                          OS=self.config.output_stride,
-                          activation="sigmoid", add_depth_prediction=True)
+    model = Deeplabv3(input_shape=(self.config.image_h, self.config.image_w, 3),
+                      classes=2,
+                      OS=self.config.output_stride,
+                      activation="sigmoid",
+                      add_depth_prediction=True)
 
     return model
 

@@ -42,7 +42,8 @@ class Experiment():
       try:
         model.load_weights(weightsFolder + '/weights.h5')
       except Exception as e:
-          print("Could not load pretrained weights. Starting with random ones.", e)
+        print("Could not load pretrained weights. Starting with random ones.",
+              e)
 
     # Get custom training data from experiment
     train_ds, test_ds = self.getTrainData()

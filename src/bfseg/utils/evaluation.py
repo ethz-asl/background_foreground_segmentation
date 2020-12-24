@@ -5,6 +5,7 @@ import os
 from PIL import Image
 import numpy as np
 
+
 def oneMetricIteration(metric, label, pred):
   """ Helper function to get the result from one prediction """
   metric.update_state(label, pred)
@@ -13,7 +14,14 @@ def oneMetricIteration(metric, label, pred):
   return res
 
 
-def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True, batchSize = 5, outFolder = None, tag = "", exportPredictions = False):
+def scoreAndPlotPredictions(imageCallback,
+                            test_ds,
+                            num_images,
+                            plot=True,
+                            batchSize=5,
+                            outFolder=None,
+                            tag="",
+                            exportPredictions=False):
   """
   Calculates different metrices for the validation set provided by the dataloader.
   Also plots predictions if plot = True
@@ -53,7 +61,7 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True, batch
   MIOUM_B_valid = IgnorantBalancedMeanIoU()
   MIOUM_valid = IgnorantMeanIoU()
 
-  batches = num_images // batchSize #- 1
+  batches = num_images // batchSize  #- 1
   cnt = 0
   for test_img, test_label in test_ds.take(batches):
     pred = imageCallback(test_img)
@@ -100,17 +108,23 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True, batch
       if outFolder is not None:
         img_name = tag + "_" + str(i + cnt * batches).zfill(3) + ".png"
 
-        with open(os.path.join(outFolder, "results_one_by_one_" + tag + ".csv"), "a+") as f:
-          f.write(f"{img_name},{iam_value:.4f},{ibm_value:.4f},{mIoU:.4f},{mIoU_B:.4f}\n")
+        with open(os.path.join(outFolder, "results_one_by_one_" + tag + ".csv"),
+                  "a+") as f:
+          f.write(
+              f"{img_name},{iam_value:.4f},{ibm_value:.4f},{mIoU:.4f},{mIoU_B:.4f}\n"
+          )
 
         if exportPredictions:
           imgs_folder = os.path.join(outFolder, "imgs")
           if not os.path.exists(imgs_folder):
             os.mkdir(imgs_folder)
 
-          Image.fromarray(np.uint8(tf.argmax(pred[i], axis=-1)), 'L').save(os.path.join(imgs_folder, "pred_" + img_name))
-          Image.fromarray(np.uint8(np.squeeze(test_label[i])), 'L').save(os.path.join(imgs_folder, "gt_" + img_name))
-          Image.fromarray(np.uint8(test_img[i]*255)).save(os.path.join(imgs_folder, "img_" + img_name))
+          Image.fromarray(np.uint8(tf.argmax(pred[i], axis=-1)), 'L').save(
+              os.path.join(imgs_folder, "pred_" + img_name))
+          Image.fromarray(np.uint8(np.squeeze(test_label[i])),
+                          'L').save(os.path.join(imgs_folder, "gt_" + img_name))
+          Image.fromarray(np.uint8(test_img[i] * 255)).save(
+              os.path.join(imgs_folder, "img_" + img_name))
 
     cnt += 1
 
@@ -135,5 +149,7 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True, batch
   print("Precision  on validation set:", TP / (TP + FP))
 
   if outFolder is not None:
-    with open(os.path.join(outFolder,"results.csv"), "a+") as f:
-      f.write(f"{tag},{iam_valid_value:.4f},{ibm_valid_value:.4f},{MIOUM_valid_value:.4f},{MIOUM_B_valid_value:.4f}\n")
+    with open(os.path.join(outFolder, "results.csv"), "a+") as f:
+      f.write(
+          f"{tag},{iam_valid_value:.4f},{ibm_valid_value:.4f},{MIOUM_valid_value:.4f},{MIOUM_B_valid_value:.4f}\n"
+      )

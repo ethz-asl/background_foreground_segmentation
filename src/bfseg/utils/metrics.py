@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+
 class IgnorantDepthMAPE(tf.keras.metrics.MeanAbsoluteError):
   """
   Wraps any keras metric to ignore a specific class or balance the weights
@@ -10,11 +11,13 @@ class IgnorantDepthMAPE(tf.keras.metrics.MeanAbsoluteError):
 
   def update_state(self, depth_label, y_pred_depth, sample_weight=None):
 
-    y_pred_depth_ignorant = tf.where(tf.math.is_nan(depth_label), tf.zeros_like(depth_label), y_pred_depth)
-    depth_label = tf.where(tf.math.is_nan(depth_label), tf.zeros_like(depth_label), depth_label)
+    y_pred_depth_ignorant = tf.where(tf.math.is_nan(depth_label),
+                                     tf.zeros_like(depth_label), y_pred_depth)
+    depth_label = tf.where(tf.math.is_nan(depth_label),
+                           tf.zeros_like(depth_label), depth_label)
 
     return super(IgnorantDepthMAPE, self).update_state(depth_label,
-                                    y_pred_depth)
+                                                       y_pred_depth)
 
   def result(self):
     return super(IgnorantDepthMAPE, self).result()
@@ -91,6 +94,7 @@ class IgnorantBalancedAccuracyMetric(IgnorantMetricsWrapper):
 
   Randomly Predicting 90%foreground and 10% background will produce a balanced accuracy of 50%
   """
+
   def __init__(self, class_to_ignore=1, class_cnt=3):
     super().__init__(tf.keras.metrics.Accuracy(), balanced=True)
 
