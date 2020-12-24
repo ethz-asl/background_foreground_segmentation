@@ -19,21 +19,18 @@ class SemSegExperiment(Experiment):
 
   def __init__(self):
     super(SemSegExperiment, self).__init__()
-    # Ugly solution to not always change paths. Should be removed before merging into master
-    # if "local" in os.environ or True:
-    #   # self.config.train_path = "/home/rene/cla_dataset/water
-    # #   shed/"
-    # self.config.train_path = "/home/rene/vicon_dataset/rotated/"
-    # self.config.validation_path = '/home/rene/hiveLabels/'
 
     # Get a dataloader to load training images
     self.dl = DataLoader(self.config.train_path,
                          [self.config.image_h, self.config.image_w],
                          validationDir=self.config.validation_path,
                          validationMode=self.config.validation_mode,
-                         batchSize=self.config.batch_size, loadDepth=False)
+                         batchSize=self.config.batch_size,
+                         loadDepth=False)
 
-    self.nyuLoader = NyuDataLoader.NyuDataLoader( self.config.nyu_batchsize, (self.config.image_w, self.config.image_h), loadDepth = False)
+    self.nyuLoader = NyuDataLoader.NyuDataLoader(
+        self.config.nyu_batchsize, (self.config.image_w, self.config.image_h),
+        loadDepth=False)
 
     self.numTestImages = self.dl.validationSize
 
@@ -71,11 +68,23 @@ class SemSegExperiment(Experiment):
                         default='PSP',
                         choices=['PSP', 'UNET', 'DEEPLAB'],
                         help='CNN architecture')
-
     parser.add_argument('--output_stride',
                         type=int,
                         default=16,
                         help='Output stride, only for Deeplab model')
+    parser.add_argument('--baselinePath',
+                        type=str,
+                        default='./baseline_model.h5')
+    parser.add_argument('--train_from_scratch',
+                        type=str2bool,
+                        default=False,
+                        help="If True, pretrain model on nyu dataset")
+    parser.add_argument('--loss_balanced',
+                        type=str2bool,
+                        default=True,
+                        help="If True, uses balanced losses (semseg)")
+    parser.add_argument('--image_w', type=int, default=720, help="Image width")
+    parser.add_argument('--image_h', type=int, default=480, help="Image height")
     parser.add_argument(
         '--backbone',
         type=str,
@@ -91,21 +100,26 @@ class SemSegExperiment(Experiment):
             "efficientnetb5", " efficientnetb7"
         ],
         help='CNN architecture')
-    parser.add_argument('--baselinePath',
-                        type=str,
-                        default='./baseline_model.h5')
-    parser.add_argument('--train_from_scratch', type=str2bool, default=False)
-    parser.add_argument('--loss_balanced', type=str2bool, default=True)
-    parser.add_argument('--image_w', type=int, default=720)
-    parser.add_argument('--image_h', type=int, default=480)
-    parser.add_argument('--nyu_batchsize', type=int, default=4)
-    parser.add_argument('--nyu_lr', type=float, default=0.001)
-    parser.add_argument('--nyu_epochs', type=int, default=20)
+
+    # NYU parameters
+    parser.add_argument('--nyu_batchsize',
+                        type=int,
+                        default=4,
+                        help="Batchsize to train on nyu")
+    parser.add_argument('--nyu_lr',
+                        type=float,
+                        default=0.001,
+                        help="Learning rate for pretraining on nyu")
+    parser.add_argument('--nyu_epochs',
+                        type=int,
+                        default=20,
+                        help="Number of epochs to train on nyu")
 
   def getNyuTrainData(self):
     """ Return training data from NYU. In order to scale the images to the right format, a custom dataloader
             with map function was implemented """
-    train_ds, train_info, valid_ds, valid_info, test_ds, test_info = self.nyuLoader.getDataSets()
+    train_ds, train_info, valid_ds, valid_info, test_ds, test_info = self.nyuLoader.getDataSets(
+    )
 
     steps_per_epoch = train_info.splits[
         'train'].num_examples // self.config.nyu_batchsize
