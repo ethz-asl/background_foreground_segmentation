@@ -37,6 +37,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
                            validationMode="CLA",
                            batchSize=self.config.batch_size,
                            loadDepth=True,
+                           verbose=True,
                            cropOptions={
                                'top': 0,
                                'bottom': 0

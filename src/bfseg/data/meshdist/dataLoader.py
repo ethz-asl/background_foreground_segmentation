@@ -21,6 +21,7 @@ class DataLoader:
                loadDepth=True,
                trainFilter = None,
                validationFilter = None,
+               verbose = False,
                cropOptions={
                    'top': 0.1,
                    'bottom': 0.1
@@ -58,6 +59,7 @@ class DataLoader:
     self.inputSize = inputSize
     self.loadDepth = loadDepth
     self.cropOptions = cropOptions
+    sefl.verbose = verbose
 
     if outputSize is None:
       self.outputSize = inputSize
@@ -109,7 +111,8 @@ class DataLoader:
             print("Validation MODE", validationMode,
                   "is unknown. Going to use all validation data")
 
-    print(f"Available Filenames. \n  Training:{len(self.filenames)} \n Validation:{len(self.validationFiles)}")
+    if verbose:
+        print(f"Available Filenames. \n  Training:{len(self.filenames)} \n Validation:{len(self.validationFiles)}")
 
     if validationFilter is not None:
         self.validationFiles, self.validationLabels = self.applyFilterToValidFileNames(self.validationFiles,
@@ -120,8 +123,8 @@ class DataLoader:
                                                                                     self.depths, trainFilter)
     self.size = len(self.filenames)
     self.validationSize = len(self.validationFiles)
-
-    print(f"Loaded Filenames. \n  Training:{self.size} \n Validation:{self.validationSize}")
+    if verbose:
+        print(f"Loaded Filenames. \n  Training:{self.size} \n Validation:{self.validationSize}")
 
   def applyFilterToValidFileNames(self, filenames, labels, filter):
       """
@@ -179,7 +182,6 @@ class DataLoader:
        Returns: filetered filenames, depths and labels. Only files matched by the filter are returned.
 
     """
-    print("filter:", filter)
     filteredFilenames = []
     filteredLabels = []
     filteredDepths = [] if depths is not None else None
@@ -218,8 +220,6 @@ class DataLoader:
             filteredLabels.append(labels[i])
             if depths is not None:
                 filteredDepths.append(depths[i])
-        else:
-            print("image number", image_number, "was not in valid numbers", validNumbers)
       else:
         print("no filter found for ", route, " route will be ignored")
 
@@ -287,7 +287,6 @@ class DataLoader:
 
     depthProvided = False
     depth = args[0] if len(args) == 1 else None
-    print("label", label, "args", args, "filname", filename)
 
     if tf.io.is_jpeg(filename):
       image = tf.image.decode_jpeg(tf.io.read_file(filename), channels=3)

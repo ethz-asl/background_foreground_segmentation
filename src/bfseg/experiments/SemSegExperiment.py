@@ -36,7 +36,8 @@ class SemSegExperiment(Experiment):
                            validationDir=self.config.validation_path,
                            validationMode=self.config.validation_mode,
                            batchSize=self.config.batch_size,
-                           loadDepth=False)
+                           loadDepth=False,
+                           verbose=True)
 
 
   def _addArguments(self, parser):
