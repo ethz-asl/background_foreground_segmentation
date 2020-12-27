@@ -59,7 +59,7 @@ class DataLoader:
     self.inputSize = inputSize
     self.loadDepth = loadDepth
     self.cropOptions = cropOptions
-    sefl.verbose = verbose
+    self.verbose = verbose
 
     if outputSize is None:
       self.outputSize = inputSize
