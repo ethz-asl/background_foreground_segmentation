@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+
+notebooks/scratch
+
 # Distribution / packaging
 .Python
 build/

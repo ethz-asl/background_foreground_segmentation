@@ -350,7 +350,7 @@ class DataLoader:
     # Resize it to desired input size of the network
     return tf.image.resize(cropped_image, size, method=method)
 
-  def train_preprocess(self, image, label, *args):
+  def train_preprocess(self, image, labels):
     """
                  Args:
                      image: keras tensor containing rgb image
@@ -358,8 +358,9 @@ class DataLoader:
 
                  Returns: randomly augmented image
 
-                 """
-    depth = args if len(args) == 1 else None
+       """
+    label = labels['semseg'] if isinstance(labels, dict) else labels
+    depth = labels['depth'] if isinstance(labels, dict) else None
 
     # random data augmentation can be uncommented here
     # # Flip left right
@@ -384,7 +385,12 @@ class DataLoader:
 
     if depth is None:
         return image, label
-    return image, label, depth
+
+    return image, {
+        'depth': depth,
+        'semseg': label,
+        'combined': label
+    }
 
   def reduce_validation_labels(self, image, label):
     """
