@@ -42,7 +42,7 @@ class SemSegExperiment(Experiment):
   def _addArguments(self, parser):
     """ Add custom arguments that are needed for this experiment """
     super(SemSegExperiment, self)._addArguments(parser)
-    #
+
     # parser.add_argument('--train_path',
     #                     type=str,
     #                     help='Path to dataset',
@@ -53,7 +53,7 @@ class SemSegExperiment(Experiment):
     #                     help='Path to dataset',
     #                     default="/home/rene/hiveLabels"
     #                    )  #"/cluster/scratch/zrene/cla_dataset/hiveLabels/")
-    #
+
 
     parser.add_argument('--train_path',
                         type=str,
@@ -233,22 +233,12 @@ class SemSegExperiment(Experiment):
                               tag=tag + "CLA",
                               exportPredictions=exportImages)
 
-      print("=========== Evaluating Model on CLA (2) =========")
-      scoreAndPlotPredictions(lambda img: self.getImagePrediction(model, img),
-                              self.dataLoaderCLA.getValidationDataset(),
-                              self.dataLoaderCLA.validationSize,
-                              plot=False,
-                              batchSize=1,
-                              outFolder=outFolder,
-                              tag=tag + "CLA",
-                              exportPredictions=exportImages)
-
       print("=========== Evaluating Model on ARCHE ===========")
       scoreAndPlotPredictions(lambda img: self.getImagePrediction(model, img),
                               self.dataLoaderArche.getValidationDataset(),
                               self.dataLoaderArche.validationSize,
                               plot=False,
-                              batchSize=self.config.batch_size,
+                              batchSize = 1,
                               outFolder=outFolder,
                               tag=tag + "ARCHE",
                               exportPredictions=exportImages)

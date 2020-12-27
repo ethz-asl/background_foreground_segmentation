@@ -29,7 +29,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
           self.config.nyu_batchsize, (self.config.image_w, self.config.image_h),
           loadDepth=True)
 
-  def loadDataLoaders(self):
+  def loadDataLoader(self):
       # Get a dataloader to load training images
       self.dl = DataLoader(self.config.train_path,
                            [self.config.image_h, self.config.image_w],
