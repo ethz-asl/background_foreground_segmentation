@@ -12,6 +12,7 @@ from bfseg.utils.metrics import IgnorantBalancedAccuracyMetric, IgnorantAccuracy
 from bfseg.utils.losses import ignorant_cross_entropy_loss, ignorant_balanced_cross_entropy_loss
 from bfseg.data.meshdist.dataLoader import DataLoader
 from bfseg.experiments.Experiment import Experiment
+from bfseg.utils.evaluation import scoreAndPlotPredictions
 
 
 class SemSegExperiment(Experiment):
@@ -19,34 +20,49 @@ class SemSegExperiment(Experiment):
 
   def __init__(self):
     super(SemSegExperiment, self).__init__()
-
-    # Get a dataloader to load training images
-    self.dl = DataLoader(self.config.train_path,
-                         [self.config.image_h, self.config.image_w],
-                         validationDir=self.config.validation_path,
-                         validationMode=self.config.validation_mode,
-                         batchSize=self.config.batch_size,
-                         loadDepth=False)
-
-    self.nyuLoader = NyuDataLoader.NyuDataLoader(
-        self.config.nyu_batchsize, (self.config.image_w, self.config.image_h),
-        loadDepth=False)
-
+    self.loadDataLoader()
+    self.loadDataLoaderNYU()
     self.numTestImages = self.dl.validationSize
+
+  def loadDataLoaderNYU(self):
+      self.nyuLoader = NyuDataLoader.NyuDataLoader(
+          self.config.nyu_batchsize, (self.config.image_w, self.config.image_h),
+          loadDepth=False)
+
+  def loadDataLoader(self):
+      # Get a dataloader to load training images
+      self.dl = DataLoader(self.config.train_path,
+                           [self.config.image_h, self.config.image_w],
+                           validationDir=self.config.validation_path,
+                           validationMode=self.config.validation_mode,
+                           batchSize=self.config.batch_size,
+                           loadDepth=False)
+
 
   def _addArguments(self, parser):
     """ Add custom arguments that are needed for this experiment """
     super(SemSegExperiment, self)._addArguments(parser)
+    #
+    # parser.add_argument('--train_path',
+    #                     type=str,
+    #                     help='Path to dataset',
+    #                     default="/home/rene/cla_dataset/watershed"
+    #                    )  #"/cluster/scratch/zrene/cla_dataset/watershed/")
+    # parser.add_argument('--validation_path',
+    #                     type=str,
+    #                     help='Path to dataset',
+    #                     default="/home/rene/hiveLabels"
+    #                    )  #"/cluster/scratch/zrene/cla_dataset/hiveLabels/")
+    #
 
     parser.add_argument('--train_path',
                         type=str,
                         help='Path to dataset',
                         default="/cluster/scratch/zrene/cla_dataset/watershed/")
-    parser.add_argument(
-        '--validation_path',
-        type=str,
-        help='Path to dataset',
-        default="/cluster/scratch/zrene/cla_dataset/hiveLabels/")
+    parser.add_argument('--validation_path',
+                        type=str,
+                        help='Path to dataset',
+                        default="/cluster/scratch/zrene/cla_dataset/hiveLabels/")
 
     parser.add_argument('--validation_mode',
                         type=str,
@@ -169,3 +185,70 @@ class SemSegExperiment(Experiment):
         IgnorantMeanIoU(),
         IgnorantBalancedMeanIoU(),
     ]
+
+  def getImagePrediction(self, model, image):
+      return model.predict(image)
+
+  def scoreModel(self, model, outFolder=None, exportImages=False, tag=""):
+      if 'dataLoaderArche' not in dir(self):
+          self.dataLoaderArche = DataLoader(self.config.train_path,
+                                            [self.config.image_h, self.config.image_w],
+                                            validationDir=self.config.validation_path,
+                                            validationMode="ARCHE",
+                                            batchSize=1,
+                                            loadDepth=False,
+                                            cropOptions={
+                                                'top': 0,
+                                                'bottom': 0
+                                            })
+      if 'dataLoaderCLA' not in dir(self):
+          self.dataLoaderCLA = DataLoader(self.config.train_path,
+                                          [self.config.image_h, self.config.image_w],
+                                          validationDir=self.config.validation_path,
+                                          validationMode="CLA",
+                                          batchSize=1,
+                                          loadDepth=False,
+                                          cropOptions={
+                                              'top': 0,
+                                              'bottom': 0
+                                          })
+
+      print("=========== Evaluating Model on provided Evaluation Set =========")
+      scoreAndPlotPredictions(lambda img: self.getImagePrediction(model, img),
+                              self.dl.getValidationDataset(),
+                              self.dl.validationSize,
+                              plot=False,
+                              batchSize=self.config.batch_size,
+                              outFolder=outFolder,
+                              tag=tag + "provided_validation_set",
+                              exportPredictions=exportImages)
+
+      print("=========== Evaluating Model on CLA (1) =========")
+      scoreAndPlotPredictions(lambda img: self.getImagePrediction(model, img),
+                              self.dataLoaderCLA.getValidationDataset(),
+                              self.dataLoaderCLA.validationSize,
+                              plot=False,
+                              batchSize=1,
+                              outFolder=outFolder,
+                              tag=tag + "CLA",
+                              exportPredictions=exportImages)
+
+      print("=========== Evaluating Model on CLA (2) =========")
+      scoreAndPlotPredictions(lambda img: self.getImagePrediction(model, img),
+                              self.dataLoaderCLA.getValidationDataset(),
+                              self.dataLoaderCLA.validationSize,
+                              plot=False,
+                              batchSize=1,
+                              outFolder=outFolder,
+                              tag=tag + "CLA",
+                              exportPredictions=exportImages)
+
+      print("=========== Evaluating Model on ARCHE ===========")
+      scoreAndPlotPredictions(lambda img: self.getImagePrediction(model, img),
+                              self.dataLoaderArche.getValidationDataset(),
+                              self.dataLoaderArche.validationSize,
+                              plot=False,
+                              batchSize=self.config.batch_size,
+                              outFolder=outFolder,
+                              tag=tag + "ARCHE",
+                              exportPredictions=exportImages)

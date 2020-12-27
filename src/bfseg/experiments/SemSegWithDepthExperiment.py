@@ -5,7 +5,6 @@ import argparse
 import segmentation_models as sm
 
 from bfseg.utils.utils import str2bool
-from bfseg.utils import NyuDataLoader
 from bfseg.utils.metrics import IgnorantBalancedAccuracyMetric, IgnorantAccuracyMetric, IgnorantBalancedMeanIoU, \
     IgnorantMeanIoU, IgnorantDepthMAPE
 from bfseg.utils.losses import ignorant_cross_entropy_loss, ignorant_balanced_cross_entropy_loss
@@ -23,37 +22,25 @@ class SemSegWithDepthExperiment(SemSegExperiment):
 
   def __init__(self):
     super(SemSegWithDepthExperiment, self).__init__()
-    # Get a dataloader to load training images
-    self.dl = DataLoader(self.config.train_path,
-                         [self.config.image_h, self.config.image_w],
-                         validationDir=self.config.validation_path,
-                         validationMode="CLA",
-                         batchSize=self.config.batch_size,
-                         loadDepth=True,
-                         cropOptions={
-                             'top': 0,
-                             'bottom': 0
-                         })
-
-    # Get a dataloader to load training images
-    self.dl_arche = DataLoader(self.config.train_path,
-                               [self.config.image_h, self.config.image_w],
-                               validationDir=self.config.validation_path,
-                               validationMode="ARCHE",
-                               batchSize=self.config.batch_size,
-                               loadDepth=True,
-                               cropOptions={
-                                   'top': 0,
-                                   'bottom': 0
-                               })
-
-    self.nyuLoader = NyuDataLoader(self.config.nyu_batchsize,
-                                   (self.config.image_w, self.config.image_h),
-                                   loadDepth=True)
-
-    self.numTestImages = self.dl.validationSize
-
     self.weightsFolder = self.weightsFolder + "_with_depth"
+
+  def loadDataLoaderNYU(self):
+      self.nyuLoader = NyuDataLoader(
+          self.config.nyu_batchsize, (self.config.image_w, self.config.image_h),
+          loadDepth=True)
+
+  def loadDataLoaders(self):
+      # Get a dataloader to load training images
+      self.dl = DataLoader(self.config.train_path,
+                           [self.config.image_h, self.config.image_w],
+                           validationDir=self.config.validation_path,
+                           validationMode="CLA",
+                           batchSize=self.config.batch_size,
+                           loadDepth=True,
+                           cropOptions={
+                               'top': 0,
+                               'bottom': 0
+                           })
 
   def _addArguments(self, parser):
     """ Add custom arguments that are needed for this experiment """
@@ -166,24 +153,5 @@ class SemSegWithDepthExperiment(SemSegExperiment):
         ]
     }
 
-  def scoreModel(self, model, outFolder=None, exportImages=False, tag=""):
-    print("=========== Evaluating Model on CLA =========")
-    model.summary()
-    scoreAndPlotPredictions(lambda img: model.predict(img)[1],
-                            self.dl.getValidationDataset(),
-                            self.dl.validationSize,
-                            plot=False,
-                            batchSize=self.config.batch_size,
-                            outFolder=outFolder,
-                            tag=tag + "CLA",
-                            exportPredictions=exportImages)
-
-    print("=========== Evaluating Model on ARCHE ===========")
-    scoreAndPlotPredictions(lambda img: model.predict(img)[1],
-                            self.dl.getValidationDataset(),
-                            self.dl_arche.validationSize,
-                            plot=False,
-                            batchSize=self.config.batch_size,
-                            outFolder=outFolder,
-                            tag=tag + "ARCHE",
-                            exportPredictions=exportImages)
+  def getImagePrediction(self, model, image):
+      return model.predict(image)[1]
