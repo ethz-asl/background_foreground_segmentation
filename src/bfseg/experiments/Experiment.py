@@ -34,7 +34,6 @@ class Experiment():
           """
 
     model = self.getModel()
-
     if self.config.train_from_scratch or not os.path.exists(self.weightsFolder):
       # pretrain model on nyu data
       self.pretrainNyu(model, self.weightsFolder)
@@ -61,7 +60,10 @@ class Experiment():
               validation_data=test_ds,
               callbacks=callbacks)
 
-    # Save final mode
+    # Save final model
+    # Get rid of all custom losses and metrics as they mess up load_model later.
+    model.compile(optimizer=tf.keras.optimizers.Adam(0.0001))
+    # save it
     model.save(outFolder + "/model.h5")
     # Export predictions + results
     self.scoreModel(model, outFolder, exportImages=True, tag="vicon")
