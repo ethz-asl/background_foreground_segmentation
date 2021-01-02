@@ -159,10 +159,9 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
 
   // Wait for transform for map
   std::shared_ptr<tf::StampedTransform> map_transform(new tf::StampedTransform);
-  tf_listener->waitForTransform("/map", camera_frame, ros::Time(0),
-                                ros::Duration(3.0));
-  tf_listener->lookupTransform("/map", camera_frame, ros::Time(0),
-                               *map_transform);
+  tf_listener->waitForTransform("/map", camera_frame, h.stamp,
+                                ros::Duration(0.5));
+  tf_listener->lookupTransform("/map", camera_frame, h.stamp, *map_transform);
 
   // Get image from camera
   image_geometry::PinholeCameraModel model;
@@ -216,9 +215,9 @@ void Creator::projectPointCloud(
 
   // Wait for transform for pointcloud
   std::shared_ptr<tf::StampedTransform> t(new tf::StampedTransform);
-  tf_listener->waitForTransform(camera_frame, cloud_frame, ros::Time(0),
-                                ros::Duration(3.0));
-  tf_listener->lookupTransform(camera_frame, cloud_frame, ros::Time(0), *t);
+  tf_listener->waitForTransform(camera_frame, cloud_frame, cloud->header.stamp,
+                                ros::Duration(0.4));
+  tf_listener->lookupTransform(camera_frame, cloud_frame,  cloud->header.stamp, *t);
 
   // Image that contains the projected pointcloud
   cv::Mat preview_img = camera_image.clone();
