@@ -96,7 +96,7 @@ class NyuDataLoader:
                             num_parallel_calls=tf.data.experimental.AUTOTUNE)
     train_ds = train_ds.cache()
     train_ds = train_ds.shuffle(
-        int(train_info.splits['train_experiments'].num_examples * 0.8))
+        int(train_info.splits['train'].num_examples * 0.8))
     train_ds = train_ds.batch(self.batch_size).repeat()
     train_ds = train_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
