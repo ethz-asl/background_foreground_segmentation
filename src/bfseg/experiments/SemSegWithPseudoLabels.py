@@ -1,5 +1,5 @@
 from bfseg.experiments.SemSegExperiment import SemSegExperiment
-from bfseg.utils.losses import combined_loss
+from bfseg.utils.losses import comdined_pseudo_label_loss
 
 
 class SemSegWithPseudoLabelsExperiment(SemSegExperiment):
@@ -21,7 +21,7 @@ class SemSegWithPseudoLabelsExperiment(SemSegExperiment):
         default=0.1)
 
   def getLoss(self):
-    """ change loss function to train with pseudo labels"""
-    return combined_loss(self.config.pseudo_label_weight,
-                         self.config.pseudo_label_weight,
-                         self.config.loss_balanced)
+    """ change loss function to train_experiments with pseudo labels"""
+    return comdined_pseudo_label_loss(self.config.pseudo_label_weight,
+                                      self.config.pseudo_label_weight,
+                                      self.config.loss_balanced)

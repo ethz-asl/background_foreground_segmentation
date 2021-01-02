@@ -6,7 +6,7 @@ __pycache__/
 # C extensions
 *.so
 
-
+model.h5
 notebooks/scratch
 
 # Distribution / packaging

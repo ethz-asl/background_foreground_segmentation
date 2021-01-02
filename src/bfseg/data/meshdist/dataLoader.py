@@ -19,9 +19,9 @@ class DataLoader:
                shuffleBufferSize=64,
                validationMode="all",
                loadDepth=True,
-               trainFilter = None,
-               validationFilter = None,
-               verbose = False,
+               trainFilter=None,
+               validationFilter=None,
+               verbose=False,
                cropOptions={
                    'top': 0.1,
                    'bottom': 0.1
@@ -29,8 +29,8 @@ class DataLoader:
     """
       Dataloader to load datasets create with the datset creator
       Args:
-          workingDir: Path to dataset images
-          inputSize: Shape of the input image
+          workingDir: Path to dataset images <- Required
+          inputSize: Shape of the input image <- Required
           outputSize: Shape of the output image (labels)
           validationDir: Path to the validation images
           batchSize: Batch size to use
@@ -74,7 +74,6 @@ class DataLoader:
     self.filenames, self.depths, self.labels = self.getImageDataFromPath(
         self.workingDir)
 
-
     if loadDepth:
       if len(self.depths) == 0:
         print("[WARNING] DID NOT FIND ANY DEPTH IMAGES!")
@@ -82,52 +81,58 @@ class DataLoader:
     else:
       self.depths = None
 
+    self.validationFiles, self.validationDepth, self.validationLabels = self.getImageDataFromPath(
+        self.validationDir)
 
+    # Load validation dataset (ARCHE, CLA)
+    if validationMode is not "all":
+      if validationMode is "ARCHE":
+        # Ugly, change filenames in the hive data loader
+        # Files with timestamp starting with _159 are from Arche
+        self.validationFiles = [
+            file for file in self.validationFiles if "_159" in file
+        ]
+        self.validationLabels = [
+            file for file in self.validationLabels if "_159" in file
+        ]
 
-    self.validationFiles, self.validationDepth, self.validationLabels = self.getImageDataFromPath(self.validationDir)
+      elif validationMode is "CLA":
+        # Ugly, change filenames in the hive data loader
+        # Files with timestamp starting with _158 are from CLA
+        self.validationFiles = [
+            file for file in self.validationFiles if "_158" in file
+        ]
+        self.validationLabels = [
+            file for file in self.validationLabels if "_158" in file
+        ]
+      else:
+        print("Validation MODE", validationMode,
+              "is unknown. Going to use all validation data")
 
-    if validationFilter is not None:
-        if validationMode is not "all":
-          if validationMode is "ARCHE":
-            # Ugly, change filenames in the hive data loader
-            # Files with timestamp starting with _159 are from Arche
-            self.validationFiles = [
-                file for file in self.validationFiles if "_159" in file
-            ]
-            self.validationLabels = [
-                file for file in self.validationLabels if "_159" in file
-            ]
-
-          elif validationMode is "CLA":
-            # Ugly, change filenames in the hive data loader
-            # Files with timestamp starting with _158 are from CLA
-            self.validationFiles = [
-                file for file in self.validationFiles if "_158" in file
-            ]
-            self.validationLabels = [
-                file for file in self.validationLabels if "_158" in file
-            ]
-          else:
-            print("Validation MODE", validationMode,
-                  "is unknown. Going to use all validation data")
-
+    # print information about the datasets
     if verbose:
-        print(f"Available Filenames. \n  Training:{len(self.filenames)} \n Validation:{len(self.validationFiles)}")
+      print(
+          f"Available Filenames. \n  Training:{len(self.filenames)} \n Validation:{len(self.validationFiles)}"
+      )
 
+    # Filter validation images
     if validationFilter is not None:
-        self.validationFiles, self.validationLabels = self.applyFilterToValidFileNames(self.validationFiles,
-                                                                                       self.validationLabels,
-                                                                                       validationFilter)
+      self.validationFiles, self.validationLabels = self.applyFilterToValidFileNames(
+          self.validationFiles, self.validationLabels, validationFilter)
+    # Filter training images
     if trainFilter is not None:
-        self.filenames, self.labels, self.depths = self.applyFilterToTrainFileNames(self.filenames, self.labels,
-                                                                                    self.depths, trainFilter)
+      self.filenames, self.labels, self.depths = self.applyFilterToTrainFileNames(
+          self.filenames, self.labels, self.depths, trainFilter)
     self.size = len(self.filenames)
     self.validationSize = len(self.validationFiles)
+
     if verbose:
-        print(f"Loaded Filenames. \n  Training:{self.size} \n Validation:{self.validationSize}")
+      print(
+          f"Loaded Filenames. \n  Training:{self.size} \n Validation:{self.validationSize}"
+      )
 
   def applyFilterToValidFileNames(self, filenames, labels, filter):
-      """
+    """
       Filters the validation filenames using a timestamp/route filter supplied in the filter parameter
       Args:
           filenames: list with paths to validation images (validation filenames are from thehive and contain the timestamp as filename)
@@ -140,32 +145,37 @@ class DataLoader:
 
       Returns: filetered filenames and labels. Only files matched by the filter are returned.
       """
-      filteredFilenames = []
-      filteredLabels = []
+    filteredFilenames = []
+    filteredLabels = []
 
-      regex_pattern = "(.+)_(\d+\.\d+)_img\.png"
+    regex_pattern = "(.+)_(\d+\.\d+)_img\.png"
 
-      for i, name in enumerate(filenames):
-        match = re.search(regex_pattern, os.path.basename(name))
-        route = match.group(1)
-        timestamp = float(match.group(2))
+    for i, name in enumerate(filenames):
+      match = re.search(regex_pattern, os.path.basename(name))
+      route = match.group(1)
+      timestamp = float(match.group(2))
 
-        if route in filter.keys():
-            if filter[route]['timestamp']['lower_bound'] < timestamp < filter[route]['timestamp']['upper_bound']:
-                filteredFilenames.append(name)
-                filteredLabels.append(labels[i])
+      if route in filter.keys():
+        if filter[route]['timestamp']['lower_bound'] < timestamp < filter[
+            route]['timestamp']['upper_bound']:
+          filteredFilenames.append(name)
+          filteredLabels.append(labels[i])
 
-      if "max_count" in filter.keys():
-          # limit how many files should be in the validation set
-          max_count = filter['max_count']
-          # to not introduce bias, only take every nth images instead of randomly selecting max_count images
-          keep_nth_image = len(filteredFilenames) // max_count
-          return filteredFilenames[::keep_nth_image][0:max_count], filteredLabels[::keep_nth_image][0:max_count]
+    if "max_count" in filter.keys():
+      # limit how many files should be in the validation set
+      max_count = filter['max_count']
+      # Oonly take every nth image
+      keep_nth_image = len(filteredFilenames) // max_count
+      return filteredFilenames[::keep_nth_image][
+          0:max_count], filteredLabels[::keep_nth_image][0:max_count]
 
-      return filteredFilenames, filteredLabels
+    return filteredFilenames, filteredLabels
 
-
-  def applyFilterToTrainFileNames(self, filenames, labels, depths = None, filter = {}):
+  def applyFilterToTrainFileNames(self,
+                                  filenames,
+                                  labels,
+                                  depths=None,
+                                  filter={}):
     """
        Filters the training filepaths using a timestamp/route filter supplied in the filter parameter
        Args:
@@ -191,17 +201,20 @@ class DataLoader:
 
     # convert timestamps to image numbers.
     for filterRoute in filter.keys():
-        # open info file that stores mapping timestap <-> image number
-        info_file =  os.path.join(self.workingDir, f"{filterRoute}_info.txt")
-        if not os.path.exists(info_file):
-            info_file = os.path.join(self.workingDir, f"../{filterRoute}/{filterRoute}_info.txt")
+      # open info file that stores mapping timestap <-> image number
+      info_file = os.path.join(self.workingDir, f"{filterRoute}_info.txt")
+      if not os.path.exists(info_file):
+        info_file = os.path.join(self.workingDir,
+                                 f"../{filterRoute}/{filterRoute}_info.txt")
 
-        df = pandas.read_csv(info_file, header =None, sep =',|;', engine = "python")
-        # only select image numbers that match timestamp
-        valid_timestamps = (filter[filterRoute]['timestamp']['lower_bound'] <= df[1]) & (df[1] <= filter[filterRoute]['timestamp']['upper_bound'])
-        valid_images = list(df[0][valid_timestamps])
-        # cache request
-        filter[filterRoute]['imageNumbers'] = valid_images
+      df = pandas.read_csv(info_file, header=None, sep=',|;', engine="python")
+      # only select image numbers that match timestamp
+      valid_timestamps = (
+          filter[filterRoute]['timestamp']['lower_bound'] <=
+          df[1]) & (df[1] <= filter[filterRoute]['timestamp']['upper_bound'])
+      valid_images = list(df[0][valid_timestamps])
+      # cache request
+      filter[filterRoute]['imageNumbers'] = valid_images
 
     for i, name in enumerate(filenames):
       basename = os.path.basename(name)
@@ -215,31 +228,30 @@ class DataLoader:
         validNumbers = routeFilter['imageNumbers']
         # print("checking image number", image_number)
         if image_number in validNumbers:
-            # apply filter
-            filteredFilenames.append(name)
-            filteredLabels.append(labels[i])
-            if depths is not None:
-                filteredDepths.append(depths[i])
+          # apply filter
+          filteredFilenames.append(name)
+          filteredLabels.append(labels[i])
+          if depths is not None:
+            filteredDepths.append(depths[i])
       else:
         print("no filter found for ", route, " route will be ignored")
 
     return filteredFilenames, filteredLabels, filteredDepths
 
-
   def getImageDataFromPath(self, path):
     """ returns all input images and labels stored in the given 'path' folder.
-                The folder structure looks like this:
-                path/
-                    img_0000/
-                     - img_0000__img.[png/jpg]   <- Original image
-                     - img_0000_semseg.png      <- Labels for Semantic Segmentation
-                     - img_0000_distance.png    <- Labels for depth prediction
-                     - ... additional information e.g. pc, pose
-                    img_9999/
-                      ....
+              The folder structure looks like this:
+              path/
+                  img_0000/
+                   - img_0000__img.[png/jpg]   <- Original image
+                   - img_0000_semseg.png      <- Labels for Semantic Segmentation
+                   - img_0000_distance.png    <- Labels for depth prediction
+                   - ... additional information e.g. pc, pose
+                  img_9999/
+                    ....
 
-                Currently the distance label is unused
-                """
+              Currently the distance label is unused
+              """
     # lists to return
     labels = []
     imgs = []
@@ -365,13 +377,13 @@ class DataLoader:
     # # Flip left right
     do_flip = tf.random.uniform([]) > 0.5
     image = tf.cond(do_flip, lambda: tf.image.flip_left_right(image),
-                   lambda: image)
+                    lambda: image)
     label = tf.cond(do_flip, lambda: tf.image.flip_left_right(label),
-                   lambda: label)
+                    lambda: label)
 
     if depth is not None:
-        depth = tf.cond(do_flip, lambda: tf.image.flip_left_right(depth),
-                        lambda: depth)
+      depth = tf.cond(do_flip, lambda: tf.image.flip_left_right(depth),
+                      lambda: depth)
 
     # image = tf.image.random_flip_left_right(image)
     # # Change brightness
@@ -383,13 +395,9 @@ class DataLoader:
     image = tf.clip_by_value(image, 0.0, 1.0)
 
     if depth is None:
-        return image, label
+      return image, label
 
-    return image, {
-        'depth': depth,
-        'semseg': label,
-        'combined': label
-    }
+    return image, {'depth': depth, 'semseg': label, 'combined': label}
 
   def reduce_validation_labels(self, image, label):
     """

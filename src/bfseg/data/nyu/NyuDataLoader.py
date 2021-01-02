@@ -9,7 +9,7 @@ import os
 
 
 class NyuDataLoader:
-  """ Simple dataloader to load nyu images and crop them to desired size. """
+  """ Simple dataloader to load nyu datasets and crop them to desired size. """
 
   def __init__(self, batch_size, shape, loadDepth=False):
     self.batch_size = batch_size
@@ -23,7 +23,6 @@ class NyuDataLoader:
     depth = labels[..., 1]
     label = tf.expand_dims(label, axis=2)
     depth = tf.expand_dims(depth, axis=2)
-    # print(label.shape)
     image = tf.cast(image, tf.float32) / 255.
     # Make sure to NOT mess up the labels thus use nearest neighbour interpolation
     input_size = (self.shape[1], self.shape[0])
@@ -40,9 +39,12 @@ class NyuDataLoader:
                                               input_size,
                                               method="nearest")
     depth_norm = (tf.cast(depth_cropped, dtype=tf.float32) - 255.0) / 131.218
+
+    # replace invalid depth(0) with NaN
     depth_norm_2 = tf.where(
         tf.equal(depth_cropped, tf.constant(0, dtype=tf.int64)),
         tf.constant(float('nan'), dtype=tf.float32), depth_norm)
+
     return image_cropped, {'depth': depth_norm_2, 'semseg': labels_cropped}
 
   def cropImageToInputSize(self, image, size, method="bilinear"):
@@ -67,12 +69,10 @@ class NyuDataLoader:
     # Resize it to desired input size of the network
     return tf.image.resize(cropped_image, size, method=method)
 
-  def create_mask(self, pred_mask):
-    pred_mask = tf.argmax(pred_mask, axis=-1)
-    pred_mask = pred_mask[..., tf.newaxis]
-    return pred_mask
-
   def getDataSets(self):
+    """
+    Returns: train, validation and test datasets
+    """
     train_ds, train_info = tfds.load(
         'NyuDepthV2Labeled',
         split='train[:80%]',
@@ -96,7 +96,7 @@ class NyuDataLoader:
                             num_parallel_calls=tf.data.experimental.AUTOTUNE)
     train_ds = train_ds.cache()
     train_ds = train_ds.shuffle(
-        int(train_info.splits['train'].num_examples * 0.8))
+        int(train_info.splits['train_experiments'].num_examples * 0.8))
     train_ds = train_ds.batch(self.batch_size).repeat()
     train_ds = train_ds.prefetch(tf.data.experimental.AUTOTUNE)
 

@@ -7,6 +7,7 @@ import gdown
 
 
 def str2bool(v):
+  """ converts a string to a bool. Used by argparser to parse arguments """
   if isinstance(v, bool):
     return v
   if v.lower() in ('yes', 'true', 't', 'y', '1'):

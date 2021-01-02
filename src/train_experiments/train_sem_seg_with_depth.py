@@ -1,5 +1,5 @@
 """
-Entry point to only train with meshdist labels
+Entry point to only train_experiments with meshdist labels
 """
 
 import bfseg.experiments.SemSegWithDepthExperiment as experimentWrapper

@@ -25,12 +25,16 @@ def scoreAndPlotPredictions(imageCallback,
   """
   Calculates different metrices for the validation set provided by the dataloader.
   Also plots predictions if plot = True
+
   Args:
       imageCallback: lambda function that takes a batch of images and returns the prediction
       dataLoader: data.meshdist.dataLoader
       plot: Flag whether to plot the results or not
+      batchSize: How many images are loaded with each batch
+      outFolder: Where to store the prediction
+      tag: tag appended to the prediction results
+      exportPredictions: Flag whether or not to export predicted images
 
-  Returns: Nothing, currently only prints
   """
   iam = IgnorantAccuracyMetric()
   ibm = IgnorantBalancedAccuracyMetric()
@@ -105,15 +109,17 @@ def scoreAndPlotPredictions(imageCallback,
             f"mIoU: {mIoU:.4f}, mIoU_B: {mIoU_B:.4f}\nIAM: {iam_value:.4f}, IBM: {ibm_value:.4f}\nTPR: {TP / (FP + FN):.4f}, TNR {TN / (TN + FP):.4f} "
         )
 
+      # Export results as csv
       if outFolder is not None:
         img_name = tag + "_" + str(i + cnt * batches).zfill(3) + ".png"
-
+        # Create csv entry for each image
         with open(os.path.join(outFolder, "results_one_by_one_" + tag + ".csv"),
                   "a+") as f:
           f.write(
               f"{img_name},{iam_value:.4f},{ibm_value:.4f},{mIoU:.4f},{mIoU_B:.4f}\n"
           )
 
+        # Export predicted images if requested
         if exportPredictions:
           imgs_folder = os.path.join(outFolder, "imgs")
           if not os.path.exists(imgs_folder):
@@ -148,6 +154,7 @@ def scoreAndPlotPredictions(imageCallback,
   print("TNR on validation set:", TN / (TN + FP))
   print("Precision  on validation set:", TP / (TP + FP))
 
+  # Export results.csv containing accuracy and iou information
   if outFolder is not None:
     with open(os.path.join(outFolder, "results.csv"), "a+") as f:
       f.write(

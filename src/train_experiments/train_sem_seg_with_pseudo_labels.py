@@ -1,5 +1,5 @@
 """
-Entry point to train with pseudo labels and meshdist labels
+Entry point to train_experiments with pseudo labels and meshdist labels
 """
 import bfseg.experiments.SemSegWithPseudoLabels as experimentWrapper
 from bfseg.experiments.Experiment import train
