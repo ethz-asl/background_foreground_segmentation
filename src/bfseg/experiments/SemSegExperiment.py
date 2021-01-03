@@ -177,7 +177,7 @@ class SemSegExperiment(Experiment):
       model = Deeplabv3(input_shape=(self.config.image_h, self.config.image_w,
                                      3),
                         classes=2,
-                        OS=config.output_stride)
+                        OS=self.config.output_stride)
 
     return model
 
