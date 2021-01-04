@@ -1,6 +1,10 @@
-from bfseg.utils.metrics import IgnorantBalancedMeanIoU, IgnorantMeanIoU, IgnorantBalancedAccuracyMetric, IgnorantAccuracyMetric
+from bfseg.utils.metrics import IgnorantBalancedMeanIoU, IgnorantMeanIoU, IgnorantBalancedAccuracyMetric, \
+  IgnorantAccuracyMetric
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import os
+from PIL import Image
+import numpy as np
 
 
 def oneMetricIteration(metric, label, pred):
@@ -11,16 +15,25 @@ def oneMetricIteration(metric, label, pred):
   return res
 
 
-def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True):
+def scoreAndPlotPredictions(imageCallback,
+                            test_ds,
+                            num_images,
+                            plot=True,
+                            outFolder=None,
+                            tag="",
+                            exportPredictions=False):
   """
   Calculates different metrices for the validation set provided by the dataloader.
   Also plots predictions if plot = True
+
   Args:
       imageCallback: lambda function that takes a batch of images and returns the prediction
       dataLoader: data.meshdist.dataLoader
       plot: Flag whether to plot the results or not
+      outFolder: Where to store the prediction
+      tag: tag appended to the prediction results
+      exportPredictions: Flag whether or not to export predicted images
 
-  Returns: Nothing, currently only prints
   """
   iam = IgnorantAccuracyMetric()
   ibm = IgnorantBalancedAccuracyMetric()
@@ -41,7 +54,7 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True):
   # Other metrices are only used to calculate results for every image.
   FPM_valid = tf.keras.metrics.FalsePositives(
   )  # object assigned the 0 label is background, assigned the 1 label is foreground.
-  # False Neg: Foreground that is interpreted as background
+
   FNM_valid = tf.keras.metrics.FalseNegatives()
   TNM_valid = tf.keras.metrics.TrueNegatives()
   TPM_valid = tf.keras.metrics.TruePositives()
@@ -51,15 +64,17 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True):
   MIOUM_B_valid = IgnorantBalancedMeanIoU()
   MIOUM_valid = IgnorantMeanIoU()
 
-  batches = num_images // 5 - 1
+  # count images
   cnt = 0
-  for test_img, test_label in test_ds.take(batches):
+  for test_img, test_label in test_ds.take(-1):
     pred = imageCallback(test_img)
+    if cnt >= num_images:
+      break
+
     for i in range(pred.shape[0]):
-      if plot:
-        plt.subplot(batches, 5, i + cnt * batches + 1)
-        plt.imshow(tf.argmax(pred[i], axis=-1))
-        plt.imshow(test_img[i], alpha=0.7)
+      if cnt >= num_images:
+        break
+      cnt += 1
 
       # Convert prediction to categorical form
       pred_categorical = tf.argmax(pred[i], axis=-1)
@@ -79,7 +94,7 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True):
 
       # Update Accuracy metrics
       iam_value = oneMetricIteration(iam, test_label[i, ...], pred[i, ...])
-      ibm_value = oneMetricIteration(iam, test_label[i, ...], pred[i, ...])
+      ibm_value = oneMetricIteration(ibm, test_label[i, ...], pred[i, ...])
       iam_valid.update_state(test_label[i, ...], pred[i, ...])
       ibm_valid.update_state(test_label[i, ...], pred[i, ...])
 
@@ -89,23 +104,61 @@ def scoreAndPlotPredictions(imageCallback, test_ds, num_images, plot=True):
       MIOUM_valid.update_state(test_label[i, ...], pred[i, ...])
       MIOUM_B_valid.update_state(test_label[i, ...], pred[i, ...])
 
+      # plot results using matplotlib
       if plot:
+        plt.subplot(num_images // 5, 5, cnt)
+        plt.imshow(tf.argmax(pred[i], axis=-1))
+        plt.imshow(test_img[i], alpha=0.7)
         plt.title(
             f"mIoU: {mIoU:.4f}, mIoU_B: {mIoU_B:.4f}\nIAM: {iam_value:.4f}, IBM: {ibm_value:.4f}\nTPR: {TP / (FP + FN):.4f}, TNR {TN / (TN + FP):.4f} "
         )
 
-    cnt += 1
+      # Export results as csv
+      if outFolder is not None:
+        img_name = tag + "_" + str(cnt).zfill(3) + ".png"
+        # Create csv entry for each image
+        with open(os.path.join(outFolder, "results_one_by_one_" + tag + ".csv"),
+                  "a+") as f:
+          f.write(
+              f"{img_name},{iam_value:.4f},{ibm_value:.4f},{mIoU:.4f},{mIoU_B:.4f}\n"
+          )
+
+        # Export predicted images if requested
+        if exportPredictions:
+          imgs_folder = os.path.join(outFolder, "imgs")
+          if not os.path.exists(imgs_folder):
+            os.mkdir(imgs_folder)
+
+          Image.fromarray(np.uint8(tf.argmax(pred[i], axis=-1)), 'L').save(
+              os.path.join(imgs_folder, "pred_" + img_name))
+          Image.fromarray(np.uint8(np.squeeze(test_label[i])),
+                          'L').save(os.path.join(imgs_folder, "gt_" + img_name))
+          Image.fromarray(np.uint8(test_img[i] * 255)).save(
+              os.path.join(imgs_folder, "img_" + img_name))
 
   FP = FPM_valid.result().numpy()
   FN = FNM_valid.result().numpy()
   TN = TNM_valid.result().numpy()
   TP = TPM_valid.result().numpy()
 
-  print("Accuracy on validation set:", iam_valid.result().numpy())
-  print("mIoU on validation set:", MIOUM_valid.result().numpy())
-  print("Balanced mIoU on validation set:", MIOUM_B_valid.result().numpy())
-  print("Balanced Accuracy on validation set:", ibm_valid.result().numpy())
+  iam_valid_value = iam_valid.result().numpy()
+  MIOUM_valid_value = MIOUM_valid.result().numpy()
+  ibm_valid_value = ibm_valid.result().numpy()
+  MIOUM_B_valid_value = MIOUM_B_valid.result().numpy()
+
+  print("Accuracy on validation set:", iam_valid_value)
+  print("Balanced Accuracy on validation set:", ibm_valid_value)
+  print("mIoU on validation set:", MIOUM_valid_value)
+  print("Balanced mIoU on validation set:", MIOUM_B_valid_value)
+
   print("Positive = Foreground, Negative = Background")
   print("TPR on validation set:", TP / (TP + FN))
   print("TNR on validation set:", TN / (TN + FP))
   print("Precision  on validation set:", TP / (TP + FP))
+
+  # Export results.csv containing accuracy and iou information
+  if outFolder is not None:
+    with open(os.path.join(outFolder, "results.csv"), "a+") as f:
+      f.write(
+          f"{tag},{iam_valid_value:.4f},{ibm_valid_value:.4f},{MIOUM_valid_value:.4f},{MIOUM_B_valid_value:.4f}\n"
+      )
