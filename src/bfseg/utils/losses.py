@@ -17,7 +17,7 @@ def ignorant_depth_loss(depth_label, y_pred_depth):
   )  # tf.keras.losses.ber(depth_label, y_pred_depth_ignorant)
 
 
-def depth_loss_function(y_true, y_pred, theta=10, maxDepthVal=1000.0 / 10.0):
+def depth_loss_function(y_true, y_pred, theta=0.1, maxDepthVal=1000.0 / 10.0):
   """ Loss Function from DenseDepth paper.
     Code taken from here https://github.com/ialhashim/DenseDepth/blob/master/loss.py
   """
