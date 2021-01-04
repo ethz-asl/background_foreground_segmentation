@@ -11,7 +11,7 @@ from bfseg.experiments.SemSegExperiment import SemSegExperiment
 from bfseg.data.nyu.NyuDataLoader import NyuDataLoader
 from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss, ignorant_depth_loss, depth_loss_function
 from bfseg.utils.losses import smooth_consistency_loss
-from bfseg.models.DeeplaabV3Plus import Deeplabv3
+from bfseg.models.DeeplabV3Plus import Deeplabv3
 
 
 class SemSegWithDepthExperiment(SemSegExperiment):
