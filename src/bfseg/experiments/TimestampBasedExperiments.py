@@ -5,7 +5,6 @@ E.g. only use images from the first 20s of the run
 
 from bfseg.experiments.SemSegWithDepthExperiment import SemSegWithDepthExperiment
 from bfseg.experiments.SemSegExperiment import SemSegExperiment
-from bfseg.utils.losses import combined_loss
 from bfseg.data.meshdist.dataLoader import DataLoader
 
 
@@ -16,7 +15,7 @@ def getTimestampFilters(routes, startTimestamp, duration, max_count=None):
     routes: List containing names of routes that are available in the dataset. e.g. [cam0,cam1] or [traj_1, traj_2]
     startTimestamp: First timestamp that should be captured
     duration: number in ms
-    max_count: Max number of images in validation set (or None if ignore)
+    max_count: Max number of images in validation set (or None)
 
   """
   # empty filters
@@ -51,10 +50,12 @@ def addTimeBasedParams(parser):
                       default="CLA",
                       choices=['CLA', 'VICON'])
   parser.add_argument('--routes', nargs="+", default=None)
+
   parser.add_argument('--train_duration',
                       type=float,
                       default=10,
                       help="train_experiments duration in seconds [s]")
+
   parser.add_argument('--start_timestamp',
                       type=float,
                       default=None,
@@ -62,7 +63,7 @@ def addTimeBasedParams(parser):
 
 
 def loadDefaultRoutes(dataset):
-  """ Helper function that loads the dafault available routes for each dataset"""
+  """ Helper function that loads the dafault available routes for each dataset  """
   routes = []
   if dataset == "CLA":
     routes = ['cam0', 'cam1', 'cam2']
@@ -71,6 +72,32 @@ def loadDefaultRoutes(dataset):
   else:
     raise ValueError("Unknown dataset " + dataset)
   return routes
+
+
+def getDataLoader(config, loadDepth):
+  """ Returns a dataloader object with images that are filtered based on their timestamps """
+  # load routes that should be used. If none specified, use all as default
+  if config.routes is None:
+    routes = loadDefaultRoutes(config.dataset)
+  else:
+    routes = config.routes
+
+  if config.start_timestamp is None:
+    config.start_timestamp = 1582125462.069531 if config.dataset == "CLA" else 1606729654.146901
+
+  # get filters for given config
+  train_filter, valid_filter = getTimestampFilters(routes,
+                                                   config.start_timestamp,
+                                                   config.train_duration)
+  # Get a dataloader to load training images
+  return DataLoader(config.train_path, [config.image_h, config.image_w],
+                    validationDir=config.validation_path,
+                    validationMode="CLA",
+                    batchSize=config.batch_size,
+                    loadDepth=loadDepth,
+                    trainFilter=train_filter,
+                    validationFilter=valid_filter,
+                    verbose=True)
 
 
 class TimestampBasedSemSegWithDepthExperiment(SemSegWithDepthExperiment):
@@ -85,33 +112,7 @@ class TimestampBasedSemSegWithDepthExperiment(SemSegWithDepthExperiment):
     addTimeBasedParams(parser)
 
   def loadDataLoader(self):
-    # load routes that should be used. If none specified, use all as default
-    if self.config.routes is None:
-      routes = loadDefaultRoutes(self.config.dataset)
-    else:
-      routes = self.config.routes
-
-    if self.config.start_timestamp is None:
-      # TODO implement for vicon dataset
-      self.config.start_timestamp = 1582125462.069531 if self.config.dataset == "CLA" else 0
-
-    # get filters for given config
-    train_filter, valid_filter = getTimestampFilters(
-        routes, self.config.start_timestamp, self.config.train_duration)
-
-    # Get a dataloader to load training images
-    self.dl = DataLoader(self.config.train_path,
-                         [self.config.image_h, self.config.image_w],
-                         validationDir=self.config.validation_path,
-                         validationMode="CLA",
-                         batchSize=self.config.batch_size,
-                         loadDepth=True,
-                         trainFilter=train_filter,
-                         validationFilter=valid_filter,
-                         cropOptions={
-                             'top': 0,
-                             'bottom': 0
-                         })
+    self.dl = getDataLoader(self.config, True)
 
 
 class TimestampBasedSemSegExperiment(SemSegExperiment):
@@ -126,25 +127,4 @@ class TimestampBasedSemSegExperiment(SemSegExperiment):
     addTimeBasedParams(parser)
 
   def loadDataLoader(self):
-    # load routes that should be used. If none specified, use all as default
-    if self.config.routes is None:
-      routes = loadDefaultRoutes(self.config.dataset)
-    else:
-      routes = self.config.routes
-
-    if self.config.start_timestamp is None:
-      # TODO implement for vicon dataset
-      self.config.start_timestamp = 1582125462.069531 if self.config.dataset == "CLA" else 0
-
-    # get filters for given config
-    train_filter, valid_filter = getTimestampFilters(
-        routes, self.config.start_timestamp, self.config.train_duration)
-    # Get a dataloader to load training images
-    self.dl = DataLoader(self.config.train_path,
-                         [self.config.image_h, self.config.image_w],
-                         validationDir=self.config.validation_path,
-                         validationMode="CLA",
-                         batchSize=self.config.batch_size,
-                         loadDepth=False,
-                         trainFilter=train_filter,
-                         validationFilter=valid_filter)
+    self.dl = getDataLoader(self.config, False)

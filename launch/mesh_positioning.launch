@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Launch file for Selective ICP with rviz
+-->
+
+<launch>
+	<arg name="cad_file" default="$(find cpt_selective_icp)/resources/vicon.json" />
+
+
+	<node name="mesh_positioning"
+          pkg="cpt_selective_icp"
+          type="position_cad_with_marker.py"
+          output="screen">
+    	<param name="marker_parent_frame" value="map" />
+		<param name="marker_frame_name" value="marker" />
+  	</node>
+
+	<node name="find_id_in_mesh"
+          pkg="cpt_utils"
+          type="find_closest_id_in_mesh.py"
+          output="screen">
+		<param name="marker_parent_frame" value="marker" />
+  	</node>
+
+	<node name="mesh_publisher" pkg="cpt_utils" type="mesh_publisher_node" output="screen">
+    	<param name="publish_on_start" value="true"/>
+    	<param name="default_filename" value="$(arg cad_file)"/>
+    	<param name="frame_name" value="marker"/>
+  	</node>
+
+	<node type="rviz" name="rviz" pkg="rviz" args="-d $(find cpt_selective_icp)/launch/rviz.rviz" />
+
+</launch>
