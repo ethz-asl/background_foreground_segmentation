@@ -35,7 +35,7 @@ def load_data(dataset, step, batch_size):
         val_ds, _ = tfds.load(
             dataset,
             split='train[80%:]',
-            shuffle_files=True,
+            shuffle_files=False,
             as_supervised=True,
             with_info=True,
         )
@@ -59,13 +59,20 @@ def load_data(dataset, step, batch_size):
         val_ds, _ = tfds.load(
             dataset,
             split='test[80%:]',
-            shuffle_files=True,
+            shuffle_files=False,
             as_supervised=True,
             with_info=True,
         )
         test_ds, _ = tfds.load(
             dataset,
             split='train[80%:]',
+            shuffle_files=False,
+            as_supervised=True,
+            with_info=True,
+        )
+        pretrain_ds, _ = tfds.load(
+            dataset,
+            split='train[:80%]',
             shuffle_files=False,
             as_supervised=True,
             with_info=True,
@@ -94,7 +101,11 @@ def load_data(dataset, step, batch_size):
                           num_parallel_calls=tf.data.experimental.AUTOTUNE)
     test_ds = test_ds.cache().batch(batch_size).prefetch(
         tf.data.experimental.AUTOTUNE)
-    return train_ds, val_ds, test_ds, lr
+    pretrain_ds = pretrain_ds.map(
+        normalize_img, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    pretrain_ds = pretrain_ds.cache().batch(batch_size).prefetch(
+        tf.data.experimental.AUTOTUNE)
+    return train_ds, val_ds, test_ds, pretrain_ds, lr
 
 
 class Model:
@@ -102,12 +113,12 @@ class Model:
                  log_dir,
                  model_save_dir,
                  lr,
-                 lambda_distillation,
+                 lambda_weights,
                  backbone="vgg16",
                  weights=None):
         self.log_dir = log_dir
         self.model_save_dir = model_save_dir
-        self.lambda_distillation = lambda_distillation
+        self.lambda_weights = lambda_weights
         self.encoder, self.model = sm.Unet(backbone,
                                            input_shape=(480, 640, 3),
                                            classes=2,
@@ -117,14 +128,14 @@ class Model:
         self.new_model = keras.Model(
             inputs=self.model.input,
             outputs=[self.encoder.output, self.model.output])
-        
-        self.old_encoder, _ = sm.Unet(backbone,
-                                      input_shape=(480, 640, 3),
-                                      classes=2,
-                                      activation='sigmoid',
-                                      weights=weights,
-                                      encoder_freeze=True)
-        self.old_encoder.trainable = False
+
+        # self.old_encoder, _ = sm.Unet(backbone,
+        #                               input_shape=(480, 640, 3),
+        #                               classes=2,
+        #                               activation='sigmoid',
+        #                               weights=weights,
+        #                               encoder_freeze=True)
+        # self.old_encoder.trainable = False
         self.train_summary_writer = tf.summary.create_file_writer(
             self.log_dir + "/train")
         self.val_summary_writer = tf.summary.create_file_writer(self.log_dir +
@@ -135,7 +146,7 @@ class Model:
 
         self.loss_ce = keras.losses.SparseCategoricalCrossentropy(
             from_logits=False)
-        self.loss_mse = keras.losses.MeanSquaredError()
+        # self.loss_mse = keras.losses.MeanSquaredError()
         self.loss_tracker = keras.metrics.Mean('loss', dtype=tf.float32)
         self.loss_ce_tracker = keras.metrics.Mean('loss_ce', dtype=tf.float32)
         self.loss_mse_tracker = keras.metrics.Mean('loss_mse',
@@ -146,86 +157,110 @@ class Model:
         self.old_params = []
         for param in self.new_model.trainable_weights:
             old_param_name = param.name.replace(':0', '_old')
-            self.old_params.append(tf.Variable(param.value,trainable=False,name=old_param_name))
+            self.old_params.append(
+                tf.Variable(param, trainable=False, name=old_param_name))
 
-    def create_fisher_params(self, dataset, num_batch):
+    def create_fisher_params(self, dataset):
         self.fisher_params = []
-        log_liklihoods = []
+        grads_list = [
+        ]  # list of list of gradients, outer: for different batches, inner: for different network parameters
         for step, (x, y) in enumerate(dataset):
-            if step > num_batch:
+            if step > 40:
                 break
+            # log_liklihoods = []
             with tf.GradientTape() as tape:
                 [_, pred_y] = self.new_model(x, training=True)
-                log_y = tf.log(pred_y)
-                y = tf.cast(y,log_y.dtype)
-                log_liklihood = tf.reduce_mean(y*log_y[:,:,:,1]+(1-y)*log_y[:,:,:,0],axis=[1,2])
-                log_liklihoods.append(log_liklihood)
-            log_likelihood = tf.reduce_mean(tf.concat(log_liklihoods))
-            grads = tape.gradient(log_likelihood, self.new_model.trainable_weights)
-            fisher_param_names = [param.name.replace(':0', '_fisher') for param in self.new_model.trainable_weights]
-            for param_name, param in zip(fisher_param_names, grads):
-                self.fisher_params.append(tf.Variable(tf.square(param).value,trainable=False,name=param_name))
+                log_y = tf.math.log(pred_y)
+                y = tf.cast(y, log_y.dtype)
+                log_likelihood = tf.reduce_sum(y * log_y[:, :, :, 1:2] +
+                                               (1 - y) * log_y[:, :, :, 0:1],
+                                               axis=[1, 2, 3])
+                # print(log_likelihood.shape)
+                # log_likelihood = tf.reduce_mean(y*log_y[:,:,:,1:2]+(1-y)*log_y[:,:,:,0:1],axis=[1,2,3])
+                # print(log_likelihood)
+                # print(log_liklihood.shape)
+                # log_liklihoods.append(log_liklihood)
+                # log_likelihood = tf.reduce_mean(tf.concat(log_liklihoods,0))
+            grads = tape.gradient(log_likelihood,
+                                  self.new_model.trainable_weights)
+            grads_list.append(grads)
+        fisher_params = []
+        fisher_param_names = [
+            param.name.replace(':0', '_fisher')
+            for param in self.new_model.trainable_weights
+        ]
+        ## compute expectation
+        for i in range(len(fisher_param_names)):
+            single_fisher_param_list = [
+                tf.square(param[i]) for param in grads_list
+            ]
+            fisher_params.append(
+                tf.reduce_mean(tf.stack(single_fisher_param_list, 0), 0))
+        for param_name, param in zip(fisher_param_names, fisher_params):
+            self.fisher_params.append(
+                tf.Variable(param, trainable=False, name=param_name))
 
     def compute_consolidation_loss(self):
-        try:
-            losses = []
-            for i, param in enumerate(self.new_model.trainable_weights):
-                losses.append(tf.reduce_sum(self.fisher_params[i] * (param - self.old_params[i])**2)))
-            return tf.reduce_sum(losses)
-        except AttributeError:
-            return 0
+        losses = []
+        for i, param in enumerate(self.new_model.trainable_weights):
+            losses.append(
+                tf.reduce_sum(self.fisher_params[i] *
+                              (param - self.old_params[i])**2))
+        return tf.reduce_sum(losses)
 
     def train_step(self, train_x, train_y):
+        # print(self.new_model.trainable_weights[0])
         with tf.GradientTape() as tape:
-            [pred_feature, pred_y] = self.new_model(train_x, training=True)
+            [_, pred_y] = self.new_model(train_x, training=True)
             output_loss = self.loss_ce(train_y, pred_y)
-            old_feature = self.old_encoder(train_x, training=False)
-            feature_loss = self.loss_mse(old_feature, pred_feature)
-            loss = (1 - self.lambda_distillation
-                    ) * output_loss + self.lambda_distillation * feature_loss
+            # old_feature = self.old_encoder(train_x, training=False)
+            # feature_loss = self.loss_mse(old_feature, pred_feature)
+            loss = (
+                1 - self.lambda_weights
+            ) * output_loss + self.lambda_weights * self.compute_consolidation_loss(
+            )
         grads = tape.gradient(loss, self.new_model.trainable_weights)
         self.optimizer.apply_gradients(
             zip(grads, self.new_model.trainable_weights))
         pred_y = tf.math.argmax(pred_y, axis=-1)
         self.loss_tracker.update_state(loss)
         self.loss_ce_tracker.update_state(output_loss)
-        self.loss_mse_tracker.update_state(feature_loss)
+        self.loss_mse_tracker.update_state(self.compute_consolidation_loss())
         self.acc_metric.update_state(train_y, pred_y)
 
     def test_step(self, test_x, test_y):
-        [pred_feature, pred_y] = self.new_model(test_x, training=False)
+        [_, pred_y] = self.new_model(test_x, training=False)
         output_loss = self.loss_ce(test_y, pred_y)
-        old_feature = self.old_encoder(test_x, training=False)
-        feature_loss = self.loss_mse(old_feature, pred_feature)
-        loss = (1 - self.lambda_distillation
-                ) * output_loss + self.lambda_distillation * feature_loss
+        # old_feature = self.old_encoder(test_x, training=False)
+        # feature_loss = self.loss_mse(old_feature, pred_feature)
+        loss = (
+            1 - self.lambda_weights
+        ) * output_loss + self.lambda_weights * self.compute_consolidation_loss(
+        )
         pred_y = tf.math.argmax(pred_y, axis=-1)
         # Update val/test metrics
         self.loss_tracker.update_state(loss)
         self.loss_ce_tracker.update_state(output_loss)
-        self.loss_mse_tracker.update_state(feature_loss)
+        self.loss_mse_tracker.update_state(self.compute_consolidation_loss())
         self.acc_metric.update_state(test_y, pred_y)
 
     def on_epoch_end(self, summary_writer, epoch, mode):
-        if mode == "Val":
-            self.model.save(
+        if mode == "Val" and (epoch+1)%10==0:
+            self.new_model.save(
                 os.path.join(
                     self.model_save_dir, 'model.' + str(epoch) + '-' +
                     str(self.acc_metric.result().numpy())[:5] + '.h5'))
         with summary_writer.as_default():
-            tf.summary.scalar('loss,lambda=' + str(self.lambda_distillation),
+            tf.summary.scalar('loss,lambda=' + str(self.lambda_weights),
                               self.loss_tracker.result(),
                               step=epoch)
-            tf.summary.scalar('loss_ce,lambda=' +
-                              str(self.lambda_distillation),
+            tf.summary.scalar('loss_ce,lambda=' + str(self.lambda_weights),
                               self.loss_ce_tracker.result(),
                               step=epoch)
-            tf.summary.scalar('loss_mse,lambda=' +
-                              str(self.lambda_distillation),
+            tf.summary.scalar('loss_mse,lambda=' + str(self.lambda_weights),
                               self.loss_mse_tracker.result(),
                               step=epoch)
-            tf.summary.scalar('accuracy,lambda=' +
-                              str(self.lambda_distillation),
+            tf.summary.scalar('accuracy,lambda=' + str(self.lambda_weights),
                               self.acc_metric.result(),
                               step=epoch)
         template = 'Epoch {}, ' + mode + ' Loss: {}, ' + mode + ' Loss_ce: {}, ' + mode + ' Loss_mse: {}, ' + mode + ' Accuracy: {}'
@@ -247,19 +282,19 @@ def main():
     batch_size = 8
     epochs = 40
     step = "step2"
-    lambda_distillation = 1  # range: [0,1], lambda=0: no distillation, lambda=1: no train on 2nd task
-    print("lambda_distillation is " + str(lambda_distillation))
+    lambda_weights = 0  # range: [0,1], lambda=0: no weight constraints, lambda=1: no train on 2nd task
+    print("lambda_weights is " + str(lambda_weights))
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    print("Current time is "+current_time)
+    print("Current time is " + current_time)
     log_dir = os.path.join(
-        'exp_EWC', 'lambda' + str(lambda_distillation) + "-epoch" + str(epochs),
+        'exp_PC', 'Progress', 'finetune', 'lambda' + str(lambda_weights) + "-epoch" + str(epochs),
         'logs', step)
     model_save_dir = os.path.join(
-        'exp_EWC', 'lambda' + str(lambda_distillation) + "-epoch" + str(epochs),
+        'exp_PC', 'Progress', 'finetune', 'lambda' + str(lambda_weights) + "-epoch" + str(epochs),
         'saved_model', step)
     if step == "step1":
         saved_weights_dir = None
-        lambda_distillation = 0
+        lambda_weights = 0
     else:
         saved_weights_dir = "exp/lambda0-epoch20/saved_model/step1/model.16-0.899.h5"
     try:
@@ -269,17 +304,17 @@ def main():
         os.makedirs(model_save_dir)
     except os.error:
         pass
-    train_ds, val_ds, test_ds, lr = load_data('NyuDepthV2Labeled', step,
-                                              batch_size)
+    train_ds, val_ds, test_ds, pretrain_ds, lr = load_data(
+        'NyuDepthV2Labeled', step, batch_size)
     model = Model(log_dir=log_dir,
                   model_save_dir=model_save_dir,
                   lr=lr,
-                  lambda_distillation=lambda_distillation,
+                  lambda_weights=lambda_weights,
                   backbone=BACKBONE,
                   weights=saved_weights_dir)
     #   model.new_model.summary()
     model.create_old_params()
-    model.create_fisher_params(test_ds, num_batch=100)
+    model.create_fisher_params(pretrain_ds)
     for epoch in range(epochs):
         print("\nStart of epoch %d" % (epoch, ))
         for step, (train_x, train_y) in enumerate(train_ds):
