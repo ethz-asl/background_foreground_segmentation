@@ -1,4 +1,5 @@
-from bfseg.utils.metrics import IgnorantBalancedMeanIoU, IgnorantMeanIoU, IgnorantBalancedAccuracyMetric, IgnorantAccuracyMetric
+from bfseg.utils.metrics import IgnorantBalancedMeanIoU, IgnorantMeanIoU, IgnorantBalancedAccuracyMetric, \
+  IgnorantAccuracyMetric
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import os
@@ -18,7 +19,6 @@ def scoreAndPlotPredictions(imageCallback,
                             test_ds,
                             num_images,
                             plot=True,
-                            batchSize=5,
                             outFolder=None,
                             tag="",
                             exportPredictions=False):
@@ -30,7 +30,6 @@ def scoreAndPlotPredictions(imageCallback,
       imageCallback: lambda function that takes a batch of images and returns the prediction
       dataLoader: data.meshdist.dataLoader
       plot: Flag whether to plot the results or not
-      batchSize: How many images are loaded with each batch
       outFolder: Where to store the prediction
       tag: tag appended to the prediction results
       exportPredictions: Flag whether or not to export predicted images
@@ -55,7 +54,7 @@ def scoreAndPlotPredictions(imageCallback,
   # Other metrices are only used to calculate results for every image.
   FPM_valid = tf.keras.metrics.FalsePositives(
   )  # object assigned the 0 label is background, assigned the 1 label is foreground.
-  # False Neg: Foreground that is interpreted as background
+
   FNM_valid = tf.keras.metrics.FalseNegatives()
   TNM_valid = tf.keras.metrics.TrueNegatives()
   TPM_valid = tf.keras.metrics.TruePositives()
@@ -65,16 +64,17 @@ def scoreAndPlotPredictions(imageCallback,
   MIOUM_B_valid = IgnorantBalancedMeanIoU()
   MIOUM_valid = IgnorantMeanIoU()
 
-  batches = num_images // batchSize  #- 1
+  # count images
   cnt = 0
-  for test_img, test_label in test_ds.take(batches):
+  for test_img, test_label in test_ds.take(-1):
     pred = imageCallback(test_img)
+    if cnt >= num_images:
+      break
 
     for i in range(pred.shape[0]):
-      if plot:
-        plt.subplot(batches, 5, i + cnt * batches + 1)
-        plt.imshow(tf.argmax(pred[i], axis=-1))
-        plt.imshow(test_img[i], alpha=0.7)
+      if cnt >= num_images:
+        break
+      cnt += 1
 
       # Convert prediction to categorical form
       pred_categorical = tf.argmax(pred[i], axis=-1)
@@ -104,14 +104,18 @@ def scoreAndPlotPredictions(imageCallback,
       MIOUM_valid.update_state(test_label[i, ...], pred[i, ...])
       MIOUM_B_valid.update_state(test_label[i, ...], pred[i, ...])
 
+      # plot results using matplotlib
       if plot:
+        plt.subplot(num_images // 5, 5, cnt)
+        plt.imshow(tf.argmax(pred[i], axis=-1))
+        plt.imshow(test_img[i], alpha=0.7)
         plt.title(
             f"mIoU: {mIoU:.4f}, mIoU_B: {mIoU_B:.4f}\nIAM: {iam_value:.4f}, IBM: {ibm_value:.4f}\nTPR: {TP / (FP + FN):.4f}, TNR {TN / (TN + FP):.4f} "
         )
 
       # Export results as csv
       if outFolder is not None:
-        img_name = tag + "_" + str(i + cnt * batches).zfill(3) + ".png"
+        img_name = tag + "_" + str(cnt).zfill(3) + ".png"
         # Create csv entry for each image
         with open(os.path.join(outFolder, "results_one_by_one_" + tag + ".csv"),
                   "a+") as f:
@@ -131,8 +135,6 @@ def scoreAndPlotPredictions(imageCallback,
                           'L').save(os.path.join(imgs_folder, "gt_" + img_name))
           Image.fromarray(np.uint8(test_img[i] * 255)).save(
               os.path.join(imgs_folder, "img_" + img_name))
-
-    cnt += 1
 
   FP = FPM_valid.result().numpy()
   FN = FNM_valid.result().numpy()
