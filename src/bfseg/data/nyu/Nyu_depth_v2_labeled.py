@@ -23,13 +23,6 @@ _CITATION = """
 _URL = 'http://horatio.cs.nyu.edu/mit/silberman/nyu_depth_v2/nyu_depth_v2_labeled.mat'
 
 
-def convert_mat(data):
-  assert data.attrs['MATLAB_class'].decode()=='char'
-  string_array=np.array(data).ravel()
-  string_array = ''.join([chr(x) for x in string_array])
-  string_array = string_array.replace('\x00', '')
-  return string_array
-  
 class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for Nyu_depth_v2_labeled dataset."""
 
@@ -38,6 +31,7 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
       # '1.0.0': 'Initial release.',
       '2.0.0': 'different scenes for train/test',
   }
+
   # MANUAL_DOWNLOAD_INSTRUCTIONS = 1
 
   def _info(self) -> tfds.core.DatasetInfo:
@@ -47,8 +41,8 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         builder=self,
         description=_DESCRIPTION,
         features=tfds.features.FeaturesDict({
-          'image': tfds.features.Image(shape=(480, 640, 3), dtype=tf.uint8),
-          'label': tfds.features.Tensor(shape=(480, 640), dtype=tf.uint8), 
+            'image': tfds.features.Image(shape=(480, 640, 3), dtype=tf.uint8),
+            'label': tfds.features.Tensor(shape=(480, 640), dtype=tf.uint8),
         }),
         supervised_keys=("image", "label"),  # e.g. ('image', 'label')
         homepage='https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html/',
@@ -66,15 +60,15 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
             name=tfds.Split.TRAIN,
             # These kwargs will be passed to _generate_examples
             gen_kwargs={
-              'dataset_path': download_dir,
-              'scene_type':'kitchen',
+                'dataset_path': download_dir,
+                'scene_type': 'kitchen',
             },
         ),
         tfds.core.SplitGenerator(
             name=tfds.Split.TEST,
             gen_kwargs={
-              'dataset_path': download_dir,
-              'scene_type':'bedroom',
+                'dataset_path': download_dir,
+                'scene_type': 'bedroom',
             },
         ),
     ]
@@ -83,17 +77,23 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
     """Yields examples."""
     # (Nyu_depth_v2_labeled): Yields (key, example) tuples from the dataset
     h5py = tfds.core.lazy_imports.h5py
-    with h5py.File(dataset_path,'r') as f:
+    with h5py.File(dataset_path, 'r') as f:
       Images = f['images']
       Labels = f['labels']
-      Images = np.array(f['images'],dtype=f['images'].dtype).T.squeeze()
-      Labels = np.array(f['labels'],dtype=f['labels'].dtype).T.squeeze()
-      scene_type = [f[f["sceneTypes"][0, i]][:, 0].tobytes().decode("utf-16")
-               for i in range(f["sceneTypes"].shape[1])]
+      Images = np.array(f['images'], dtype=f['images'].dtype).T.squeeze()
+      Labels = np.array(f['labels'], dtype=f['labels'].dtype).T.squeeze()
+      scene_type = [
+          f[f["sceneTypes"][0, i]][:, 0].tobytes().decode("utf-16")
+          for i in range(f["sceneTypes"].shape[1])
+      ]
       for i in range(Images.shape[-1]):
         # Label_expand = np.expand_dims(Labels[:,:,i], axis=2)
-        if scene_type[i]==scene_type:
-          label = Labels[:,:,i]
-          combine_label = np.logical_or(label==4,(np.logical_or(label==11,label==21))).astype(np.uint8)
-          yield str(i).zfill(4), {'image':Images[:,:,:,i],
-                  'label':combine_label}
+        if scene_type[i] == scene_type:
+          label = Labels[:, :, i]
+          combine_label = np.logical_or(
+              label == 4,
+              (np.logical_or(label == 11, label == 21))).astype(np.uint8)
+          yield str(i).zfill(4), {
+              'image': Images[:, :, :, i],
+              'label': combine_label
+          }
