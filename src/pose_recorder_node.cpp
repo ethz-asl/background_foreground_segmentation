@@ -12,8 +12,6 @@ std::string out_file;
 tf::TransformListener *tf_listener;
 
 void callback(const sensor_msgs::ImageConstPtr &msg) {
-  std::cout << "got callback" << std::endl;
-  std::cout << msg->header << std::endl;
 
   std_msgs::Header h = msg->header;
   std::string timestamp = std::to_string(h.stamp.toSec());

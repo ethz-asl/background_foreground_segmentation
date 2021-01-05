@@ -47,6 +47,21 @@ if config['processImages']:
                                      custom_objects={'tf': tf})
 
 
+@tf.function
+def predictImage(img):
+  """ prediction segmentation mask for the given image """
+  img_shape = img.shape
+  # scale to input size
+  img = tf.image.resize(tf.cast(img, dtype=float) / 255, [480, 640])
+  # predict image
+  pred = tf.squeeze(tf.argmax(model(tf.expand_dims(img, axis=0))[1], axis=-1))
+  # scale to output size
+  final_prediction = tf.image.resize(
+      tf.expand_dims(pred * 255, axis=-1), [img_shape[0], img_shape[1]],
+      method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+  return final_prediction
+
+
 def callback(msg, *args):
   """ Gets executed every time we get an image from the camera"""
   # Set headers for camera info
@@ -62,19 +77,11 @@ def callback(msg, *args):
     img = np.frombuffer(msg.data, dtype=np.uint8)
     # Convert BGR to RGB
     img = img.reshape(msg.height, msg.width, 4)[:, :, [2, 1, 0]]
+    img_shape = img.shape
     # Rotate image
     img = tf.convert_to_tensor(np.rot90(np.rot90(img)))
-    img_shape = img.shape
 
-    # scale to input size
-    img = tf.image.resize(tf.cast(img, dtype=float) / 255, [480, 640])
-    # predict image
-    pred = tf.squeeze(
-        tf.argmax(model.predict(tf.expand_dims(img, axis=0))[1], axis=-1))
-    # scale to output size, change dtype
-    final_prediction = tf.image.resize(
-        tf.expand_dims(pred * 255, axis=-1), [img_shape[0], img_shape[1]],
-        method=tf.image.ResizeMethod.NEAREST_NEIGHBOR).numpy().astype(np.uint8)
+    final_prediction = predictImage(img).numpy().astype(np.uint8)
     # rotate back
     final_prediction = np.rot90(np.rot90(final_prediction))
 
