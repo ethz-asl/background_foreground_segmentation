@@ -51,7 +51,7 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         description=_DESCRIPTION,
         features=tfds.features.FeaturesDict({
             'image': tfds.features.Image(shape=(480, 640, 3), dtype=tf.uint8),
-            'label': tfds.features.Tensor(shape=(480, 640,2), dtype=tf.int64),
+            'label': tfds.features.Tensor(shape=(480, 640, 2), dtype=tf.int64),
         }),
         # features=tfds.features.FeaturesDict({
         #   'image': tfds.features.Image(shape=(48, 64, 3), dtype=tf.uint8),
@@ -92,7 +92,6 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         ),
     ]
 
-
   def _generate_examples(self, dataset_path, scene_type):
     """Yields examples."""
     # TODO(Nyu_depth_v2_labeled): Yields (key, example) tuples from the dataset
@@ -117,18 +116,22 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         if cell[0][i] == scene_type:
           label = Labels[:, :, i]
           combine_label = np.logical_not(
-              np.logical_or(label == 4,
-                            (np.logical_or(label == 11, label == 21)))).astype(
-                                int)
+              np.logical_or(
+                  label == 4,
+                  (np.logical_or(label == 11, label == 21)))).astype(int)
           yield str(i).zfill(4), {
-              'image': Images[:, :, :, i],
+              'image':
+                  Images[:, :, :, i],
               # 'depth': Depths[:, :, i],
               # 'label':mask}
               #'label': combine_label
-              'label': np.stack([combine_label, (Depths[:, :, i]*100).astype(int)],axis = -1)
+              'label':
+                  np.stack([combine_label, (Depths[:, :, i] * 100).astype(int)],
+                           axis=-1)
           }
         # yield str(i).zfill(4), {'image':Image_resize,
         #         'label':Label_resize}
+
 
 # h5py = tfds.core.lazy_imports.h5py
 # f=h5py.File('nyu_depth_v2_labeled.mat','r')
