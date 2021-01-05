@@ -215,9 +215,9 @@ void Creator::projectPointCloud(
 
   // Wait for transform for pointcloud
   std::shared_ptr<tf::StampedTransform> t(new tf::StampedTransform);
-  tf_listener->waitForTransform(camera_frame, cloud_frame, stamp,
+  tf_listener->waitForTransform(camera_frame, cloud_frame, cloud->header.stamp,
                                 ros::Duration(0.4));
-  tf_listener->lookupTransform(camera_frame, cloud_frame, stamp, *t);
+  tf_listener->lookupTransform(camera_frame, cloud_frame,  cloud->header.stamp, *t);
 
   // Image that contains the projected pointcloud
   cv::Mat preview_img = camera_image.clone();

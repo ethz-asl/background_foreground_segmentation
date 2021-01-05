@@ -1,0 +1,17 @@
+<launch>
+
+      <arg name="topics" default="/tf /points_filtered /rgb/bg_fg_img" />
+      <!-- Record Bagfile -->
+      <node name="rosbag_record" 
+            pkg="rosbag" 
+            type="record" 
+            output="screen" 
+            respawn="false"
+            args="-o /home/rene/vicon_filtered $(arg topics)">
+      </node>
+      <include file="$(find background_foreground_segmentation)/launch/vicon_pointcloud_projector.launch" />
+      <node name="ros_image_publisher" pkg="background_foreground_segmentation" type="ros_image_publisher.py" output="screen" />
+
+
+
+</launch>
