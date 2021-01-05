@@ -4,7 +4,7 @@ from bfseg.utils.losses import ignorant_cross_entropy_loss
 
 def test_ignorant_loss():
   # Generate random labels and predictions
-  labels = tf.random.uniform(shape=[4, 120, 240, 1],
+  labels = tf.random.uniform(shape=[4, 120, 240],
                              minval=0,
                              maxval=3,
                              dtype=tf.int64)
@@ -14,7 +14,7 @@ def test_ignorant_loss():
   loss1 = ignorant_cross_entropy_loss(labels, prediction).numpy()
 
   # Get labels as one hot encoded tensor
-  labels_as_tensor = tf.squeeze(tf.keras.backend.one_hot(labels, 3))
+  labels_as_tensor = tf.keras.backend.one_hot(labels, 3)
 
   # Pixels that should be ignored
   class_to_ignore = labels_as_tensor[..., 1]
