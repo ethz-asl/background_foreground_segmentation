@@ -12,14 +12,14 @@ def normalize_img(image, label):
 def main():
   train_ds, train_info = tfds.load(
       'NyuDepthV2Labeled',
-      split='train_experiments[:80%]',
+      split='train[:80%]',
       shuffle_files=True,
       as_supervised=True,
       with_info=True,
   )
   test_ds, test_info = tfds.load(
       'NyuDepthV2Labeled',
-      split='train_experiments[80%:]',
+      split='train[80%:]',
       shuffle_files=False,
       as_supervised=True,
       with_info=True,
@@ -27,7 +27,7 @@ def main():
   train_ds = train_ds.map(normalize_img,
                           num_parallel_calls=tf.data.experimental.AUTOTUNE)
   train_ds = train_ds.cache()
-  train_ds = train_ds.shuffle(train_info.splits['train_experiments[:80%'].num_examples)
+  train_ds = train_ds.shuffle(train_info.splits['train[:80%'].num_examples)
   train_ds = train_ds.batch(128)
   train_ds = train_ds.prefetch(tf.data.experimental.AUTOTUNE)
 

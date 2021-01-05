@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<launch>
-	<node pkg="tf" type="static_transform_publisher" name="whatever" args="0.11 0 0 0 0 0 1 vicon/azure/azure  camera_base 100"/>
-<!--	<node pkg="tf" type="static_transform_publisher" name="whatewver" args="0 0 0 1.5708 0 1.5708  camera_base  rgb_camera_link  100"/> -->
-<!--	<node pkg="tf" type="static_transform_publisher" name="please" args="-0.110193 0.27627 0.121654 -0.027386 0.0220249 -0.000600477 0.999382 /map /rgb_camera_link  100"/> -->
-<!---->	 <node pkg="tf" type="static_transform_publisher" name="wrld" args="0 0 0 0 0 0 1  map world 100"/> -->
-</launch>
