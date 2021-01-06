@@ -5,6 +5,7 @@ import json
 from sacred import Experiment as SacredExperiment
 from sacred.observers import MongoObserver
 import tensorflow as tf
+import nump as np
 import shutil
 import datetime
 
@@ -21,6 +22,13 @@ def train(experiment):
                     - compileModel(model)
                     - compileNyuModel(model)
     """
+
+  # fix seeds
+  tf.reset_default_graph()
+  tf.random.set_seed(0)
+  random.seed(0)
+  np.random.seed(0)
+
   # needs to be global to be set using @ex.config
   global args, outFolder, experiment_name
   args = experiment.getConfig()
@@ -134,6 +142,7 @@ class Experiment():
       except Exception as e:
         print("Could not load pretrained weights. Starting with random ones.",
               e)
+        self.pretrainNyu(model, self.weightsFolder)
 
     # Get custom training data from experiment
     train_ds, test_ds = self.getTrainData()
