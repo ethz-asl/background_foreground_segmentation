@@ -42,7 +42,7 @@ class SemSegExperiment(Experiment):
 
     parser.add_argument('--image_w', type=int, default=720, help="Image width")
     parser.add_argument('--image_h', type=int, default=480, help="Image height")
-    #
+
     parser.add_argument('--train_path',
                         type=str,
                         help='Path to dataset',

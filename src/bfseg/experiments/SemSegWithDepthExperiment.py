@@ -94,15 +94,13 @@ class SemSegWithDepthExperiment(SemSegExperiment):
                   metrics=self.getMetrics())
 
   def compileNyuModel(self, model):
-    model.compile(loss={
-        'depth': depth_loss_function,
-        'semseg': tf.keras.losses.sparse_categorical_crossentropy
-    },
-                  optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr),
-                  metrics=[
-                      tf.keras.metrics.MeanAbsoluteError(),
-                      tf.keras.metrics.SparseCategoricalAccuracy()
-                  ])
+    model.compile(
+        loss={
+            'depth': depth_loss_function,
+            'semseg': tf.keras.losses.sparse_categorical_crossentropy
+        },
+        optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr),
+        metrics={'semseg': tf.keras.metrics.SparseCategoricalAccuracy()})
 
   """ --------------------------------- Data Loading -------------------------------------------------- """
 
