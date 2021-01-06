@@ -133,7 +133,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     steps_per_epoch = train_info.splits[
         'train'].num_examples // self.config.nyu_batchsize
     # return train_ds, valid_ds, steps_per_epoch
-    return train_ds, None, steps_per_epoch
+    return train_ds, valid_ds, steps_per_epoch
 
   def getTrainData(self):
     """ return train_ds, test_ds """
@@ -148,7 +148,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
                         OS=self.config.output_stride,
                         activation="sigmoid",
                         add_depth_prediction=True)
-    if self.config.model_name == "PSP":
+    elif self.config.model_name == "PSP":
       model = PSPNetMultiTask(self.config.backbone,
                               input_shape=(self.config.image_h,
                                            self.config.image_w, 3),

@@ -5,9 +5,10 @@ import json
 from sacred import Experiment as SacredExperiment
 from sacred.observers import MongoObserver
 import tensorflow as tf
-import nump as np
+import numpy as np
 import shutil
 import datetime
+import random
 
 
 def train(experiment):
@@ -24,7 +25,6 @@ def train(experiment):
     """
 
   # fix seeds
-  tf.reset_default_graph()
   tf.random.set_seed(0)
   random.seed(0)
   np.random.seed(0)
