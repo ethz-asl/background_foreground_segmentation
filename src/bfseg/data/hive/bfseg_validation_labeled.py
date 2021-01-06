@@ -11,10 +11,6 @@ It consists of two labels (0,1) where all classes that belong to the background 
 '1' label.
 """
 
-_CITATION = """
-Should we do this?
-"""
-
 
 class BfsegValidationLabeled(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for Nyu_depth_v2_labeled dataset."""
@@ -24,46 +20,38 @@ class BfsegValidationLabeled(tfds.core.GeneratorBasedBuilder):
 
   def _info(self) -> tfds.core.DatasetInfo:
     """Returns the dataset metadata."""
-    return tfds.core.DatasetInfo(
-        builder=self,
-        description=_DESCRIPTION,
-        features=tfds.features.FeaturesDict({
-            'image':
-                tfds.features.Tensor(shape=(480, 640, 3), dtype=tf.float64),
-            'label':
-                tfds.features.Tensor(shape=(480, 640, 1), dtype=tf.uint8),
-        }),
-        supervised_keys=("image", "label"),
-        citation=_CITATION,
-    )
+    return tfds.core.DatasetInfo(builder=self,
+                                 description=_DESCRIPTION,
+                                 features=tfds.features.FeaturesDict({
+                                     'image':
+                                         tfds.features.Tensor(shape=(480, 640,
+                                                                     3),
+                                                              dtype=tf.float64),
+                                     'label':
+                                         tfds.features.Tensor(shape=(480, 640,
+                                                                     1),
+                                                              dtype=tf.uint8),
+                                 }),
+                                 supervised_keys=("image", "label"))
 
   def _split_generators(self, dl_manager: tfds.download.DownloadManager):
     """Returns SplitGenerators."""
-
-    download_dir = os.path.expanduser(
-        "~/tensorflow_datasets/hive_labels_validation/")
-    file_dir = download_dir + "data.h5"
-
-    if not os.path.exists(file_dir):
-      os.makedirs(download_dir, exist_ok=True)
-      print("Data file does not exist, going to download it from google drive")
-      saved_file = load_gdrive_file('1qpDnnxSCqNR3LrOv6kkVrdeU8yotSkXB',
-                                    output_folder=download_dir)
-      _, filename = os.path.split(saved_file)
-      os.rename(saved_file, saved_file.replace(filename, "data.h5"))
+    dataset_path = dl_manager.download(
+        "https://drive.google.com/uc?export=download&id=1qpDnnxSCqNR3LrOv6kkVrdeU8yotSkXB"
+    )
 
     return [
         tfds.core.SplitGenerator(
             name="CLA",
             gen_kwargs={
-                'dataset_path': download_dir + "data.h5",
+                'dataset_path': dataset_path,
                 'scene_type': "CLA",
             },
         ),
         tfds.core.SplitGenerator(
             name="ARCHE",
             gen_kwargs={
-                'dataset_path': download_dir + "data.h5",
+                'dataset_path': dataset_path,
                 'scene_type': "ARCHE",
             },
         ),

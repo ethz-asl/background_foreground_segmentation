@@ -20,27 +20,32 @@ class BfsegCLAMeshdistLabels(tfds.core.GeneratorBasedBuilder):
 
   def _info(self) -> tfds.core.DatasetInfo:
     """Returns the dataset metadata."""
-    return tfds.core.DatasetInfo(
-        builder=self,
-        description=_DESCRIPTION,
-        features=tfds.features.FeaturesDict({
-            'image':
-                tfds.features.Tensor(shape=(480, 640, 3), dtype=tf.float64),
-            'label':
-                tfds.features.Tensor(shape=(480, 640, 1), dtype=tf.uint8),
-        }),
-        supervised_keys=("image", "label"),
-    )
+    return tfds.core.DatasetInfo(builder=self,
+                                 description=_DESCRIPTION,
+                                 features=tfds.features.FeaturesDict({
+                                     'image':
+                                         tfds.features.Tensor(shape=(480, 640,
+                                                                     3),
+                                                              dtype=tf.float64),
+                                     'label':
+                                         tfds.features.Tensor(shape=(480, 640,
+                                                                     1),
+                                                              dtype=tf.uint8),
+                                 }),
+                                 supervised_keys=("image", "label"))
 
   def _split_generators(self, dl_manager: tfds.download.DownloadManager):
     """Returns SplitGenerators."""
 
-    download_dir = "/home/rene/catkin_ws/src/background_foreground_segmentation/notebooks/"
+    # TODO , update with real path once uploaded
+    dataset_path = dl_manager.download(
+        "https://drive.google.com/uc?export=download&id=1qpDnnxSCqNR3LrOv6kkVrdeU8yotSkXB"
+    )
     return [
         tfds.core.SplitGenerator(
             name="fused",
             gen_kwargs={
-                'dataset_path': download_dir + "data.h5",
+                'dataset_path': dataset_path,
                 'scene_type': "CLA_FUSED",
             },
         )
