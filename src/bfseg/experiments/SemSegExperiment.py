@@ -42,7 +42,7 @@ class SemSegExperiment(Experiment):
 
     parser.add_argument('--image_w', type=int, default=720, help="Image width")
     parser.add_argument('--image_h', type=int, default=480, help="Image height")
-
+    #
     parser.add_argument('--train_path',
                         type=str,
                         help='Path to dataset',
@@ -100,9 +100,11 @@ class SemSegExperiment(Experiment):
             "densenet169", "densenet201", "inceptionv3", "inceptionresnetv2",
             "mobilenet", "mobilenetv2", "efficientnetb0", "efficientnetb1",
             "efficientnetb2", "efficientnetb3", "efficientnetb4",
-            "efficientnetb5", " efficientnetb7"
+            "efficientnetb5", " efficientnetb7", "xception", "mobile"
         ],
-        help='CNN architecture, only used if PSP or UNET selected')
+        help=
+        'CNN architecture. If using Deeplab model, only xception and mobile are supported'
+    )
 
     # NYU parameters
     parser.add_argument('--nyu_batchsize',

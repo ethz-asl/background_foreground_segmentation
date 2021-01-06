@@ -12,6 +12,7 @@ from bfseg.data.nyu.NyuDataLoader import NyuDataLoader
 from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss, ignorant_depth_loss, depth_loss_function
 from bfseg.utils.losses import smooth_consistency_loss
 from bfseg.models.DeeplabV3Plus import Deeplabv3
+from bfseg.models.PspMultiTask import PSPNetMultiTask
 
 
 class SemSegWithDepthExperiment(SemSegExperiment):
@@ -26,7 +27,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     super(SemSegWithDepthExperiment, self)._addArguments(parser)
 
     # overwrite default image size since we are now using the kinect
-    parser.add_argument('--image_w', type=int, default=640)
+    parser.add_argument('--image_w', type=int, default=624)
     parser.add_argument('--image_h', type=int, default=480)
 
     parser.add_argument('--depth_weigth', type=float, default=4)
@@ -34,12 +35,6 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     parser.add_argument('--use_consistency_loss', type=str2bool, default=False)
     parser.add_argument('--consistency_weight', type=float, default=10)
     parser.add_argument('--model_name', type=str, default="DEEPLAB")
-
-    parser.add_argument('--backbone',
-                        type=str,
-                        default='xception',
-                        choices=["xception", "mobile"],
-                        help='CNN architecture')
 
   """ --------------------------------- Loss and Metrics----------------------------------------------- """
 
@@ -146,15 +141,21 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     return train, None
 
   def getModel(self):
-    if self.config.model_name != "DEEPLAB":
+    if self.config.model_name == "DEEPLAB":
+      model = Deeplabv3(input_shape=(self.config.image_h, self.config.image_w,
+                                     3),
+                        classes=2,
+                        OS=self.config.output_stride,
+                        activation="sigmoid",
+                        add_depth_prediction=True)
+    if self.config.model_name == "PSP":
+      model = PSPNetMultiTask(self.config.backbone,
+                              input_shape=(self.config.image_h,
+                                           self.config.image_w, 3),
+                              classes=2)
+    else:
       raise ValueError(
-          "Only DEEPLAB is supported as model for depth prediction")
-
-    model = Deeplabv3(input_shape=(self.config.image_h, self.config.image_w, 3),
-                      classes=2,
-                      OS=self.config.output_stride,
-                      activation="sigmoid",
-                      add_depth_prediction=True)
+          "Only DEEPLAB and PSP is supported as model for depth prediction")
 
     return model
 
