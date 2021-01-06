@@ -660,7 +660,12 @@ def Deeplabv3(weights='pascal_voc',
     depth = Conv2D(1, (1, 1), padding='same',
                    name="depth_decoder")(before_decoder_layer)
     depth = Lambda(lambda xx: tf.compat.v1.image.resize(
-        xx, size_before3[1:3], method='bilinear', align_corners=True))(depth)
+        xx,
+        size_before3[1:3],
+        method='bilinear',
+        align_corners=True,
+    ),
+                   name="depth")(depth)
 
     # decoded semseg
     semseg = Conv2D(classes, (1, 1), padding='same',
@@ -669,8 +674,8 @@ def Deeplabv3(weights='pascal_voc',
         xx, size_before3[1:3], method='bilinear', align_corners=True))(semseg)
 
     # This lambda layer rescales the depth
-    depth = Lambda(lambda xx: tf.math.scalar_mul(1.5, xx) + 2,
-                   name="depth")(depth)
+    # depth = Lambda(lambda xx: tf.math.scalar_mul(1.5, xx) + 2,
+    #               name="depth")(depth)
 
     if activation in {'softmax', 'sigmoid'}:
       semseg = tf.keras.layers.Activation(activation, name="semseg")(semseg)

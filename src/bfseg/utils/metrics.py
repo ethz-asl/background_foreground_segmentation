@@ -10,7 +10,8 @@ class IgnorantDepthMAPE(tf.keras.metrics.MeanAbsoluteError):
     super().__init__()
 
   def update_state(self, depth_label, y_pred_depth, sample_weight=None):
-
+    y_pred_depth = 10 / y_pred_depth
+    depth_label = 10 / depth_label
     y_pred_depth_ignorant = tf.where(tf.math.is_nan(depth_label),
                                      tf.zeros_like(depth_label), y_pred_depth)
     depth_label = tf.where(tf.math.is_nan(depth_label),

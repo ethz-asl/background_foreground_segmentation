@@ -136,7 +136,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     train_ds, train_info, valid_ds, _, _, _ = self.nyuLoader.getDataSets()
 
     steps_per_epoch = train_info.splits[
-        'train_experiments'].num_examples // self.config.nyu_batchsize
+        'train'].num_examples // self.config.nyu_batchsize
     # return train_ds, valid_ds, steps_per_epoch
     return train_ds, None, steps_per_epoch
 

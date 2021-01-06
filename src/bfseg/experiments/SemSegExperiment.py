@@ -29,30 +29,30 @@ class SemSegExperiment(Experiment):
     """ Add custom arguments that are needed for this experiment """
     super(SemSegExperiment, self)._addArguments(parser)
 
-    parser.add_argument('--train_path',
-                        type=str,
-                        help='Path to dataset',
-                        default="/home/rene/cla_dataset/watershed"
-                       )  #"/cluster/scratch/zrene/cla_dataset/watershed/")
-    parser.add_argument('--validation_path',
-                        type=str,
-                        help='Path to dataset',
-                        default="/home/rene/hiveLabels"
-                       )  #"/cluster/scratch/zrene/cla_dataset/hiveLabels/")
+    # parser.add_argument('--train_path',
+    #                     type=str,
+    #                     help='Path to dataset',
+    #                     default="/home/rene/vicon_dataset/rotated"
+    #                    )  #"/cluster/scratch/zrene/cla_dataset/watershed/")
+    # parser.add_argument('--validation_path',
+    #                     type=str,
+    #                     help='Path to dataset',
+    #                     default="/home/rene/hiveLabels"
+    #                    )  #"/cluster/scratch/zrene/cla_dataset/hiveLabels/")
 
     parser.add_argument('--image_w', type=int, default=720, help="Image width")
     parser.add_argument('--image_h', type=int, default=480, help="Image height")
 
-    # parser.add_argument('--train_path',
-    #                     type=str,
-    #                     help='Path to dataset',
-    #                     default="/cluster/scratch/zrene/cla_dataset/watershed/")
-    #
-    # parser.add_argument(
-    #     '--validation_path',
-    #     type=str,
-    #     help='Path to validation dataset',
-    #     default="/cluster/scratch/zrene/cla_dataset/hiveLabels/")
+    parser.add_argument('--train_path',
+                        type=str,
+                        help='Path to dataset',
+                        default="/cluster/scratch/zrene/cla_dataset/watershed/")
+
+    parser.add_argument(
+        '--validation_path',
+        type=str,
+        help='Path to validation dataset',
+        default="/cluster/scratch/zrene/cla_dataset/hiveLabels/")
 
     parser.add_argument('--validation_mode',
                         type=str,

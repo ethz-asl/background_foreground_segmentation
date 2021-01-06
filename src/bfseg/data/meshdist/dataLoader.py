@@ -329,6 +329,10 @@ class DataLoader:
     depth_norm_2 = tf.where(
         tf.equal(depth_cropped, tf.constant(0, dtype=tf.float32)),
         tf.constant(float('nan'), dtype=tf.float32), depth_norm)
+
+    # normalize depth
+    depth_norm_2 = 10 / depth_norm
+
     return cropped_image, {
         'depth': depth_norm_2,
         'semseg': cropped_semseg_labels,
