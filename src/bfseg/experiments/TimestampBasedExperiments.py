@@ -91,6 +91,7 @@ def getDataLoader(config, loadDepth):
                                                    config.train_duration)
   # Get a dataloader to load training images
   return DataLoader(config.train_path, [config.image_h, config.image_w],
+                    shuffle=False,
                     validationDir=config.validation_path,
                     validationMode="CLA",
                     batchSize=config.batch_size,

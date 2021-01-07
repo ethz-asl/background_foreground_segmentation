@@ -16,7 +16,7 @@ class DataLoader:
                outputSize=None,
                validationDir=None,
                batchSize=4,
-               shuffleBufferSize=64,
+               shuffle=True,
                validationMode="all",
                loadDepth=True,
                trainFilter=None,
@@ -55,7 +55,7 @@ class DataLoader:
 
     self.workingDir = workingDir
     self.batchSize = batchSize
-    self.shuffleBufferSize = shuffleBufferSize
+    self.shuffle = shuffle
     self.inputSize = inputSize
     self.loadDepth = loadDepth
     self.cropOptions = cropOptions
@@ -434,8 +434,13 @@ class DataLoader:
   def getValidationDataset(self):
     """ Returns a tensorflow dataset based on list of filenames """
     # Passing validation labels as depth since they will get removed anyway
-    return tf.data.Dataset.from_tensor_slices((self.validationFiles, self.validationLabels)) \
-        .shuffle(self.validationSize) \
+    ds = tf.data.Dataset.from_tensor_slices(
+        (self.validationFiles, self.validationLabels))
+
+    if self.shuffle:
+      ds = ds.shuffle(self.validationSize)
+
+    return ds \
         .map(self.parse_function, num_parallel_calls=4) \
         .map(self.reduce_validation_labels, num_parallel_calls=4) \
         .batch(self.batchSize) \
@@ -443,8 +448,13 @@ class DataLoader:
 
   def getTrainingDataset(self):
     """ Returns a tensorflow dataset based on list of filenames """
-    return tf.data.Dataset.from_tensor_slices((self.filenames, self.labels, self.depths)) \
-        .shuffle(self.size) \
+
+    ds = tf.data.Dataset.from_tensor_slices(
+        (self.filenames, self.labels, self.depths))
+
+    if self.shuffle:
+      ds = ds.shuffle(self.size)
+    return ds \
         .map(self.parse_function, num_parallel_calls=4) \
         .map(self.train_preprocess, num_parallel_calls=4) \
         .batch(self.batchSize) \

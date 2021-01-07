@@ -32,7 +32,7 @@ class SemSegExperiment(Experiment):
     # parser.add_argument('--train_path',
     #                     type=str,
     #                     help='Path to dataset',
-    #                     default="/home/rene/vicon_dataset/rotated"
+    #                     default="/home/rene/cla_dataset/fused"
     #                    )  #"/cluster/scratch/zrene/cla_dataset/watershed/")
     # parser.add_argument('--validation_path',
     #                     type=str,
