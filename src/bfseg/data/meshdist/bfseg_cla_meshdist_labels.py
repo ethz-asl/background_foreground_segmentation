@@ -37,9 +37,8 @@ class BfsegCLAMeshdistLabels(tfds.core.GeneratorBasedBuilder):
   def _split_generators(self, dl_manager: tfds.download.DownloadManager):
     """Returns SplitGenerators."""
 
-    # TODO , update with real path once uploaded
     dataset_path = dl_manager.download(
-        "https://drive.google.com/uc?export=download&id=1qpDnnxSCqNR3LrOv6kkVrdeU8yotSkXB"
+        "https://drive.google.com/uc?export=download&id=1dJN2c4nP5Yh27Qjo49_3gCqhnLw-4Nz5"
     )
     return [
         tfds.core.SplitGenerator(
