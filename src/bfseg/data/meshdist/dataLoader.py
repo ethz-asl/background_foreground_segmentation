@@ -448,12 +448,15 @@ class DataLoader:
 
   def getTrainingDataset(self):
     """ Returns a tensorflow dataset based on list of filenames """
-
+    if not self.shuffle:
+      self.filenames = sorted(self.filenames,
+                              key=lambda name: re.findall("_(\d+)_", name)[-1])
     ds = tf.data.Dataset.from_tensor_slices(
         (self.filenames, self.labels, self.depths))
 
     if self.shuffle:
       ds = ds.shuffle(self.size)
+
     return ds \
         .map(self.parse_function, num_parallel_calls=4) \
         .map(self.train_preprocess, num_parallel_calls=4) \

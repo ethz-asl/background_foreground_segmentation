@@ -127,6 +127,11 @@ def getBalancedWeight(labels,
       frequency *= tf.reduce_sum(tf.cast(labels, tf.float32))
     weight_tensor = tf.math.add(weight_tensor, frequency)
 
+  # tf.print("freq:", tf.unique(tf.reshape(weight_tensor, [-1])))
+  # remove nan values if there are any
+  weight_tensor = tf.where(tf.math.is_nan(weight_tensor),
+                           tf.zeros_like(weight_tensor), weight_tensor)
+
   return weight_tensor
 
 

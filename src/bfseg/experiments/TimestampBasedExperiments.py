@@ -105,11 +105,11 @@ class TimestampBasedSemSegWithDepthExperiment(SemSegWithDepthExperiment):
   """ Experiment that uses SemSeg + Depth but only trains on a subset of all images.  """
 
   def __init__(self):
-    super(SemSegWithPseudoLabelsExperiment, self).__init__()
+    super(TimestampBasedSemSegWithDepthExperiment, self).__init__()
 
   def _addArguments(self, parser):
     """ add pseudo label specific arguements """
-    super(SemSegWithDepthExperiment, self)._addArguments(parser)
+    super(TimestampBasedSemSegWithDepthExperiment, self)._addArguments(parser)
     addTimeBasedParams(parser)
 
   def loadDataLoader(self):
