@@ -133,16 +133,16 @@ class Experiment():
     # Get Model
     model = self.getModel()
     # Train it on NYU data
-    # if self.config.train_from_scratch or not os.path.exists(self.weightsFolder):
-    #   # pretrain model on nyu data
-    #   self.pretrainNyu(model, self.weightsFolder)
-    # else:
-    #   try:
-    #     model.load_weights(self.weightsFolder + '/weights.h5')
-    #   except Exception as e:
-    #     print("Could not load pretrained weights. Starting with random ones.",
-    #           e)
-    #     self.pretrainNyu(model, self.weightsFolder)
+    if self.config.train_from_scratch or not os.path.exists(self.weightsFolder):
+      # pretrain model on nyu data
+      self.pretrainNyu(model, self.weightsFolder)
+    else:
+      try:
+        model.load_weights(self.weightsFolder + '/weights.h5')
+      except Exception as e:
+        print("Could not load pretrained weights. Starting with random ones.",
+              e)
+        self.pretrainNyu(model, self.weightsFolder)
 
     # Get custom training data from experiment
     train_ds, test_ds = self.getTrainData()
