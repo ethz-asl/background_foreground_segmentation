@@ -17,7 +17,7 @@ Should we do this?
 
 
 class BfsegValidationLabeled(tfds.core.GeneratorBasedBuilder):
-  """DatasetBuilder for Nyu_depth_v2_labeled dataset."""
+  """DatasetBuilder for BfsegValidationLabeled dataset."""
 
   VERSION = tfds.core.Version('1.0.0')
   RELEASE_NOTES = {'1.0.0': 'Initial release.'}
