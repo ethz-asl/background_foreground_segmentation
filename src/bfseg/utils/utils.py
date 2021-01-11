@@ -50,7 +50,7 @@ def load_gdrive_file(file_id,
   return filename
 
 
-def dump_meshdist_ds_to_h5(datasets, path="data.h5"):
+def dump_meshdist_ds_to_h5(datasets, dump_depth=False, path="data.h5"):
   """
     Dumps all images and dataset information into a .h5 file
 
@@ -64,10 +64,15 @@ def dump_meshdist_ds_to_h5(datasets, path="data.h5"):
       # images are stored as float [0,1]
       images = np.zeros((num_images, 480, 640, 3), dtype=float)
       labels = np.zeros((num_images, 480, 640, 1), dtype=np.uint8)
+      if dump_depth:
+        depth = np.zeros((num_images, 480, 640, 1), dtype=float)
 
       for idx, (image, label) in enumerate(ds):
+        print(f" processing img {idx} of {len(ds)}", end="\r")
         images[idx, ...] = image.numpy()
         labels[idx, ...] = label.numpy()
+        if dump_depth:
+          depth[idx, ...] = depth.numpy()
 
       grp = hf.require_group(name)
       # export images and labels
@@ -75,6 +80,8 @@ def dump_meshdist_ds_to_h5(datasets, path="data.h5"):
       dataset_label = grp.create_dataset("labels",
                                          np.shape(labels),
                                          data=labels)
+      if dump_depth:
+        dataset_depth = grp.create_dataset("depth", np.shape(depth), data=depth)
 
       # Now store metadata (camera and timestamp for each image)
       metadata = hf.require_group("metadata").require_group(name)
