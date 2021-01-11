@@ -433,6 +433,7 @@ class DataLoader:
 
   def getValidationDataset(self):
     """ Returns a tensorflow dataset based on list of filenames """
+    # Passing validation labels as depth since they will get removed anyway
     return tf.data.Dataset.from_tensor_slices((self.validationFiles, self.validationLabels)) \
         .shuffle(self.validationSize) \
         .map(self.parse_function, num_parallel_calls=4) \
