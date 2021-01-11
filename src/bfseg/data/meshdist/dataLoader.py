@@ -242,7 +242,6 @@ class DataLoader:
             """
 
     label = tf.math.multiply(tf.cast(tf.cast(label, tf.bool), tf.int32), 2)
-    print(label)
     return image, label
 
   def getDataset(self):

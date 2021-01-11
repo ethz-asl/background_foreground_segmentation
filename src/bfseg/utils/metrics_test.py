@@ -11,23 +11,21 @@ def test_numeric_accuracy():
   labels = tf.constant([0, 0, 0, 0, 1, 2, 2, 2, 2], shape=(1, 3, 3, 1))
 
   prediction_cat = tf.constant([0, 0, 0, 0, 0, 1, 1, 1, 1], shape=(1, 3, 3, 1))
-  prediction_one_hot = tf.squeeze(tf.keras.backend.one_hot(prediction_cat, 2))
+  prediction_one_hot = tf.keras.backend.one_hot(prediction_cat, 2)
   ignorant_accuracy.update_state(labels, prediction_one_hot)
   acc_correct = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
   assert acc_correct == 1
 
-  prediction_wrong = tf.squeeze(
-      tf.keras.backend.one_hot(
-          tf.constant([1, 1, 1, 1, 0, 0, 0, 0, 0], shape=(1, 3, 3, 1)), 2))
+  prediction_wrong = tf.keras.backend.one_hot(
+      tf.constant([1, 1, 1, 1, 0, 0, 0, 0, 0], shape=(1, 3, 3, 1)), 2)
   ignorant_accuracy.update_state(labels, prediction_wrong)
   acc_wrong = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
   assert acc_wrong == 0
 
-  prediction_not_correct = tf.squeeze(
-      tf.keras.backend.one_hot(
-          tf.constant([0, 0, 0, 1, 0, 1, 1, 0, 1], shape=(1, 3, 3, 1)), 2))
+  prediction_not_correct = tf.keras.backend.one_hot(
+      tf.constant([0, 0, 0, 1, 0, 1, 1, 0, 1], shape=(1, 3, 3, 1)), 2)
   ignorant_accuracy.update_state(labels, prediction_not_correct)
   acc_not_correct = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
@@ -43,23 +41,21 @@ def test_numeric_accuracy_weighted():
   labels = tf.constant([0, 0, 0, 0, 1, 2, 2, 2, 2], shape=(1, 3, 3, 1))
 
   prediction_cat = tf.constant([0, 0, 0, 0, 0, 1, 1, 1, 1], shape=(1, 3, 3, 1))
-  prediction_one_hot = tf.squeeze(tf.keras.backend.one_hot(prediction_cat, 2))
+  prediction_one_hot = tf.keras.backend.one_hot(prediction_cat, 2)
   weighted_ignorant_accuracy.update_state(labels, prediction_one_hot)
   acc_correct = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
   assert acc_correct == 1
 
-  prediction_wrong = tf.squeeze(
-      tf.keras.backend.one_hot(
-          tf.constant([1, 1, 1, 1, 0, 0, 0, 0, 0], shape=(1, 3, 3, 1)), 2))
+  prediction_wrong = (tf.keras.backend.one_hot(
+      tf.constant([1, 1, 1, 1, 0, 0, 0, 0, 0], shape=(1, 3, 3, 1)), 2))
   weighted_ignorant_accuracy.update_state(labels, prediction_wrong)
   acc_wrong = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
   assert acc_wrong == 0
 
-  prediction_not_correct = tf.squeeze(
-      tf.keras.backend.one_hot(
-          tf.constant([0, 0, 0, 1, 0, 1, 1, 0, 1], shape=(1, 3, 3, 1)), 2))
+  prediction_not_correct = (tf.keras.backend.one_hot(
+      tf.constant([0, 0, 0, 1, 0, 1, 1, 0, 1], shape=(1, 3, 3, 1)), 2))
   acc_not_correct = weighted_ignorant_accuracy(labels,
                                                prediction_not_correct).numpy()
   assert acc_not_correct == 6 / 8
@@ -75,30 +71,27 @@ def test_numeric_accuracy_weighted_unbalanced():
   labels = tf.constant([0, 0, 0, 0, 0, 0, 2, 2, 2], shape=(1, 3, 3, 1))
 
   prediction_cat = tf.constant([0, 0, 0, 0, 0, 0, 1, 1, 1], shape=(1, 3, 3, 1))
-  prediction_one_hot = tf.squeeze(tf.keras.backend.one_hot(prediction_cat, 2))
+  prediction_one_hot = (tf.keras.backend.one_hot(prediction_cat, 2))
   weighted_ignorant_accuracy.update_state(labels, prediction_one_hot)
   acc_correct = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
   assert acc_correct == 1
 
-  prediction_wrong = tf.squeeze(
-      tf.keras.backend.one_hot(
-          tf.constant([1, 1, 1, 1, 1, 1, 0, 0, 0], shape=(1, 3, 3, 1)), 2))
+  prediction_wrong = (tf.keras.backend.one_hot(
+      tf.constant([1, 1, 1, 1, 1, 1, 0, 0, 0], shape=(1, 3, 3, 1)), 2))
   weighted_ignorant_accuracy.update_state(labels, prediction_wrong)
   acc_wrong = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
   assert acc_wrong == 0
 
-  prediction_minority_correct = tf.squeeze(
-      tf.keras.backend.one_hot(
-          tf.constant([1, 1, 1, 1, 1, 1, 0, 0, 1], shape=(1, 3, 3, 1)), 2))
+  prediction_minority_correct = (tf.keras.backend.one_hot(
+      tf.constant([1, 1, 1, 1, 1, 1, 0, 0, 1], shape=(1, 3, 3, 1)), 2))
   weighted_ignorant_accuracy.update_state(labels, prediction_minority_correct)
   acc_minority_correct = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
 
-  prediction_majority_correct = tf.squeeze(
-      tf.keras.backend.one_hot(
-          tf.constant([0, 1, 1, 1, 1, 1, 0, 0, 0], shape=(1, 3, 3, 1)), 2))
+  prediction_majority_correct = (tf.keras.backend.one_hot(
+      tf.constant([0, 1, 1, 1, 1, 1, 0, 0, 0], shape=(1, 3, 3, 1)), 2))
   weighted_ignorant_accuracy.update_state(labels, prediction_majority_correct)
   acc_majority_correct = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
@@ -128,7 +121,7 @@ def test_ignorant_accuracy():
   ignorant_accuracy.reset_states()
 
   # Get labels as one hot encoded tensor
-  labels_as_tensor = tf.squeeze(tf.keras.backend.one_hot(labels, 3))
+  labels_as_tensor = (tf.keras.backend.one_hot(labels, 3))
 
   # Pixels that should be ignored
   class_to_ignore = labels_as_tensor[..., 1]
@@ -139,8 +132,9 @@ def test_ignorant_accuracy():
 
   # Perturb prediction such that all pixels that are assigned label 1 are now assigned label 0
   new_prediction_class_bg = tf.multiply(
-      tf.cast(inverted_classes_to_ignore, tf.float64), prediction[..., 0])
-  new_prediction_class_fg = prediction[..., 1]
+      tf.cast(inverted_classes_to_ignore, tf.float64),
+      tf.expand_dims(prediction[..., 0], axis=-1))
+  new_prediction_class_fg = tf.expand_dims(prediction[..., 1], axis=-1)
   new_prediction_2 = tf.stack(
       [new_prediction_class_bg, new_prediction_class_fg], axis=-1)
 
@@ -185,7 +179,7 @@ def test_weighted_ignorant_accuracy():
   weighted_ignorant_accuracy.reset_states()
 
   # Get labels as one hot encoded tensor
-  labels_as_tensor = tf.squeeze(tf.keras.backend.one_hot(labels, 3))
+  labels_as_tensor = (tf.keras.backend.one_hot(labels, 3))
 
   # Pixels that should be ignored
   class_to_ignore = labels_as_tensor[..., 1]
@@ -196,8 +190,9 @@ def test_weighted_ignorant_accuracy():
 
   # Perturb prediction such that all pixels that are assigned label 1 are now assigned label 0
   new_prediction_class_bg = tf.multiply(
-      tf.cast(inverted_classes_to_ignore, tf.float64), prediction[..., 0])
-  new_prediction_class_fg = prediction[..., 1]
+      tf.cast(inverted_classes_to_ignore, tf.float64),
+      tf.expand_dims(prediction[..., 0], axis=-1))
+  new_prediction_class_fg = tf.expand_dims(prediction[..., 1], axis=-1)
   new_prediction_2 = tf.stack(
       [new_prediction_class_bg, new_prediction_class_fg], axis=-1)
 
@@ -233,11 +228,11 @@ def test_weighted_ignorant_accuracy():
                                   tf.zeros_like(prediction_all_zeros),
                                   prediction_all_zeros)
 
-  weighted_ignorant_accuracy.update_state(labels_unbalanced,
+  weighted_ignorant_accuracy.update_state((labels_unbalanced),
                                           prediction_all_zeros)
   acc_all_zeros_predict_weighted = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
-  ignorant_accuracy.update_state(labels_unbalanced, prediction_all_zeros)
+  ignorant_accuracy.update_state((labels_unbalanced), prediction_all_zeros)
   acc_all_zeros_predict_unweighted = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
 
@@ -249,12 +244,12 @@ def test_weighted_ignorant_accuracy():
                                  2 * tf.ones_like(prediction_all_twos),
                                  prediction_all_twos)
 
-  weighted_ignorant_accuracy.update_state(labels_unbalanced,
+  weighted_ignorant_accuracy.update_state((labels_unbalanced),
                                           prediction_all_twos)
   acc_all_twos_predict_weighted = weighted_ignorant_accuracy.result().numpy()
   weighted_ignorant_accuracy.reset_states()
 
-  ignorant_accuracy.update_state(labels_unbalanced, prediction_all_twos)
+  ignorant_accuracy.update_state((labels_unbalanced), prediction_all_twos)
   acc_all_twos_predict_unweighted = ignorant_accuracy.result().numpy()
   ignorant_accuracy.reset_states()
 
