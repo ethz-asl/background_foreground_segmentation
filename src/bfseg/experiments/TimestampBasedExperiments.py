@@ -61,6 +61,11 @@ def addTimeBasedParams(parser):
                       default=None,
                       help="Timestamp where training should start")
 
+  parser.add_argument('--shuffle',
+                      type=bool,
+                      default=False,
+                      help="Whether to shuffle Images")
+
 
 def loadDefaultRoutes(dataset):
   """ Helper function that loads the dafault available routes for each dataset  """
@@ -91,7 +96,7 @@ def getDataLoader(config, loadDepth):
                                                    config.train_duration)
   # Get a dataloader to load training images
   return DataLoader(config.train_path, [config.image_h, config.image_w],
-                    shuffle=False,
+                    shuffle=config.shuffle,
                     validationDir=config.validation_path,
                     validationMode="CLA",
                     batchSize=config.batch_size,
