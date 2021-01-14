@@ -10,3 +10,4 @@ matplotlib
 sacred
 pymongo
 pyyaml
+pandas
