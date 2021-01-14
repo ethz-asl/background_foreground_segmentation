@@ -78,22 +78,22 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
     # (Nyu_depth_v2_labeled): Yields (key, example) tuples from the dataset
     h5py = tfds.core.lazy_imports.h5py
     with h5py.File(dataset_path, 'r') as f:
-      Images = f['images']
-      Labels = f['labels']
-      Images = np.array(f['images'], dtype=f['images'].dtype).T.squeeze()
-      Labels = np.array(f['labels'], dtype=f['labels'].dtype).T.squeeze()
+      images = f['images']
+      labels = f['labels']
+      images = np.array(f['images'], dtype=f['images'].dtype).T.squeeze()
+      labels = np.array(f['labels'], dtype=f['labels'].dtype).T.squeeze()
       scene_type = [
           f[f["sceneTypes"][0, i]][:, 0].tobytes().decode("utf-16")
           for i in range(f["sceneTypes"].shape[1])
       ]
-      for i in range(Images.shape[-1]):
-        # Label_expand = np.expand_dims(Labels[:,:,i], axis=2)
+      for i in range(images.shape[-1]):
+        # Label_expand = np.expand_dims(labels[:,:,i], axis=2)
         if scene_type[i] == scene_type:
-          label = Labels[:, :, i]
+          label = labels[:, :, i]
           combine_label = np.logical_or(
               label == 4,
               (np.logical_or(label == 11, label == 21))).astype(np.uint8)
           yield str(i).zfill(4), {
-              'image': Images[:, :, :, i],
+              'image': images[:, :, :, i],
               'label': combine_label
           }
