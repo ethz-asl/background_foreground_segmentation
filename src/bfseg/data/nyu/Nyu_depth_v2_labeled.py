@@ -82,13 +82,13 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
       labels = f['labels']
       images = np.array(f['images'], dtype=f['images'].dtype).T.squeeze()
       labels = np.array(f['labels'], dtype=f['labels'].dtype).T.squeeze()
-      scene_type = [
+      scene_types = [
           f[f["sceneTypes"][0, i]][:, 0].tobytes().decode("utf-16")
           for i in range(f["sceneTypes"].shape[1])
       ]
       for i in range(images.shape[-1]):
         # Label_expand = np.expand_dims(labels[:,:,i], axis=2)
-        if scene_type[i] == scene_type:
+        if scene_types[i] == scene_type:
           label = labels[:, :, i]
           combine_label = np.logical_or(
               label == 4,
