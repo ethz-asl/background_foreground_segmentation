@@ -18,10 +18,10 @@ ex = Experiment()
 @ex.main
 def pretrain_nyu(_run, batchsize=10, learning_rate=1e-4):
   train_data = tfds.load(
-      'NyuDepthV2Labeled', split='train',
+      'NyuDepthV2Labeled', split='full[:90%]',
       as_supervised=True).map(crop_map).shuffle(1000).batch(batchsize).cache()
   val_data = tfds.load(
-      'NyuDepthV2Labeled', split='test',
+      'NyuDepthV2Labeled', split='full[90%:]',
       as_supervised=True).map(crop_map).batch(batchsize).cache()
 
   x = tf.keras.Input(shape=train_data.element_spec[0].shape[1:])
