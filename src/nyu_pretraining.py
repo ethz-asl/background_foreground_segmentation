@@ -12,8 +12,10 @@ from bfseg.models.fast_scnn import fast_scnn
 from bfseg.utils.utils import crop_map
 from bfseg.settings import TMPDIR
 
-# TODO add observer
+from .sacred_utils import get_observer
+
 ex = Experiment()
+ex.observers.append(get_observer())
 
 
 @ex.main
