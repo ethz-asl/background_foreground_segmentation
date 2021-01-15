@@ -1,10 +1,12 @@
 import tensorflow as tf
+from tensorflow.python.keras.losses import LossFunctionWrapper
 
 
 def ignorant_cross_entropy_loss(y_true,
                                 y_pred,
                                 class_to_ignore=1,
-                                num_classes=3):
+                                num_classes=3,
+                                from_logits=False):
   """
     Loss function that ignores all classes with label class_to_ignore.
 
@@ -13,6 +15,8 @@ def ignorant_cross_entropy_loss(y_true,
         y_pred: Predicted labels
         class_to_ignore: Class number from ground truth which should be ignored
         num_classes: how many classes there are
+        from_logits: set to True if y_pred are logits instead of softmax output. This
+          gives better numerical stability.
 
     Returns: Cross entropy loss where ground truth labels that have class 'class_to_ignore' are ignored
     """
@@ -38,5 +42,18 @@ def ignorant_cross_entropy_loss(y_true,
   y_true_back = tf.cast(tf.math.argmax(y_true_one_hot_no_ignore, axis=-1),
                         tf.int64)
 
-  scce = tf.keras.losses.SparseCategoricalCrossentropy()
+  scce = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=from_logits)
   return scce(y_true_back, y_pred, sample_weight=ignore_inverted)
+
+
+class IgnorantCrossEntropyLoss(LossFunctionWrapper):
+  """
+  Wraps ignorant_cross_entropy_loss into an object to pass arguments at construction.
+  """
+
+  def __init__(self, class_to_ignore=1, num_classes=3, from_logits=False):
+    super().__init__(ignorant_cross_entropy_loss,
+                     class_to_ignore=class_to_ignore,
+                     num_classes=num_classes,
+                     from_logits=from_logits,
+                     name='ignorant_cross_entropy_loss')

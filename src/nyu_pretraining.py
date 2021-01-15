@@ -6,12 +6,13 @@ import os
 from shutil import make_archive
 
 import bfseg.data.nyu.Nyu_depth_v2_labeled
-from bfseg.utils.losses import ignorant_cross_entropy_loss
+from bfseg.utils.losses import IgnorantCrossEntropyLoss
 from bfseg.utils.metrics import IgnorantMeanIoU
 from bfseg.models.fast_scnn import fast_scnn
 from bfseg.utils.utils import crop_map
 from bfseg.settings import TMPDIR
 
+# TODO add observer
 ex = Experiment()
 
 
@@ -28,7 +29,7 @@ def pretrain_nyu(_run, batchsize=10, learning_rate=1e-4):
   out = tf.image.convert_image_dtype(x, tf.float32)
   out = fast_scnn(out, num_downsampling_layers=1, num_classes=2)
   model = tf.keras.Model(inputs=x, outputs=out)
-  model.compile(loss=ignorant_cross_entropy_loss,
+  model.compile(loss=IgnorantCrossEntropyLoss(from_logits=True),
                 optimizer=tf.keras.optimizers.Adam(learning_rate),
                 metrics=[IgnorantMeanIoU()])
   history = model.fit(train_data.take(1),

@@ -177,6 +177,6 @@ def fast_scnn(inputs, num_downsampling_layers=3, num_classes=19):
 
   classifier = tf.keras.layers.UpSampling2D(
       (2**num_downsampling_layers, 2**num_downsampling_layers))(classifier)
-  classifier = tf.keras.activations.softmax(classifier)
+  # classifier = tf.keras.activations.softmax(classifier)
 
   return classifier
