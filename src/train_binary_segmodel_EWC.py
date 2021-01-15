@@ -130,13 +130,6 @@ class Model:
             inputs=self.model.input,
             outputs=[self.encoder.output, self.model.output])
 
-        # self.old_encoder, _ = sm.Unet(backbone,
-        #                               input_shape=(480, 640, 3),
-        #                               classes=2,
-        #                               activation='sigmoid',
-        #                               weights=weights,
-        #                               encoder_freeze=True)
-        # self.old_encoder.trainable = False
         self.train_summary_writer = tf.summary.create_file_writer(self.log_dir +
                                                                   "/train")
         self.val_summary_writer = tf.summary.create_file_writer(self.log_dir +
@@ -175,12 +168,6 @@ class Model:
                 log_likelihood = tf.reduce_sum(y * log_y[:, :, :, 1:2] +
                                                (1 - y) * log_y[:, :, :, 0:1],
                                                axis=[1, 2, 3])
-                # print(log_likelihood.shape)
-                # log_likelihood = tf.reduce_mean(y*log_y[:,:,:,1:2]+(1-y)*log_y[:,:,:,0:1],axis=[1,2,3])
-                # print(log_likelihood)
-                # print(log_liklihood.shape)
-                # log_liklihoods.append(log_liklihood)
-                # log_likelihood = tf.reduce_mean(tf.concat(log_liklihoods,0))
             grads = tape.gradient(log_likelihood,
                                   self.new_model.trainable_weights)
             grads_list.append(grads)
@@ -213,8 +200,6 @@ class Model:
         with tf.GradientTape() as tape:
             [_, pred_y] = self.new_model(train_x, training=True)
             output_loss = self.loss_ce(train_y, pred_y)
-            # old_feature = self.old_encoder(train_x, training=False)
-            # feature_loss = self.loss_mse(old_feature, pred_feature)
             loss = (
                 1 - self.lambda_weights
             ) * output_loss + self.lambda_weights * self.compute_consolidation_loss(
@@ -231,8 +216,6 @@ class Model:
     def test_step(self, test_x, test_y):
         [_, pred_y] = self.new_model(test_x, training=False)
         output_loss = self.loss_ce(test_y, pred_y)
-        # old_feature = self.old_encoder(test_x, training=False)
-        # feature_loss = self.loss_mse(old_feature, pred_feature)
         loss = (
             1 - self.lambda_weights
         ) * output_loss + self.lambda_weights * self.compute_consolidation_loss(
@@ -327,59 +310,6 @@ def main():
         for (test_x, test_y) in test_ds:
             model.test_step(test_x, test_y)
         model.on_epoch_end(model.test_summary_writer, epoch, mode="Test")
-
-    # i = 0
-    # for image, _ in train_ds:
-    #   features_maps = encoder(image)
-    #   features_maps = np.array(features_maps)
-    #   np.save("old_features/batch_"+str('{:03d}'.format(i)+".npy"),features_maps)
-    #   print("Predicting train batch %d" % i)
-    #   i = i + 1
-
-    # testing_save_path = './test_result_epoch10_diffscene/'
-    # validating_save_path = './val_result_epoch10_diffscene/'
-    # if os.path.exists(testing_save_path) == False:
-    #   os.mkdir(testing_save_path)
-    # if os.path.exists(validating_save_path) == False:
-    #   os.mkdir(validating_save_path)
-    # i = 0
-    # for image, label in test_ds:
-    #   for j in range(image.shape[0]):
-    #     pred_label = model.predict(image)
-    #     Image.save_img(
-    #         os.path.join(testing_save_path,
-    #                      str(i * batch_size + j).zfill(4) + '_image.png'),
-    #         image[j])
-    #     Image.save_img(
-    #         os.path.join(testing_save_path,
-    #                      str(i * batch_size + j).zfill(4) + '_trueseg.png'),
-    #         label[j])
-    #     # print(label[j])
-    #     Image.save_img(
-    #         os.path.join(testing_save_path,
-    #                      str(i * batch_size + j).zfill(4) + '_preddeg.png'),
-    #         create_mask(pred_label[j]))
-    #     # print(create_mask(pred_label[j]))
-    #   print("Predicting test batch %d" % i)
-    #   i = i + 1
-    # i = 0
-    # for image, label in val_ds:
-    #   for j in range(image.shape[0]):
-    #     pred_label = model.predict(image)
-    #     Image.save_img(
-    #         os.path.join(validating_save_path,
-    #                      str(i * batch_size + j).zfill(4) + '_image.png'),
-    #         image[j])
-    #     Image.save_img(
-    #         os.path.join(validating_save_path,
-    #                      str(i * batch_size + j).zfill(4) + '_trueseg.png'),
-    #         label[j])
-    #     Image.save_img(
-    #         os.path.join(validating_save_path,
-    #                      str(i * batch_size + j).zfill(4) + '_preddeg.png'),
-    #         create_mask(pred_label[j]))
-    #   print("Predicting train batch %d" % i)
-    #   i = i + 1
 
 
 if __name__ == "__main__":
