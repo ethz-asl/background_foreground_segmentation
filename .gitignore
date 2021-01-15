@@ -135,3 +135,5 @@ py3/**
 */.DS_Store
 ._*
 */._*
+
+src/bfseg/settings.py

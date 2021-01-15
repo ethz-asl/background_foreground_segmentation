@@ -2,12 +2,15 @@ from sacred import Experiment
 import tensorflow as tf
 import pandas as pd
 import tensorflow_datasets as tfds
+import os
+from shutil import make_archive
 
 import bfseg.data.nyu.Nyu_depth_v2_labeled
 from bfseg.utils.losses import ignorant_cross_entropy_loss
 from bfseg.utils.metrics import IgnorantMeanIoU
 from bfseg.models.fast_scnn import fast_scnn
 from bfseg.utils.utils import crop_map
+from bfseg.settings import TMPDIR
 
 ex = Experiment()
 
@@ -28,7 +31,13 @@ def pretrain_nyu(_run, batchsize=10, learning_rate=1e-4):
   model.compile(loss=ignorant_cross_entropy_loss,
                 optimizer=tf.keras.optimizers.Adam(learning_rate),
                 metrics=[IgnorantMeanIoU()])
-  history = model.fit(train_data.take(2), epochs=2, validation_data=val_data.take(2))
+  history = model.fit(train_data.take(1),
+                      epochs=2,
+                      validation_data=val_data.take(1))
+  model.save(os.path.join(TMPDIR, 'model'))
+  make_archive(os.path.join(TMPDIR, 'model.zip'), 'zip',
+               os.path.join(TMPDIR, 'model'))
+  _run.add_artifact(os.path.join(TMPDIR, 'model.zip'))
   hist = pd.DataFrame(history.history)
   hist['epoch'] = history.epoch
   _run.info['final_loss'] = hist['loss'].iloc[-1]
