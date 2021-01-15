@@ -32,9 +32,7 @@ def pretrain_nyu(_run, batchsize=10, learning_rate=1e-4):
   model.compile(loss=IgnorantCrossEntropyLoss(from_logits=True),
                 optimizer=tf.keras.optimizers.Adam(learning_rate),
                 metrics=[IgnorantMeanIoU()])
-  history = model.fit(train_data.take(1),
-                      epochs=2,
-                      validation_data=val_data.take(1))
+  history = model.fit(train_data, epochs=2, validation_data=val_data)
   model.save(os.path.join(TMPDIR, 'model'))
   make_archive(os.path.join(TMPDIR, 'model.zip'), 'zip',
                os.path.join(TMPDIR, 'model'))
