@@ -17,7 +17,11 @@ ex.observers.append(get_observer())
 
 
 @ex.main
-def pretrain_nyu(_run, batchsize=10, epochs=100, learning_rate=1e-4, test=False):
+def pretrain_nyu(_run,
+                 batchsize=10,
+                 epochs=100,
+                 learning_rate=1e-4,
+                 test=False):
   train_data = tfds.load(
       'NyuDepthV2Labeled', split='full[:90%]',
       as_supervised=True).map(crop_map).shuffle(1000).batch(batchsize).cache()
@@ -42,7 +46,11 @@ def pretrain_nyu(_run, batchsize=10, epochs=100, learning_rate=1e-4, test=False)
   history = model.fit(train_data,
                       epochs=epochs,
                       validation_data=val_data,
-                      verbose=2)
+                      verbose=2,
+                      callbacks=[
+                          tf.keras.callbacks.ReduceLROnPlateau(),
+                          tf.keras.callbacks.EarlyStopping(patience=20)
+                      ])
   model.save(os.path.join(TMPDIR, 'model'))
   make_archive(os.path.join(TMPDIR, 'model.zip'), 'zip',
                os.path.join(TMPDIR, 'model'))
