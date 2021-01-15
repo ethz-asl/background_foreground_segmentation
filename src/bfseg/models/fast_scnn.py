@@ -93,10 +93,8 @@ def bottleneck_block(inputs, filters, kernel, t, strides, n):
 """#### PPM Method"""
 
 
-def pyramid_pooling_block(input_tensor, bin_sizes):
+def pyramid_pooling_block(input_tensor, bin_sizes, h=15, w=20):
   concat_list = [input_tensor]
-  w = 20
-  h = 15
 
   for bin_size in bin_sizes:
     x = tf.keras.layers.AveragePooling2D(pool_size=(h // bin_size,
@@ -123,7 +121,12 @@ def fast_scnn(inputs, num_downsampling_layers=3, num_classes=19):
   gfe_layer = bottleneck_block(lds_layer, 64, (3, 3), t=6, strides=2, n=3)
   gfe_layer = bottleneck_block(gfe_layer, 96, (3, 3), t=6, strides=2, n=3)
   gfe_layer = bottleneck_block(gfe_layer, 128, (3, 3), t=6, strides=1, n=3)
-  gfe_layer = pyramid_pooling_block(gfe_layer, [2, 4, 6, 8])
+
+  input_shape = inputs.shape
+  downsampling_factor = 4 * 2**num_downsampling_layers
+  gfe_layer = pyramid_pooling_block(gfe_layer, [2, 4, 6, 8],
+                                    h=input_shape[1] // downsampling_factor,
+                                    w=input_shape[2] // downsampling_factor)
   """## Step 3: Feature Fusion"""
 
   ff_layer1 = conv_block(lds_layer,
