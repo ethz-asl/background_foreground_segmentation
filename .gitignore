@@ -137,3 +137,5 @@ py3/**
 */._*
 
 src/bfseg/settings.py
+
+omniboard/**
