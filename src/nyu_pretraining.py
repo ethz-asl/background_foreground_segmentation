@@ -6,20 +6,18 @@ import os
 from shutil import make_archive
 
 import bfseg.data.nyu.Nyu_depth_v2_labeled
-from bfseg.utils.losses import IgnorantCrossEntropyLoss
 from bfseg.utils.metrics import IgnorantMeanIoU
 from bfseg.models.fast_scnn import fast_scnn
 from bfseg.utils.utils import crop_map
 from bfseg.settings import TMPDIR
-
-from .sacred_utils import get_observer
+from bfseg.sacred_utils import get_observer
 
 ex = Experiment()
 ex.observers.append(get_observer())
 
 
 @ex.main
-def pretrain_nyu(_run, batchsize=10, learning_rate=1e-4):
+def pretrain_nyu(_run, batchsize=10, epochs=100, learning_rate=1e-4):
   train_data = tfds.load(
       'NyuDepthV2Labeled', split='full[:90%]',
       as_supervised=True).map(crop_map).shuffle(1000).batch(batchsize).cache()
@@ -29,12 +27,12 @@ def pretrain_nyu(_run, batchsize=10, learning_rate=1e-4):
 
   x = tf.keras.Input(shape=train_data.element_spec[0].shape[1:])
   out = tf.image.convert_image_dtype(x, tf.float32)
-  out = fast_scnn(out, num_downsampling_layers=1, num_classes=2)
+  out = fast_scnn(out, num_downsampling_layers=3, num_classes=2)
   model = tf.keras.Model(inputs=x, outputs=out)
-  model.compile(loss=IgnorantCrossEntropyLoss(from_logits=True),
+  model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                 optimizer=tf.keras.optimizers.Adam(learning_rate),
-                metrics=[IgnorantMeanIoU()])
-  history = model.fit(train_data, epochs=2, validation_data=val_data)
+                metrics=[IgnorantMeanIoU(num_classes=3, class_to_ignore=2)])
+  history = model.fit(train_data, epochs=epochs, validation_data=val_data)
   model.save(os.path.join(TMPDIR, 'model'))
   make_archive(os.path.join(TMPDIR, 'model.zip'), 'zip',
                os.path.join(TMPDIR, 'model'))
