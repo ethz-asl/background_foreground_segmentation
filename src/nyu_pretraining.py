@@ -51,9 +51,9 @@ def pretrain_nyu(_run,
                           tf.keras.callbacks.ReduceLROnPlateau(),
                           tf.keras.callbacks.EarlyStopping(patience=20)
                       ])
-  model.save(os.path.join(TMPDIR, 'model'))
-  make_archive(os.path.join(TMPDIR, 'model.zip'), 'zip',
-               os.path.join(TMPDIR, 'model'))
+  modelpath = os.path.join(TMPDIR, 'model')
+  model.save(modelpath)
+  make_archive(modelpath, 'zip', modelpath)
   _run.add_artifact(os.path.join(TMPDIR, 'model.zip'))
   hist = pd.DataFrame(history.history)
   for metric in hist.columns:
