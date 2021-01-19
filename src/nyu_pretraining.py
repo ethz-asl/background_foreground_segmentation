@@ -21,6 +21,7 @@ def pretrain_nyu(_run,
                  batchsize=10,
                  epochs=100,
                  learning_rate=1e-4,
+                 stopping_patience=50,
                  test=False):
   train_data = tfds.load(
       'NyuDepthV2Labeled', split='full[:90%]',
@@ -35,7 +36,7 @@ def pretrain_nyu(_run,
 
   x = tf.keras.Input(shape=train_data.element_spec[0].shape[1:])
   out = tf.image.convert_image_dtype(x, tf.float32)
-  out = fast_scnn(out, num_downsampling_layers=3, num_classes=2)
+  out = fast_scnn(out, num_downsampling_layers=2, num_classes=2)
   model = tf.keras.Model(inputs=x, outputs=out)
   model.compile(
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -49,7 +50,7 @@ def pretrain_nyu(_run,
                       verbose=2,
                       callbacks=[
                           tf.keras.callbacks.ReduceLROnPlateau(),
-                          tf.keras.callbacks.EarlyStopping(patience=20)
+                          tf.keras.callbacks.EarlyStopping(patience=stopping_patience)
                       ])
   modelpath = os.path.join(TMPDIR, 'model')
   model.save(modelpath)
