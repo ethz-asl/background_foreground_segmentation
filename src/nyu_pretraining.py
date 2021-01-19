@@ -65,6 +65,8 @@ def pretrain_nyu(_run,
       if metric == 'epoch':
         continue
       _run.log_scalar(metric, row[metric], row['epoch'])
+  return float(hist['val_ignorant_mean_io_u'].iloc[-1])
+  
 
 
 if __name__ == '__main__':
