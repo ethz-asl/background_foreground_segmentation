@@ -16,7 +16,7 @@ class IgnorantMetricsWrapper(tf.keras.metrics.Metric):
   def update_state(self, y_true, y_pred, sample_weight=None):
 
     # convert true labels to one hot encoded images
-    labels_one_hot = tf.keras.backend.one_hot(y_true, 3)
+    labels_one_hot = tf.keras.backend.one_hot(y_true, self.num_of_classes)
     # Remove "unknown" class from groundtruth
     classes_to_keep = tf.constant([
         idx_class for idx_class in range(self.num_of_classes)
@@ -51,27 +51,38 @@ class IgnorantMetricsWrapper(tf.keras.metrics.Metric):
 
 class IgnorantBalancedMeanIoU(IgnorantMetricsWrapper):
 
-  def __init__(self, class_to_ignore=1, class_cnt=3):
-    super().__init__(tf.keras.metrics.MeanIoU(num_classes=2), balanced=True)
+  def __init__(self, class_to_ignore=1, num_classes=3):
+    super().__init__(tf.keras.metrics.MeanIoU(num_classes=2),
+                     balanced=True,
+                     num_classes=num_classes,
+                     class_to_ignore=class_to_ignore)
 
 
 class IgnorantMeanIoU(IgnorantMetricsWrapper):
 
-  def __init__(self, class_to_ignore=1, class_cnt=3):
-    super().__init__(tf.keras.metrics.MeanIoU(num_classes=2), balanced=False)
+  def __init__(self, class_to_ignore=1, num_classes=3):
+    super().__init__(tf.keras.metrics.MeanIoU(num_classes=2),
+                     balanced=False,
+                     num_classes=num_classes,
+                     class_to_ignore=class_to_ignore)
 
 
 class IgnorantBalancedAccuracyMetric(IgnorantMetricsWrapper):
   """
   Accuracy function that ignores a class with a given label and balances the weights.
-  e.g. if the GT has 90% background and 10% foreground, a pixel that is correctly predicted as background counts less
-  than a pixel that is correctly predicted as foreground.
+  e.g. if the GT has 90% background and 10% foreground, a pixel that is correctly
+  predicted as background counts less than a pixel that is correctly predicted as
+  foreground.
 
-  Randomly Predicting 90%foreground and 10% background will produce a balanced accuracy of 50%
+  Randomly Predicting 90%foreground and 10% background will produce a balanced accuracy
+  of 50%
   """
 
-  def __init__(self, class_to_ignore=1, class_cnt=3):
-    super().__init__(tf.keras.metrics.Accuracy(), balanced=True)
+  def __init__(self, class_to_ignore=1, num_classes=3):
+    super().__init__(tf.keras.metrics.Accuracy(),
+                     balanced=True,
+                     num_classes=num_classes,
+                     class_to_ignore=class_to_ignore)
 
 
 class IgnorantAccuracyMetric(IgnorantMetricsWrapper):
@@ -79,8 +90,10 @@ class IgnorantAccuracyMetric(IgnorantMetricsWrapper):
   Accuracy function that ignores a class with a given label
   """
 
-  def __init__(self, class_to_ignore=1, class_cnt=3):
-    super().__init__(tf.keras.metrics.Accuracy())
+  def __init__(self, class_to_ignore=1, num_classes=3):
+    super().__init__(tf.keras.metrics.Accuracy(),
+                     num_classes=num_classes,
+                     class_to_ignore=class_to_ignore)
 
 
 def getBalancedWeight(labels, labels_one_hot, class_to_ignore, num_classes):
