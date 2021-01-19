@@ -44,14 +44,15 @@ def pretrain_nyu(_run,
       # this does actually not ignore any of the 2 classes, but necessary because
       # standard MeanIoU does expect argmax output
       metrics=[IgnorantMeanIoU(num_classes=3, class_to_ignore=2)])
-  history = model.fit(train_data,
-                      epochs=epochs,
-                      validation_data=val_data,
-                      verbose=2,
-                      callbacks=[
-                          tf.keras.callbacks.ReduceLROnPlateau(),
-                          tf.keras.callbacks.EarlyStopping(patience=stopping_patience)
-                      ])
+  history = model.fit(
+      train_data,
+      epochs=epochs,
+      validation_data=val_data,
+      verbose=2,
+      callbacks=[
+          tf.keras.callbacks.ReduceLROnPlateau(),
+          tf.keras.callbacks.EarlyStopping(patience=stopping_patience)
+      ])
   modelpath = os.path.join(TMPDIR, 'model')
   model.save(modelpath)
   make_archive(modelpath, 'zip', modelpath)
@@ -66,7 +67,6 @@ def pretrain_nyu(_run,
         continue
       _run.log_scalar(metric, row[metric], row['epoch'])
   return float(hist['val_ignorant_mean_io_u'].iloc[-1])
-  
 
 
 if __name__ == '__main__':
