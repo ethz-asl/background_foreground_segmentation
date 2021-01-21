@@ -277,4 +277,3 @@ class DataLoader:
         .map(self.train_preprocess, num_parallel_calls=4) \
         .batch(self.batchSize) \
         .prefetch(tf.data.experimental.AUTOTUNE)
-
