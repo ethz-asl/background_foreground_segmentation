@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
   ROS node that takes the sparse label of the projected pointcloud and aggregates them
 """
@@ -18,8 +18,8 @@ import os
 
 # Load config.
 with open(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "../config/label_aggregator_cla.yaml"),
-    'r') as f:
+    os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                 "../config/label_aggregator_cla.yaml"), 'r') as f:
   config = yaml.safe_load(f)
 
 publishers = [
@@ -36,18 +36,18 @@ def callback(original, labels, distance):
                               dtype=np.uint8).reshape(original.height,
                                                       original.width, -1)
   np_labels = np.frombuffer(labels.data,
-                            dtype=np.uint8).reshape(labels.height, labels.width,
-                                                    -1)
+                            dtype=np.uint8).reshape(labels.height, labels.width)
   np_distance = np.frombuffer(distance.data,
                               dtype=np.uint8).reshape(distance.height,
-                                                      distance.width, -1)
+                                                      distance.width)
   t1 = time.time()
 
   aggregate_labels = aggregate_sparse_labels(
       np_labels,
       np_distance,
       np_original,
-      resizeFactor=labelOptions['downsamplingFactor'],
+      outSize=(np_labels.shape[1] // labelOptions['downsamplingFactor'],
+               np_labels.shape[0] // labelOptions['downsamplingFactor']),
       useSuperpixel=labelOptions['useSuperixel'],
       foregroundTrustRegion=labelOptions['foregroundTrustRegion'],
       fg_bg_threshold=labelOptions['fgBgThreshold'],
