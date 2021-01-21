@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import skimage
 from skimage.segmentation import watershed
-from skimage.transform import resize
+from scipy.spatial import distance
 """
 Helper functions to convert self supervised sparse annotations to images
 """
