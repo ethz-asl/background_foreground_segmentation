@@ -5,7 +5,7 @@ structure allows for standalone python useage and useage within ROS.
 To use the python package `cd src; pip install -e .`
 
 ## Dataset Creator
-### Overview
+## Overview
 This package extracts the following information from a ROS Bag:
 
 - For each camera:
@@ -19,7 +19,7 @@ This package extracts the following information from a ROS Bag:
         - Projecctted PointCloud in camera image containing distance of point as grey value
         - Projecctted PointCloud in camera image containing distance to closest mesh as grey value
 
-### Getting Started
+## Getting Started
 The following extracts all images from cam0 into the output folder <outputFolder>
 1. Terminal A: `roscore`
 2. Terminal B: `rosparam set use_sim_time true`
@@ -37,3 +37,11 @@ Sometimes due to bad timings running the standalone launch script can confuse th
 5. Terminal E: `roslaunch segmentation_filtered_icp extrinsics.launch`
 6. Terminal F: `rosbag play --clock <path/to/bagfile>`
 5. RVIZ: Align Mesh with Pointcloud and right click marker -> load CAD, publish mesh
+
+## Generating Pseudo Labels on the Fly 
+Pseudo Labels can also be generated on the fly for each camera mounted on the robot.
+### For the SMB with a camera stick setup
+1. Terminal A: `roslaunch background_foreground_segmentation cla_label_projector_standalone_with_rviz.launch`
+2. Terminal B: `rosrun background_foreground_segmentation label_aggregator.py`
+3. Terminal C: `rosbag play --clock <path/to/bagfile>`
+In order to change the segmentation method, modify the parameters inside the `config/label_aggregator_cla.yaml` file.
