@@ -6,10 +6,8 @@ import os
 
 # TODO(Nyu_depth_v2_labeled): Markdown description  that will appear on the catalog page.
 _DESCRIPTION = """
-Description is **formatted** as markdown.
-
-It should also contain any processing which has been applied (if any),
-(e.g. corrupted example skipped, images cropped,...):
+The NYU-Depth V2 labeled data set is comprised of video sequences from a variety of indoor scenes as recorded by both the RGB and Depth cameras from the Microsoft Kinect.
+It contains 1449 densely labeled pairs of aligned RGB and depth images.
 """
 
 # TODO(Nyu_depth_v2_labeled): BibTeX citation
@@ -28,10 +26,14 @@ _URL = 'http://horatio.cs.nyu.edu/mit/silberman/nyu_depth_v2/nyu_depth_v2_labele
 class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for Nyu_depth_v2_labeled dataset."""
 
-  VERSION = tfds.core.Version('1.0.0')
+  VERSION = tfds.core.Version('2.1.0')
   RELEASE_NOTES = {
-      '1.0.0': 'Initial release.',
+      # '1.0.0': 'Initial release.',
+      # '2.0.0': 'different scenes for train/test',
+      '2.1.0': 'additional "full" split',
   }
+
+  # MANUAL_DOWNLOAD_INSTRUCTIONS = 1
 
   def _info(self) -> tfds.core.DatasetInfo:
     """Returns the dataset metadata."""
@@ -41,12 +43,8 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         description=_DESCRIPTION,
         features=tfds.features.FeaturesDict({
             'image': tfds.features.Image(shape=(480, 640, 3), dtype=tf.uint8),
-            # 'depth': tfds.features.Tensor(shape=(480, 640), dtype=tf.float16),
-            'label': tfds.features.Tensor(shape=(480, 640), dtype=tf.uint16),
+            'label': tfds.features.Tensor(shape=(480, 640), dtype=tf.uint8),
         }),
-        # If there's a common (input, target) tuple from the
-        # features, specify them here. They'll be used if
-        # `as_supervised=True` in `builder.as_dataset`.
         supervised_keys=("image", "label"),  # e.g. ('image', 'label')
         homepage='https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html/',
         citation=_CITATION,
@@ -54,32 +52,56 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
 
   def _split_generators(self, dl_manager: tfds.download.DownloadManager):
     """Returns SplitGenerators."""
-    # TODO(Nyu_depth_v2_labeled): Downloads the data and defines the splits
+    # (Nyu_depth_v2_labeled): Downloads the data and defines the splits
     # dl_manager is a tfds.download.DownloadManager that can be used to
     # download and extract URLs
     download_dir = dl_manager.download(_URL)
     return [
         tfds.core.SplitGenerator(
-            'train',
+            name=tfds.Split.TRAIN,
             # These kwargs will be passed to _generate_examples
-            gen_kwargs={'dataset_path': download_dir},
+            gen_kwargs={
+                'dataset_path': download_dir,
+                'scene_type': 'kitchen',
+            },
+        ),
+        tfds.core.SplitGenerator(
+            name=tfds.Split.TEST,
+            gen_kwargs={
+                'dataset_path': download_dir,
+                'scene_type': 'bedroom',
+            },
+        ),
+        tfds.core.SplitGenerator(
+            name='full',
+            gen_kwargs={
+                'dataset_path': download_dir,
+                'scene_type': None,
+            },
         ),
     ]
 
-  def _generate_examples(self, dataset_path):
+  def _generate_examples(self, dataset_path, scene_type):
     """Yields examples."""
-    # TODO(Nyu_depth_v2_labeled): Yields (key, example) tuples from the dataset
+    # (Nyu_depth_v2_labeled): Yields (key, example) tuples from the dataset
     h5py = tfds.core.lazy_imports.h5py
     with h5py.File(dataset_path, 'r') as f:
-      Images = f['images']
-      # Depths = f['depths']
-      Labels = f['labels']
-      Images = np.array(f['images'], dtype=f['images'].dtype).T.squeeze()
-      # Depths=np.array(f['depths'],dtype=f['images'].dtype).T.squeeze()
-      Labels = np.array(f['labels'], dtype=f['labels'].dtype).T.squeeze()
-      for i in range(Images.shape[-1]):
-        yield str(i).zfill(4), {
-            'image': Images[:, :, :, i],
-            # 'depth':Depths[:,:,i],
-            'label': Labels[:, :, i]
-        }
+      images = f['images']
+      labels = f['labels']
+      images = np.array(f['images'], dtype=f['images'].dtype).T.squeeze()
+      labels = np.array(f['labels'], dtype=f['labels'].dtype).T.squeeze()
+      scene_types = [
+          f[f["sceneTypes"][0, i]][:, 0].tobytes().decode("utf-16")
+          for i in range(f["sceneTypes"].shape[1])
+      ]
+      for i in range(images.shape[-1]):
+        # Label_expand = np.expand_dims(labels[:,:,i], axis=2)
+        if scene_type is None or scene_types[i] == scene_type:
+          label = labels[:, :, i]
+          combine_label = np.logical_or(
+              label == 4,
+              (np.logical_or(label == 11, label == 21))).astype(np.uint8)
+          yield str(i).zfill(4), {
+              'image': images[:, :, :, i],
+              'label': combine_label
+          }

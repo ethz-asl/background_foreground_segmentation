@@ -37,6 +37,23 @@ def crop_multiple(data, multiple_of=16):
     return data
 
 
+def crop_map(*data):
+  if len(data) == 1 and isinstance(data, dict):
+    for key in data:
+      data[0][key] = crop_multiple(data[key])
+  elif len(data) == 1 and isinstance(data, list):
+    for i in range(len(data)):
+      data[0][i] = crop_multiple(data[i])
+  elif len(data) > 1:
+    data = list(data)
+    for i in range(len(data)):
+      data[i] = crop_multiple(data[i])
+    return (*data,)
+  else:
+    data = crop_multiple(data)
+  return data
+
+
 def load_gdrive_file(file_id,
                      ending='',
                      output_folder=path.expanduser('~/.keras/datasets')):
