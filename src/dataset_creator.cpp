@@ -31,6 +31,8 @@ Creator::Creator(ros::NodeHandle &nodeHandle)
   image_sub.subscribe(nodeHandle_, camera_image_topic, 10);
   cam_info_sub.subscribe(nodeHandle_, camera_info_topic, 10);
   pub = it_.advertise(output_topic, 1);
+  labels_publisher = it_.advertise(labels_topic, 1);
+  distance_publisher = it_.advertise(distance_topic, 1);
 
   if (!ignore_pointcloud) {
     // time synchronization for image, cloud and camera info
@@ -76,6 +78,16 @@ bool Creator::readParameters() {
   if (!nodeHandle_.getParam("ignorePointcloud", ignore_pointcloud))
     return false;
   if (!nodeHandle_.getParam("fileType", file_type))
+    return false;
+  if (!nodeHandle_.getParam("storeImages", store_images))
+    return false;
+  if (!nodeHandle_.getParam("createPreview", create_preview))
+    return false;
+  if (!nodeHandle_.getParam("exportPose", export_pose))
+    return false;
+  if (!nodeHandle_.getParam("distanceTopic", distance_topic))
+    return false;
+  if (!nodeHandle_.getParam("labelsTopic", labels_topic))
     return false;
 
   std::string camera_name;
@@ -159,47 +171,54 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
 
   // Wait for transform for map
   std::shared_ptr<tf::StampedTransform> map_transform(new tf::StampedTransform);
-  tf_listener->waitForTransform("/map", camera_frame, ros::Time(0),
-                                ros::Duration(3.0));
-  tf_listener->lookupTransform("/map", camera_frame, ros::Time(0),
-                               *map_transform);
+  tf_listener->waitForTransform("/map", camera_frame, h.stamp,
+                                ros::Duration(0.5));
+  tf_listener->lookupTransform("/map", camera_frame, h.stamp, *map_transform);
 
   // Get image from camera
   image_geometry::PinholeCameraModel model;
   model.fromCameraInfo(c_info);
-  // Create information file containing pinhole camera parameters
-  createInfoFile(timestamp, model);
+
+  if (store_images) {
+    // Create information file containing pinhole camera parameters
+    createInfoFile(timestamp, model);
+  }
 
   cv_bridge::CvImageConstPtr img =
       cv_bridge::toCvShare(image, sensor_msgs::image_encodings::BGR8);
   // Camera image
   const cv::Mat &camera_image = img->image;
-  // Store original image
-  cv::imwrite(output_folder + "/" + timestamp + "/original.png", camera_image);
+
+  if (store_images) {
+    // Store original image
+    cv::imwrite(output_folder + "/" + timestamp + "/original.png",
+                camera_image);
+  }
 
   if (cloud) {
     // Cloud is defined -> extract pc information
     projectPointCloud(timestamp, camera_image, cloud, model);
   }
 
-  // Export pose of camera in map frame
-  tf::Matrix3x3 rotation = (*map_transform).getBasis();
-  tf::Vector3 origin = (*map_transform).getOrigin();
+  if (export_pose) {
+    // Export pose of camera in map frame
+    tf::Matrix3x3 rotation = (*map_transform).getBasis();
+    tf::Vector3 origin = (*map_transform).getOrigin();
 
-  // Convert pose to string to save
-  std::string matrixAsString;
-  for (int i = 0; i < 3; i++) {
-    matrixAsString += std::to_string(rotation.getRow(i).getX()) + "," +
-                      std::to_string(rotation.getRow(i).getY()) + "," +
-                      std::to_string(rotation.getRow(i).getZ()) + "," +
-                      std::to_string(origin[i]) + ";\n";
+    // Convert pose to string to save
+    std::string matrixAsString;
+    for (int i = 0; i < 3; i++) {
+      matrixAsString += std::to_string(rotation.getRow(i).getX()) + "," +
+                        std::to_string(rotation.getRow(i).getY()) + "," +
+                        std::to_string(rotation.getRow(i).getZ()) + "," +
+                        std::to_string(origin[i]) + ";\n";
+    }
+    matrixAsString += "0,0,0,1;";
+    // Save pose matrix
+    std::ofstream myfile(output_folder + timestamp + "pose.txt");
+    myfile << matrixAsString;
+    myfile.close();
   }
-  matrixAsString += "0,0,0,1;";
-  // Save pose matrix
-  std::ofstream myfile(output_folder + timestamp + "pose.txt");
-  myfile << matrixAsString;
-  myfile.close();
-
   // Publish to topic
   pub.publish(img->toImageMsg());
   std::cout << "published" << output_folder + timestamp + "_preview."
@@ -216,13 +235,16 @@ void Creator::projectPointCloud(
 
   // Wait for transform for pointcloud
   std::shared_ptr<tf::StampedTransform> t(new tf::StampedTransform);
-  tf_listener->waitForTransform(camera_frame, cloud_frame, ros::Time(0),
-                                ros::Duration(3.0));
-  tf_listener->lookupTransform(camera_frame, cloud_frame, ros::Time(0), *t);
+  tf_listener->waitForTransform(camera_frame, cloud_frame, cloud->header.stamp,
+                                ros::Duration(0.4));
+  tf_listener->lookupTransform(camera_frame, cloud_frame, cloud->header.stamp,
+                               *t);
+  cv::Mat preview_img;
 
-  // Image that contains the projected pointcloud
-  cv::Mat preview_img = camera_image.clone();
-
+  if (create_preview) {
+    // Image that contains the projected pointcloud
+    preview_img = camera_image.clone();
+  }
   // Image that contains only the pointcloud projection
   cv::Mat labels_img(camera_image.rows, camera_image.cols, CV_8UC1,
                      cv::Scalar(0, 0, 0));
@@ -269,14 +291,12 @@ void Creator::projectPointCloud(
       int distance_to_mesh = std::max(
           0, std::min(254, (int)(254 * (it->intensity / max_distance))));
 
-      // Draw an camera image -> will be published to topic
-      cv::circle(camera_image, pixel, 6,
-                 CV_RGB(distance_to_mesh, 255 - distance_to_mesh, 0), CV_FILLED,
-                 8, 0);
-      // Draw on preview image -> will be stored for visual inspection
-      cv::circle(preview_img, pixel, 1,
-                 CV_RGB(distance_to_mesh, 255 - distance_to_mesh, 0), CV_FILLED,
-                 8, 0);
+      if (create_preview) {
+        // Draw on preview image -> will be stored for visual inspection
+        cv::circle(preview_img, pixel, 1,
+                   CV_RGB(distance_to_mesh, 255 - distance_to_mesh, 0),
+                   CV_FILLED, 8, 0);
+      }
       // Draw on labels groundtruth image
       cv::circle(labels_img, pixel, 1, cv::Scalar(distance_to_mesh));
       // Draw on distance groundtruth image.
@@ -284,13 +304,25 @@ void Creator::projectPointCloud(
     }
   }
 
-  // Save images
-  cv::imwrite(output_folder + "/" + timestamp + "/preview." + file_type,
-              preview_img);
-  cv::imwrite(output_folder + timestamp + "/labels.png", labels_img);
-  cv::imwrite(output_folder + timestamp + "/distance.png", distance_img);
-  // Save pointcloud
-  pcl::io::savePCDFile(output_folder + timestamp + "/pcl.pcd", camera_frame_pc);
+  if (store_images) {
+    // Save images
+    cv::imwrite(output_folder + "/" + timestamp + "/preview." + file_type,
+                preview_img);
+    cv::imwrite(output_folder + timestamp + "/labels.png", labels_img);
+    cv::imwrite(output_folder + timestamp + "/distance.png", distance_img);
+    // Save pointcloud
+    pcl::io::savePCDFile(output_folder + timestamp + "/pcl.pcd",
+                         camera_frame_pc);
+  }
+
+  cv_bridge::CvImage out_msg;
+  out_msg.header = cloud->header;
+  out_msg.encoding = sensor_msgs::image_encodings::TYPE_8UC1;
+  out_msg.image = labels_img;
+  labels_publisher.publish(out_msg.toImageMsg());
+
+  out_msg.image = distance_img;
+  distance_publisher.publish(out_msg.toImageMsg());
 }
 
 } // namespace dataset_creator
