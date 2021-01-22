@@ -231,7 +231,7 @@ class SemSegExperiment(Experiment):
                             tag=tag + "provided_validation_set",
                             exportPredictions=exportImages)
 
-    print("=========== Evaluating Model on CLA (1) =========")
+    print("=========== Evaluating Model on CLA  =========")
     scoreAndPlotPredictions(lambda img: self.getImagePrediction(model, img),
                             self.dataLoaderCLA.getValidationDataset(),
                             self.dataLoaderCLA.validationSize,
