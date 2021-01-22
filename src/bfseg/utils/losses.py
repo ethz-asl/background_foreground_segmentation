@@ -114,14 +114,12 @@ def ignorant_cross_entropy_loss(y_true,
 
   # convert true labels to one hot encoded images
   labels_one_hot = tf.keras.backend.one_hot(y_true, 3)
-  # Remove class that should be ignored from one hot encoding
-  y_true_one_hot_no_ignore = tf.stack([
-      labels_one_hot[..., _class]
-      for _class in range(num_classes)
-      if _class != class_to_ignore
-  ],
-                                      axis=-1)
-
+  # Remove "unknown" class from groundtruth
+  classes_to_keep = tf.constant([
+      idx_class for idx_class in range(num_classes)
+      if idx_class != class_to_ignore
+  ])
+  y_true_one_hot_no_ignore = tf.gather(labels_one_hot, classes_to_keep, axis=-1)
   # Transform one hot encoding back to categorical
   y_true_back = tf.cast(tf.math.argmax(y_true_one_hot_no_ignore, axis=-1),
                         tf.int64)
@@ -151,14 +149,13 @@ def ignorant_balanced_cross_entropy_loss(y_true,
     Returns: Cross entropy loss where ground truth labels that have class 'class_to_ignore' are ignored
     """
   # convert true labels to one hot encoded images
-  labels_one_hot = tf.keras.backend.one_hot(y_true, 3)
-  # Remove class that should be ignored from one hot encoding
-  y_true_one_hot_no_ignore = tf.stack([
-      labels_one_hot[..., _class]
-      for _class in range(num_of_classes)
-      if _class != class_to_ignore
-  ],
-                                      axis=-1)
+  labels_one_hot = tf.keras.backend.one_hot(y_true, num_of_classes)
+  # Remove "unknown" class from groundtruth
+  classes_to_keep = tf.constant([
+      idx_class for idx_class in range(num_of_classes)
+      if idx_class != class_to_ignore
+  ])
+  y_true_one_hot_no_ignore = tf.gather(labels_one_hot, classes_to_keep, axis=-1)
 
   # Transform one hot encoding back to categorical
   y_true_back = tf.cast(tf.math.argmax(y_true_one_hot_no_ignore, axis=-1),
