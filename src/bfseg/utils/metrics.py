@@ -127,6 +127,21 @@ def getBalancedWeight(labels,
                       class_to_ignore,
                       num_classes,
                       normalize=True):
+  """
+  Returns a tensor with the same shape as the labels.
+  This tensor contains weights for each pixel. Pixels that have an 'unknown' class will be assigned a 0 weight
+  and all other pixels will be balanced by their occurence
+
+  Args:
+    labels: ground truth labels
+    labels_one_hot: prediction one hot encoded
+    class_to_ignore: which class number symbolizes the "unknown" class
+    num_classes: How many classes there are
+    normalize: if weights should add up to one
+
+  Returns:
+
+  """
   weight_tensor = tf.cast(tf.zeros_like(labels), tf.float32)
   for i in range(num_classes):
     if i == class_to_ignore:
@@ -140,7 +155,6 @@ def getBalancedWeight(labels,
       frequency *= tf.reduce_sum(tf.cast(labels, tf.float32))
     weight_tensor = tf.math.add(weight_tensor, frequency)
 
-  # tf.print("freq:", tf.unique(tf.reshape(weight_tensor, [-1])))
   # remove nan values if there are any
   weight_tensor = tf.where(tf.math.is_nan(weight_tensor),
                            tf.zeros_like(weight_tensor), weight_tensor)
