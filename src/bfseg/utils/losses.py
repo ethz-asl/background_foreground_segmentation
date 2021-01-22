@@ -71,6 +71,44 @@ def smooth_consistency_loss(depth_pred, y_pred_semantic, class_number=0):
   return tf.keras.backend.mean(diffx_no_nan + diffy_no_nan)
 
 
+class ConsistencyLossFromStackedPrection(LossFunctionWrapper):
+  """
+    Defines a consistency loss which expects the labels to have the following format:
+    y_pred: tensor [image_h, image_w, semantic_classes  + 1]
+            where y_pred[..., 1:semantic_classes] are the softmax predictions and
+            y_pred[..., 0] is the depth prediction
+    """
+
+  def __init__(self, semantic_class=2):
+    super().__init__(consistency_loss_from_stacked_prediction,
+                     semantic_classes=semantic_classes,
+                     name='consistency_loss_from_stacked_prediction')
+
+
+def consistency_loss_from_stacked_prediction(y_true=None,
+                                             y_pred=None,
+                                             semantic_classes=2):
+  """
+
+  Args:
+    Defines a consistency loss which expects the labels to have the following format:
+    y_pred: tensor [image_h, image_w, semantic_classes  + 1]
+            where y_pred[..., 1:semantic_classes] are the softmax predictions and
+            y_pred[..., 0] is the depth prediction
+
+  """
+  # det depth predictions
+  depth_pred = y_pred[..., 0]
+  # get semantic segmentation prediction
+  semseg_pred = tf.argmax(tf.gather(
+      y_pred, tf.constant([i + 1 for i in range(semantic_classes)]), axis=-1),
+                          axis=-1)
+  return sum([
+      smooth_consistency_loss(depth_pred, semseg_pred, c)
+      for c in range(semantic_classes)
+  ])
+
+
 def reduceGroundTruth(y_true, class_to_ignore=1, num_of_classes=3):
   """ convert true labels to one hot encoded images """
   labels_one_hot = tf.keras.backend.one_hot(y_true, 3)

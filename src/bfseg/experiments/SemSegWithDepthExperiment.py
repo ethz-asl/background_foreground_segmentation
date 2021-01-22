@@ -10,9 +10,9 @@ from bfseg.data.meshdist.dataLoader import DataLoader
 from bfseg.experiments.SemSegExperiment import SemSegExperiment
 from bfseg.data.nyu.NyuDataLoader import NyuDataLoader
 from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss, ignorant_depth_loss, depth_loss_function
-from bfseg.utils.losses import smooth_consistency_loss
-from bfseg.models.DeeplabV3Plus import Deeplabv3
+from bfseg.utils.losses import consistency_loss_from_stacked_prediction
 from bfseg.models.PspMultiTask import PSPNetMultiTask
+from bfseg.models.DeeplabV3Plus import Deeplabv3
 
 
 class SemSegWithDepthExperiment(SemSegExperiment):
@@ -38,21 +38,6 @@ class SemSegWithDepthExperiment(SemSegExperiment):
 
   """ --------------------------------- Loss and Metrics----------------------------------------------- """
 
-  def consistency_loss(self):
-    """ returns smooth consistency loss """
-
-    def loss(y_true=None, y_pred=None):
-      # det depth predictions
-      depth_pred = y_pred[..., 0]
-      # get semantic segmentation prediction
-      semseg_pred = tf.argmax(tf.gather(y_pred, tf.constant([1, 2]), axis=-1),
-                              axis=-1)
-      return smooth_consistency_loss(depth_pred, semseg_pred,
-                                     0) + smooth_consistency_loss(
-                                         depth_pred, semseg_pred, 1)
-
-    return loss
-
   def getLoss(self):
     losses = {
         'depth':
@@ -64,7 +49,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
 
     if self.config.use_consistency_loss:
       # add consistency loss if available
-      losses['combined'] = self.consistency_loss()
+      losses['combined'] = consistency_loss_from_stacked_prediction
 
     return losses
 
