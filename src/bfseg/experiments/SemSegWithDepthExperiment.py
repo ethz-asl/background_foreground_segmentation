@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from bfseg.utils.utils import str2bool
 from bfseg.utils.metrics import IgnorantBalancedAccuracyMetric, IgnorantAccuracyMetric, IgnorantBalancedMeanIoU, \
-    IgnorantMeanIoU, IgnorantDepthMAPE
+    IgnorantMeanIoU, IgnorantDepthMAE
 from bfseg.utils.losses import ignorant_cross_entropy_loss
 from bfseg.data.meshdist.dataLoader import DataLoader
 from bfseg.experiments.SemSegExperiment import SemSegExperiment
@@ -70,7 +70,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
 
   def getMetrics(self):
     return {
-        'depth': [IgnorantDepthMAPE()],
+        'depth': [IgnorantDepthMAE()],
         'semseg': [
             IgnorantBalancedAccuracyMetric(),
             IgnorantAccuracyMetric(),

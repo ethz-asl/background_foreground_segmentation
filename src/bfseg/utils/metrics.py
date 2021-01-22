@@ -1,15 +1,16 @@
 import tensorflow as tf
 
 
-class IgnorantDepthMAPE(tf.keras.metrics.MeanAbsoluteError):
+class IgnorantDepthMAE(tf.keras.metrics.MeanAbsoluteError):
   """
-  Wraps any keras metric to ignore a specific class or balance the weights
+    Ignorant wrapper for mean absolute error metric
   """
 
   def __init__(self):
     super().__init__()
 
   def update_state(self, depth_label, y_pred_depth, sample_weight=None):
+    # Depth is predicted as inverse
     y_pred_depth = 10 / y_pred_depth
     depth_label = 10 / depth_label
     y_pred_depth_ignorant = tf.where(tf.math.is_nan(depth_label),
@@ -17,14 +18,13 @@ class IgnorantDepthMAPE(tf.keras.metrics.MeanAbsoluteError):
     depth_label = tf.where(tf.math.is_nan(depth_label),
                            tf.zeros_like(depth_label), depth_label)
 
-    return super(IgnorantDepthMAPE, self).update_state(depth_label,
-                                                       y_pred_depth)
+    return super(IgnorantDepthMAE, self).update_state(depth_label, y_pred_depth)
 
   def result(self):
-    return super(IgnorantDepthMAPE, self).result()
+    return super(IgnorantDepthMAE, self).result()
 
   def reset_states(self):
-    return super(IgnorantDepthMAPE, self).reset_states()
+    return super(IgnorantDepthMAE, self).reset_states()
 
 
 class IgnorantMetricsWrapper(tf.keras.metrics.Metric):
