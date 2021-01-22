@@ -38,15 +38,16 @@ class DataLoader:
           validationMode: <all,CLA,ARCHE> which validation dataset to load
           loadDepth: whether to also load depth images
           trainFilter: Filter to filter training data by timestamp, camera etc.
-                          e.g.
-                          {
-                                   'rgb_2': {
-                                       'timestamp' : {
-                                           'lower_bound' : 0,
-                                           'upper_bound' : 1593603395.1234674
-                                       }
-                                   }
-                               },
+              e.g.
+              {
+                       'rgb_2': {
+                           'timestamp' : {
+                               'lower_bound' : 0,
+                               'upper_bound' : 1593603395.1234674
+                           }
+                       }
+                   },
+
           validationFilter: see above. additionally has parameter max_count
 
           cropOptions: Dict specifing how much the image should be cropped. Numbers are treated as percentages
@@ -143,13 +144,16 @@ class DataLoader:
                 max_count: -1
           }
 
-      Returns: filetered filenames and labels. Only files matched by the filter are returned.
+      Returns: filtered filenames and labels. Only files matched by the filter are returned.
       """
     filteredFilenames = []
     filteredLabels = []
 
+    # validation images have the following naming convention: route_timestamp_img.png
+    # e.g. cam0_1593603395.150319_img.png
     regex_pattern = "(.+)_(\d+\.\d+)_img\.png"
 
+    # for each image in validation set, check if they match the filter criterion
     for i, name in enumerate(filenames):
       match = re.search(regex_pattern, os.path.basename(name))
       route = match.group(1)
@@ -226,7 +230,6 @@ class DataLoader:
       if route in filter.keys():
         routeFilter = filter[route]
         validNumbers = routeFilter['imageNumbers']
-        # print("checking image number", image_number)
         if image_number in validNumbers:
           # apply filter
           filteredFilenames.append(name)
@@ -249,8 +252,6 @@ class DataLoader:
                    - ... additional information e.g. pc, pose
                   img_9999/
                     ....
-
-              Currently the distance label is unused
               """
     # lists to return
     labels = []
@@ -324,8 +325,10 @@ class DataLoader:
                                                       self.outputSize,
                                                       method="nearest"),
                             dtype=tf.float32)
+
     # Convert depth [0,255] to real distance [0m, 10m]
     depth_norm = ((tf.cast(depth_cropped, dtype=tf.float32) - 1.0) / 25.4)
+    # replace zeros with NaN
     depth_norm_2 = tf.where(
         tf.equal(depth_cropped, tf.constant(0, dtype=tf.float32)),
         tf.constant(float('nan'), dtype=tf.float32), depth_norm)
@@ -367,18 +370,18 @@ class DataLoader:
 
   def train_preprocess(self, image, labels):
     """
-                 Args:
-                     image: keras tensor containing rgb image
-                     label: keras tensor containing label image (1 channel)
+       Args:
+           image: keras tensor containing rgb image
+           label: keras tensor containing label image (1 channel)
 
-                 Returns: randomly augmented image
+       Returns: randomly augmented image
 
        """
     label = labels['semseg'] if isinstance(labels, dict) else labels
     depth = labels['depth'] if isinstance(labels, dict) else None
 
     # random data augmentation can be uncommented here
-    # # Flip left right
+    # Flip left right
     do_flip = tf.random.uniform([]) > 0.5
     image = tf.cond(do_flip, lambda: tf.image.flip_left_right(image),
                     lambda: image)
@@ -386,13 +389,13 @@ class DataLoader:
                     lambda: label)
 
     if depth is not None:
+      # also flip depth image
       depth = tf.cond(do_flip, lambda: tf.image.flip_left_right(depth),
                       lambda: depth)
 
-    # image = tf.image.random_flip_left_right(image)
-    # # Change brightness
+    # Change brightness
     image = tf.image.random_brightness(image, max_delta=32.0 / 255.0)
-    # # Change saturation
+    # Change saturation
     image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
 
     # Make sure the image is still in [0, 1]

@@ -42,16 +42,18 @@ def depth_loss_function(y_true, y_pred, theta=0.1, maxDepthVal=1000.0 / 10.0):
 
 def smooth_consistency_loss(depth_pred, y_pred_semantic, class_number=0):
   """
-    Makes sure the semantic and depth prediction match. e.q. there are not too many edges inside a
+    Makes sure the semantic and depth prediction match. e.g. there are not too many edges inside a
     segmentation mask.
 
-    Taken from this paper:
+    Taken from this paper, using similar naming convention.
+    Semantics-Guided Disparity Smoothness (8):
     https://openaccess.thecvf.com/content_CVPR_2019/papers/Chen_Towards_Scene_Understanding_Unsupervised_Monocular_Depth_Estimation_With_Semantic-Aware_Representation_CVPR_2019_paper.pdf
   """
 
   phi = tf.cast(tf.math.equal(y_pred_semantic, class_number), dtype=tf.float32)
   phi_x = tf.roll(phi, 1, axis=-3)
   phi_y = tf.roll(phi, 1, axis=-2)
+
   depth_x = tf.roll(depth_pred, 1, axis=-3)
   depth_y = tf.roll(depth_pred, 1, axis=-2)
   diffx = tf.multiply(tf.math.abs(depth_pred - depth_x), 1 - tf.math.abs(
@@ -102,6 +104,9 @@ def consistency_loss_from_stacked_prediction(y_true=None,
       for c in range(semantic_classes)
   ])
 
+  edges_x = tf.math.abs(depth_pred - depth_x)
+  mask_x = 1 - tf.math.abs((phi - phi_x))
+  diffx = tf.multiply(edges_x, mask_x)
 
 def reduceGroundTruth(y_true, class_to_ignore=1, num_of_classes=3):
   """ convert true labels to one hot encoded images """
@@ -114,15 +119,11 @@ def reduceGroundTruth(y_true, class_to_ignore=1, num_of_classes=3):
   ],
                                       axis=-1)
 
-  # Transform one hot encoding back to categorical
-  y_true_back = tf.cast(tf.math.argmax(y_true_one_hot_no_ignore, axis=-1),
-                        tf.int64)
+  # remove all NaN values
+  diffx_no_nan = tf.where(tf.math.is_nan(diffx), tf.zeros_like(diffx), diffx)
+  diffy_no_nan = tf.where(tf.math.is_nan(diffy), tf.zeros_like(diffy), diffy)
 
-  weights = getIgnoreWeight(
-      labels_one_hot,
-      class_to_ignore,
-  )
-  return y_true_back, weights
+  return tf.keras.backend.mean(diffx_no_nan + diffy_no_nan)
 
 
 def ignorant_cross_entropy_loss(y_true,

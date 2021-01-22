@@ -21,17 +21,12 @@ add_definitions(-std=c++14 -Wall -Wextra)
 cs_add_library(${PROJECT_NAME}
         src/dataset_creator.cpp)
 
-
 ############
 # BINARIES #
 ############
 cs_add_executable(${PROJECT_NAME}_node
         src/background_foreground_segmentation_node.cpp
         )
-
-cs_add_executable(pose_recorder_node
-    src/pose_recorder_node.cpp
-)
 
 target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME})
 
@@ -48,9 +43,3 @@ target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME})
 ##########
 cs_install()
 cs_export()
-
-
-catkin_install_python(PROGRAMS
-    src/ros_image_publisher.py
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
