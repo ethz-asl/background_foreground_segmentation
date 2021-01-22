@@ -4,9 +4,7 @@
             type="pose_recorder_node"
             cwd="node"
             output="screen">
-
-       <param name="imageTopic" value="/rgb/image_raw" /> 
-     <!--  <param name="imageTopic" value="/rgb/bg_fg_img" /> -->
+        <param name="imageTopic" value="/rgb/bg_fg_img" />
         <param name="cameraFrame" value="/rgb_camera_link" />
         <param name="outputFile" value = "/home/rene/pose_recorder.csv" />
     </node>

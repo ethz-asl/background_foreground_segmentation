@@ -1,3 +1,3 @@
-"""Nyu_depth_v2_labeled dataset."""
+"""Bfseg validation set labeled (CLA and ARCHE)"""
 
 from .bfseg_validation_labeled import BfsegValidationLabeled
