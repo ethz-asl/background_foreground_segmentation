@@ -16,7 +16,7 @@ class DataLoader:
                outputSize=None,
                validationDir=None,
                batchSize=4,
-               shuffleBufferSize=64,
+               shuffle=True,
                validationMode="all",
                loadDepth=True,
                trainFilter=None,
@@ -56,7 +56,7 @@ class DataLoader:
 
     self.workingDir = workingDir
     self.batchSize = batchSize
-    self.shuffleBufferSize = shuffleBufferSize
+    self.shuffle = shuffle
     self.inputSize = inputSize
     self.loadDepth = loadDepth
     self.cropOptions = cropOptions
@@ -333,6 +333,9 @@ class DataLoader:
         tf.equal(depth_cropped, tf.constant(0, dtype=tf.float32)),
         tf.constant(float('nan'), dtype=tf.float32), depth_norm)
 
+    # normalize depth
+    depth_norm_2 = 10 / depth_norm
+
     return cropped_image, {
         'depth': depth_norm_2,
         'semseg': cropped_semseg_labels,
@@ -433,8 +436,14 @@ class DataLoader:
 
   def getValidationDataset(self):
     """ Returns a tensorflow dataset based on list of filenames """
-    return tf.data.Dataset.from_tensor_slices((self.validationFiles, self.validationLabels)) \
-        .shuffle(self.validationSize) \
+    # Passing validation labels as depth since they will get removed anyway
+    ds = tf.data.Dataset.from_tensor_slices(
+        (self.validationFiles, self.validationLabels))
+
+    if self.shuffle:
+      ds = ds.shuffle(self.validationSize)
+
+    return ds \
         .map(self.parse_function, num_parallel_calls=4) \
         .map(self.reduce_validation_labels, num_parallel_calls=4) \
         .batch(self.batchSize) \
@@ -442,8 +451,16 @@ class DataLoader:
 
   def getTrainingDataset(self):
     """ Returns a tensorflow dataset based on list of filenames """
-    return tf.data.Dataset.from_tensor_slices((self.filenames, self.labels, self.depths)) \
-        .shuffle(self.size) \
+    if not self.shuffle:
+      self.filenames = sorted(self.filenames,
+                              key=lambda name: re.findall("_(\d+)_", name)[-1])
+    ds = tf.data.Dataset.from_tensor_slices(
+        (self.filenames, self.labels, self.depths))
+
+    if self.shuffle:
+      ds = ds.shuffle(self.size)
+
+    return ds \
         .map(self.parse_function, num_parallel_calls=4) \
         .map(self.train_preprocess, num_parallel_calls=4) \
         .batch(self.batchSize) \

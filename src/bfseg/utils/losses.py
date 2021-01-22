@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tensorflow.python.keras.losses import LossFunctionWrapper
 
 from bfseg.utils.metrics import getBalancedWeight, getIgnoreWeight
 
@@ -12,9 +13,7 @@ def ignorant_depth_loss(depth_label, y_pred_depth):
   depth_label = tf.where(tf.math.is_nan(depth_label),
                          tf.zeros_like(depth_label), depth_label)
 
-  return depth_loss_function(
-      depth_label, y_pred_depth_ignorant
-  )  # tf.keras.losses.ber(depth_label, y_pred_depth_ignorant)
+  return depth_loss_function(depth_label, y_pred_depth_ignorant)
 
 
 def depth_loss_function(y_true, y_pred, theta=0.1, maxDepthVal=1000.0 / 10.0):
@@ -23,26 +22,22 @@ def depth_loss_function(y_true, y_pred, theta=0.1, maxDepthVal=1000.0 / 10.0):
   """
 
   # Point-wise depth
-  l_depth = tf.keras.backend.mean(tf.keras.backend.abs(y_pred - y_true),
-                                  axis=-1)
+  l_depth = tf.mean(tf.abs(y_pred - y_true), axis=-1)
   # Edges
   dy_true, dx_true = tf.image.image_gradients(y_true)
   dy_pred, dx_pred = tf.image.image_gradients(y_pred)
-  l_edges = tf.keras.backend.mean(tf.keras.backend.abs(dy_pred - dy_true) +
-                                  tf.keras.backend.abs(dx_pred - dx_true),
-                                  axis=-1)
+  l_edges = tf.mean(tf.abs(dy_pred - dy_true) + tf.abs(dx_pred - dx_true),
+                    axis=-1)
 
   # Structural similarity (SSIM) index
-  l_ssim = tf.keras.backend.clip(
-      (1 - tf.image.ssim(y_true, y_pred, maxDepthVal)) * 0.5, 0, 1)
+  l_ssim = tf.clip((1 - tf.image.ssim(y_true, y_pred, maxDepthVal)) * 0.5, 0, 1)
 
   # Weights
   w1 = 1.0
   w2 = 1.0
   w3 = theta
 
-  return (w1 * l_ssim) + (w2 * tf.keras.backend.mean(l_edges)) + (
-      w3 * tf.keras.backend.mean(l_depth))
+  return (w1 * l_ssim) + (w2 * tf.mean(l_edges)) + (w3 * tf.mean(l_depth))
 
 
 def smooth_consistency_loss(depth_pred, y_pred_semantic, class_number=0):
@@ -61,14 +56,68 @@ def smooth_consistency_loss(depth_pred, y_pred_semantic, class_number=0):
 
   depth_x = tf.roll(depth_pred, 1, axis=-3)
   depth_y = tf.roll(depth_pred, 1, axis=-2)
+  diffx = tf.multiply(tf.math.abs(depth_pred - depth_x), 1 - tf.math.abs(
+      (phi - phi_x)))
+  diffx_no_nan = tf.where(tf.math.is_nan(diffx), tf.zeros_like(diffx), diffx)
+
+  diffy = tf.multiply(tf.math.abs(depth_pred - depth_y), 1 - tf.math.abs(
+      (phi - phi_y)))
+  diffy_no_nan = tf.where(tf.math.is_nan(diffy), tf.zeros_like(diffy), diffy)
+
+  return tf.mean(diffx_no_nan + diffy_no_nan)
+
+
+class ConsistencyLossFromStackedPrection(LossFunctionWrapper):
+  """
+    Defines a consistency loss which expects the labels to have the following format:
+    y_pred: tensor [image_h, image_w, semantic_classes  + 1]
+            where y_pred[..., 1:semantic_classes] are the softmax predictions and
+            y_pred[..., 0] is the depth prediction
+    """
+
+  def __init__(self, semantic_class=2):
+    super().__init__(consistency_loss_from_stacked_prediction,
+                     semantic_classes=semantic_classes,
+                     name='consistency_loss_from_stacked_prediction')
+
+
+def consistency_loss_from_stacked_prediction(y_true=None,
+                                             y_pred=None,
+                                             semantic_classes=2):
+  """
+
+  Args:
+    Defines a consistency loss which expects the labels to have the following format:
+    y_pred: tensor [image_h, image_w, semantic_classes  + 1]
+            where y_pred[..., 1:semantic_classes] are the softmax predictions and
+            y_pred[..., 0] is the depth prediction
+
+  """
+  # det depth predictions
+  depth_pred = y_pred[..., 0]
+  # get semantic segmentation prediction
+  semseg_pred = tf.argmax(tf.gather(
+      y_pred, tf.constant([i + 1 for i in range(semantic_classes)]), axis=-1),
+                          axis=-1)
+  return sum([
+      smooth_consistency_loss(depth_pred, semseg_pred, c)
+      for c in range(semantic_classes)
+  ])
 
   edges_x = tf.math.abs(depth_pred - depth_x)
   mask_x = 1 - tf.math.abs((phi - phi_x))
   diffx = tf.multiply(edges_x, mask_x)
 
-  edges_y = tf.math.abs(depth_pred - depth_y)
-  mask_y = 1 - tf.math.abs((phi - phi_y))
-  diffy = tf.multiply(edges_x, mask_y)
+def reduceGroundTruth(y_true, class_to_ignore=1, num_of_classes=3):
+  """ convert true labels to one hot encoded images """
+  labels_one_hot = tf.one_hot(y_true, 3)
+  # Remove class that should be ignored from one hot encoding
+  y_true_one_hot_no_ignore = tf.stack([
+      labels_one_hot[..., _class]
+      for _class in range(num_of_classes)
+      if _class != class_to_ignore
+  ],
+                                      axis=-1)
 
   # remove all NaN values
   diffx_no_nan = tf.where(tf.math.is_nan(diffx), tf.zeros_like(diffx), diffx)
@@ -80,7 +129,8 @@ def smooth_consistency_loss(depth_pred, y_pred_semantic, class_number=0):
 def ignorant_cross_entropy_loss(y_true,
                                 y_pred,
                                 class_to_ignore=1,
-                                num_of_classes=3):
+                                num_classes=3,
+                                from_logits=False):
   """
     Loss function that ignores all classes with label class_to_ignore.
 
@@ -89,20 +139,20 @@ def ignorant_cross_entropy_loss(y_true,
         y_pred: Predicted labels
         class_to_ignore: Class number from ground truth which should be ignored
         num_classes: how many classes there are
+        from_logits: set to True if y_pred are logits instead of softmax output. This
+          gives better numerical stability.
 
     Returns: Cross entropy loss where ground truth labels that have class 'class_to_ignore' are ignored
     """
 
   # convert true labels to one hot encoded images
-  labels_one_hot = tf.keras.backend.one_hot(y_true, 3)
-  # Remove class that should be ignored from one hot encoding
-  y_true_one_hot_no_ignore = tf.stack([
-      labels_one_hot[..., _class]
-      for _class in range(num_of_classes)
-      if _class != class_to_ignore
-  ],
-                                      axis=-1)
-
+  labels_one_hot = tf.one_hot(y_true, 3)
+  # Remove "unknown" class from groundtruth
+  classes_to_keep = tf.constant([
+      idx_class for idx_class in range(num_classes)
+      if idx_class != class_to_ignore
+  ])
+  y_true_one_hot_no_ignore = tf.gather(labels_one_hot, classes_to_keep, axis=-1)
   # Transform one hot encoding back to categorical
   y_true_back = tf.cast(tf.math.argmax(y_true_one_hot_no_ignore, axis=-1),
                         tf.int64)
@@ -112,7 +162,7 @@ def ignorant_cross_entropy_loss(y_true,
       class_to_ignore,
   )
 
-  scce = tf.keras.losses.SparseCategoricalCrossentropy()
+  scce = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=from_logits)
   return scce(y_true_back, y_pred, sample_weight=weights)
 
 
@@ -132,14 +182,13 @@ def ignorant_balanced_cross_entropy_loss(y_true,
     Returns: Cross entropy loss where ground truth labels that have class 'class_to_ignore' are ignored
     """
   # convert true labels to one hot encoded images
-  labels_one_hot = tf.keras.backend.one_hot(y_true, 3)
-  # Remove class that should be ignored from one hot encoding
-  y_true_one_hot_no_ignore = tf.stack([
-      labels_one_hot[..., _class]
-      for _class in range(num_of_classes)
-      if _class != class_to_ignore
-  ],
-                                      axis=-1)
+  labels_one_hot = tf.one_hot(y_true, num_of_classes)
+  # Remove "unknown" class from groundtruth
+  classes_to_keep = tf.constant([
+      idx_class for idx_class in range(num_of_classes)
+      if idx_class != class_to_ignore
+  ])
+  y_true_one_hot_no_ignore = tf.gather(labels_one_hot, classes_to_keep, axis=-1)
 
   # Transform one hot encoding back to categorical
   y_true_back = tf.cast(tf.math.argmax(y_true_one_hot_no_ignore, axis=-1),
@@ -185,3 +234,16 @@ def pseudo_labels(y_true, y_pred, threshold):
   # Assign 1 to all predictions where the prediction was not certain enough
   pseudo_labels = tf.where(believe, assignment, tf.ones_like(assignment))
   return pseudo_labels
+
+
+class IgnorantCrossEntropyLoss(LossFunctionWrapper):
+  """
+  Wraps ignorant_cross_entropy_loss into an object to pass arguments at construction.
+  """
+
+  def __init__(self, class_to_ignore=1, num_classes=3, from_logits=False):
+    super().__init__(ignorant_cross_entropy_loss,
+                     class_to_ignore=class_to_ignore,
+                     num_classes=num_classes,
+                     from_logits=from_logits,
+                     name='ignorant_cross_entropy_loss')

@@ -1,29 +1,30 @@
 import tensorflow as tf
 
 
-class IgnorantDepthMAPE(tf.keras.metrics.MeanAbsoluteError):
+class IgnorantDepthMAE(tf.keras.metrics.MeanAbsoluteError):
   """
-  Wraps any keras metric to ignore a specific class or balance the weights
+    Ignorant wrapper for mean absolute error metric
   """
 
   def __init__(self):
     super().__init__()
 
   def update_state(self, depth_label, y_pred_depth, sample_weight=None):
-
+    # Depth is predicted as inverse
+    y_pred_depth = 10 / y_pred_depth
+    depth_label = 10 / depth_label
     y_pred_depth_ignorant = tf.where(tf.math.is_nan(depth_label),
                                      tf.zeros_like(depth_label), y_pred_depth)
     depth_label = tf.where(tf.math.is_nan(depth_label),
                            tf.zeros_like(depth_label), depth_label)
 
-    return super(IgnorantDepthMAPE, self).update_state(depth_label,
-                                                       y_pred_depth)
+    return super(IgnorantDepthMAE, self).update_state(depth_label, y_pred_depth)
 
   def result(self):
-    return super(IgnorantDepthMAPE, self).result()
+    return super(IgnorantDepthMAE, self).result()
 
   def reset_states(self):
-    return super(IgnorantDepthMAPE, self).reset_states()
+    return super(IgnorantDepthMAE, self).reset_states()
 
 
 class IgnorantMetricsWrapper(tf.keras.metrics.Metric):
@@ -41,7 +42,7 @@ class IgnorantMetricsWrapper(tf.keras.metrics.Metric):
   def update_state(self, y_true, y_pred, sample_weight=None):
 
     # convert true labels to one hot encoded images
-    labels_one_hot = tf.keras.backend.one_hot(y_true, 3)
+    labels_one_hot = tf.keras.backend.one_hot(y_true, self.num_of_classes)
     # Remove "unknown" class from groundtruth
     classes_to_keep = tf.constant([
         idx_class for idx_class in range(self.num_of_classes)
@@ -76,27 +77,38 @@ class IgnorantMetricsWrapper(tf.keras.metrics.Metric):
 
 class IgnorantBalancedMeanIoU(IgnorantMetricsWrapper):
 
-  def __init__(self, class_to_ignore=1, class_cnt=3):
-    super().__init__(tf.keras.metrics.MeanIoU(num_classes=2), balanced=True)
+  def __init__(self, class_to_ignore=1, num_classes=3):
+    super().__init__(tf.keras.metrics.MeanIoU(num_classes=2),
+                     balanced=True,
+                     num_classes=num_classes,
+                     class_to_ignore=class_to_ignore)
 
 
 class IgnorantMeanIoU(IgnorantMetricsWrapper):
 
-  def __init__(self, class_to_ignore=1, class_cnt=3):
-    super().__init__(tf.keras.metrics.MeanIoU(num_classes=2), balanced=False)
+  def __init__(self, class_to_ignore=1, num_classes=3):
+    super().__init__(tf.keras.metrics.MeanIoU(num_classes=2),
+                     balanced=False,
+                     num_classes=num_classes,
+                     class_to_ignore=class_to_ignore)
 
 
 class IgnorantBalancedAccuracyMetric(IgnorantMetricsWrapper):
   """
   Accuracy function that ignores a class with a given label and balances the weights.
-  e.g. if the GT has 90% background and 10% foreground, a pixel that is correctly predicted as background counts less
-  than a pixel that is correctly predicted as foreground.
+  e.g. if the GT has 90% background and 10% foreground, a pixel that is correctly
+  predicted as background counts less than a pixel that is correctly predicted as
+  foreground.
 
-  Randomly Predicting 90%foreground and 10% background will produce a balanced accuracy of 50%
+  Randomly Predicting 90%foreground and 10% background will produce a balanced accuracy
+  of 50%
   """
 
-  def __init__(self, class_to_ignore=1, class_cnt=3):
-    super().__init__(tf.keras.metrics.Accuracy(), balanced=True)
+  def __init__(self, class_to_ignore=1, num_classes=3):
+    super().__init__(tf.keras.metrics.Accuracy(),
+                     balanced=True,
+                     num_classes=num_classes,
+                     class_to_ignore=class_to_ignore)
 
 
 class IgnorantAccuracyMetric(IgnorantMetricsWrapper):
@@ -104,8 +116,10 @@ class IgnorantAccuracyMetric(IgnorantMetricsWrapper):
   Accuracy function that ignores a class with a given label
   """
 
-  def __init__(self, class_to_ignore=1, class_cnt=3):
-    super().__init__(tf.keras.metrics.Accuracy())
+  def __init__(self, class_to_ignore=1, num_classes=3):
+    super().__init__(tf.keras.metrics.Accuracy(),
+                     num_classes=num_classes,
+                     class_to_ignore=class_to_ignore)
 
 
 def getBalancedWeight(labels,
@@ -113,6 +127,21 @@ def getBalancedWeight(labels,
                       class_to_ignore,
                       num_classes,
                       normalize=True):
+  """
+  Returns a tensor with the same shape as the labels.
+  This tensor contains weights for each pixel. Pixels that have an 'unknown' class will be assigned a 0 weight
+  and all other pixels will be balanced by their occurence
+
+  Args:
+    labels: ground truth labels
+    labels_one_hot: prediction one hot encoded
+    class_to_ignore: which class number symbolizes the "unknown" class
+    num_classes: How many classes there are
+    normalize: if weights should add up to one
+
+  Returns:
+
+  """
   weight_tensor = tf.cast(tf.zeros_like(labels), tf.float32)
   for i in range(num_classes):
     if i == class_to_ignore:
@@ -125,6 +154,10 @@ def getBalancedWeight(labels,
     if not normalize:
       frequency *= tf.reduce_sum(tf.cast(labels, tf.float32))
     weight_tensor = tf.math.add(weight_tensor, frequency)
+
+  # remove nan values if there are any
+  weight_tensor = tf.where(tf.math.is_nan(weight_tensor),
+                           tf.zeros_like(weight_tensor), weight_tensor)
 
   return weight_tensor
 

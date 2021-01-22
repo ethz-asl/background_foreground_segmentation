@@ -4,13 +4,14 @@ import tensorflow as tf
 
 from bfseg.utils.utils import str2bool
 from bfseg.utils.metrics import IgnorantBalancedAccuracyMetric, IgnorantAccuracyMetric, IgnorantBalancedMeanIoU, \
-    IgnorantMeanIoU, IgnorantDepthMAPE
+    IgnorantMeanIoU, IgnorantDepthMAE
 from bfseg.utils.losses import ignorant_cross_entropy_loss
 from bfseg.data.meshdist.dataLoader import DataLoader
 from bfseg.experiments.SemSegExperiment import SemSegExperiment
 from bfseg.data.nyu.NyuDataLoader import NyuDataLoader
 from bfseg.utils.losses import ignorant_balanced_cross_entropy_loss, ignorant_depth_loss, depth_loss_function
-from bfseg.utils.losses import smooth_consistency_loss
+from bfseg.utils.losses import consistency_loss_from_stacked_prediction
+from bfseg.models.PspMultiTask import PSPNetMultiTask
 from bfseg.models.DeeplabV3Plus import Deeplabv3
 
 
@@ -26,7 +27,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     super(SemSegWithDepthExperiment, self)._addArguments(parser)
 
     # overwrite default image size since we are now using the kinect
-    parser.add_argument('--image_w', type=int, default=640)
+    parser.add_argument('--image_w', type=int, default=624)
     parser.add_argument('--image_h', type=int, default=480)
 
     parser.add_argument('--depth_weigth', type=float, default=4)
@@ -35,28 +36,7 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     parser.add_argument('--consistency_weight', type=float, default=10)
     parser.add_argument('--model_name', type=str, default="DEEPLAB")
 
-    parser.add_argument('--backbone',
-                        type=str,
-                        default='xception',
-                        choices=["xception", "mobile"],
-                        help='CNN architecture')
-
   """ --------------------------------- Loss and Metrics----------------------------------------------- """
-
-  def consistency_loss(self):
-    """ returns smooth consistency loss """
-
-    def loss(y_true=None, y_pred=None):
-      # det depth predictions
-      depth_pred = y_pred[..., 0]
-      # get semantic segmentation prediction
-      semseg_pred = tf.argmax(tf.gather(y_pred, tf.constant([1, 2]), axis=-1),
-                              axis=-1)
-      return smooth_consistency_loss(depth_pred, semseg_pred,
-                                     0) + smooth_consistency_loss(
-                                         depth_pred, semseg_pred, 1)
-
-    return loss
 
   def getLoss(self):
     losses = {
@@ -69,13 +49,13 @@ class SemSegWithDepthExperiment(SemSegExperiment):
 
     if self.config.use_consistency_loss:
       # add consistency loss if available
-      losses['combined'] = self.consistency_loss()
+      losses['combined'] = consistency_loss_from_stacked_prediction
 
     return losses
 
   def getMetrics(self):
     return {
-        'depth': [IgnorantDepthMAPE()],
+        'depth': [IgnorantDepthMAE()],
         'semseg': [
             IgnorantBalancedAccuracyMetric(),
             IgnorantAccuracyMetric(),
@@ -99,15 +79,13 @@ class SemSegWithDepthExperiment(SemSegExperiment):
                   metrics=self.getMetrics())
 
   def compileNyuModel(self, model):
-    model.compile(loss={
-        'depth': depth_loss_function,
-        'semseg': tf.keras.losses.sparse_categorical_crossentropy
-    },
-                  optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr),
-                  metrics=[
-                      tf.keras.metrics.MeanAbsoluteError(),
-                      tf.keras.metrics.SparseCategoricalAccuracy()
-                  ])
+    model.compile(
+        loss={
+            'depth': depth_loss_function,
+            'semseg': tf.keras.losses.sparse_categorical_crossentropy
+        },
+        optimizer=tf.keras.optimizers.Adam(self.config.nyu_lr),
+        metrics={'semseg': tf.keras.metrics.SparseCategoricalAccuracy()})
 
   """ --------------------------------- Data Loading -------------------------------------------------- """
 
@@ -136,9 +114,9 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     train_ds, train_info, valid_ds, _, _, _ = self.nyuLoader.getDataSets()
 
     steps_per_epoch = train_info.splits[
-        'train_experiments'].num_examples // self.config.nyu_batchsize
+        'train'].num_examples // self.config.nyu_batchsize
     # return train_ds, valid_ds, steps_per_epoch
-    return train_ds, None, steps_per_epoch
+    return train_ds, valid_ds, steps_per_epoch
 
   def getTrainData(self):
     """ return train_ds, test_ds """
@@ -146,15 +124,21 @@ class SemSegWithDepthExperiment(SemSegExperiment):
     return train, None
 
   def getModel(self):
-    if self.config.model_name != "DEEPLAB":
+    if self.config.model_name == "DEEPLAB":
+      model = Deeplabv3(input_shape=(self.config.image_h, self.config.image_w,
+                                     3),
+                        classes=2,
+                        OS=self.config.output_stride,
+                        activation="sigmoid",
+                        add_depth_prediction=True)
+    elif self.config.model_name == "PSP":
+      model = PSPNetMultiTask(self.config.backbone,
+                              input_shape=(self.config.image_h,
+                                           self.config.image_w, 3),
+                              classes=2)
+    else:
       raise ValueError(
-          "Only DEEPLAB is supported as model for depth prediction")
-
-    model = Deeplabv3(input_shape=(self.config.image_h, self.config.image_w, 3),
-                      classes=2,
-                      OS=self.config.output_stride,
-                      activation="sigmoid",
-                      add_depth_prediction=True)
+          "Only DEEPLAB and PSP is supported as model for depth prediction")
 
     return model
 

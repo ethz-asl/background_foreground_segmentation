@@ -61,6 +61,11 @@ def addTimeBasedParams(parser):
                       default=None,
                       help="Timestamp where training should start")
 
+  parser.add_argument('--shuffle',
+                      type=bool,
+                      default=False,
+                      help="Whether to shuffle Images")
+
 
 def loadDefaultRoutes(dataset):
   """ Helper function that loads the dafault available routes for each dataset  """
@@ -91,6 +96,7 @@ def getDataLoader(config, loadDepth):
                                                    config.train_duration)
   # Get a dataloader to load training images
   return DataLoader(config.train_path, [config.image_h, config.image_w],
+                    shuffle=config.shuffle,
                     validationDir=config.validation_path,
                     validationMode="CLA",
                     batchSize=config.batch_size,
@@ -104,11 +110,11 @@ class TimestampBasedSemSegWithDepthExperiment(SemSegWithDepthExperiment):
   """ Experiment that uses SemSeg + Depth but only trains on a subset of all images.  """
 
   def __init__(self):
-    super(SemSegWithPseudoLabelsExperiment, self).__init__()
+    super(TimestampBasedSemSegWithDepthExperiment, self).__init__()
 
   def _addArguments(self, parser):
     """ add pseudo label specific arguements """
-    super(SemSegWithDepthExperiment, self)._addArguments(parser)
+    super(TimestampBasedSemSegWithDepthExperiment, self)._addArguments(parser)
     addTimeBasedParams(parser)
 
   def loadDataLoader(self):

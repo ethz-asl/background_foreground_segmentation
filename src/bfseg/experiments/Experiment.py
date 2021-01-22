@@ -5,8 +5,11 @@ import json
 from sacred import Experiment as SacredExperiment
 from sacred.observers import MongoObserver
 import tensorflow as tf
+import numpy as np
 import shutil
 import datetime
+import random
+import bfseg.sacred_utils as sacred_utils
 
 
 def train(experiment):
@@ -21,6 +24,12 @@ def train(experiment):
                     - compileModel(model)
                     - compileNyuModel(model)
     """
+
+  # fix seeds
+  tf.random.set_seed(0)
+  random.seed(0)
+  np.random.seed(0)
+
   # needs to be global to be set using @ex.config
   global args, outFolder, experiment_name
   args = experiment.getConfig()
@@ -31,11 +40,7 @@ def train(experiment):
 
   # Set up sacred experiment
   ex = SacredExperiment(experiment_name)
-  ex.observers.append(
-      MongoObserver(
-          url=
-          'mongodb://bfseg_runner:y5jL6uTnHN3W4AZo5oCiG3iX@data.asl.ethz.ch/bfseg',
-          db_name='bfseg'))
+  ex.observers.append(sacred_utils.get_observer())
 
   # Folder where model checkpoints are stored
   outFolder = os.path.join(
@@ -134,6 +139,7 @@ class Experiment():
       except Exception as e:
         print("Could not load pretrained weights. Starting with random ones.",
               e)
+        self.pretrainNyu(model, self.weightsFolder)
 
     # Get custom training data from experiment
     train_ds, test_ds = self.getTrainData()
@@ -155,7 +161,8 @@ class Experiment():
     # Get rid of all custom losses and metrics as they mess up load_model later.
     model.compile(optimizer=tf.keras.optimizers.Adam(0.0001))
     # save it
-    model.save(outFolder + "/model.h5")
+    tf.saved_model.save(model, outFolder + "/model")
+
     # Export predictions + results
     self.scoreModel(model, outFolder, exportImages=True, tag="vicon")
     print("Scored model. Finished")

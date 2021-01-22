@@ -134,3 +134,11 @@ dmypy.json
 # local python environment
 py3/**
 
+.DS_Store
+*/.DS_Store
+._*
+*/._*
+
+src/bfseg/settings.py
+
+omniboard/**
