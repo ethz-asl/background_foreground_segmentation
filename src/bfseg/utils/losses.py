@@ -104,9 +104,6 @@ def consistency_loss_from_stacked_prediction(y_true=None,
       for c in range(semantic_classes)
   ])
 
-  edges_x = tf.math.abs(depth_pred - depth_x)
-  mask_x = 1 - tf.math.abs((phi - phi_x))
-  diffx = tf.multiply(edges_x, mask_x)
 
 def reduceGroundTruth(y_true, class_to_ignore=1, num_of_classes=3):
   """ convert true labels to one hot encoded images """
