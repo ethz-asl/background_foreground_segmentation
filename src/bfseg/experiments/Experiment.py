@@ -9,6 +9,7 @@ import numpy as np
 import shutil
 import datetime
 import random
+import bfseg.sacred_utils as sacred_utils
 
 
 def train(experiment):
@@ -39,11 +40,7 @@ def train(experiment):
 
   # Set up sacred experiment
   ex = SacredExperiment(experiment_name)
-  ex.observers.append(
-      MongoObserver(
-          url=
-          'mongodb://bfseg_runner:y5jL6uTnHN3W4AZo5oCiG3iX@data.asl.ethz.ch/bfseg',
-          db_name='bfseg'))
+  ex.observers.append(sacred_utils.get_observer())
 
   # Folder where model checkpoints are stored
   outFolder = os.path.join(
