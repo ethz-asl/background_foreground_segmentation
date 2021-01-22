@@ -99,7 +99,10 @@ def dump_meshdist_ds_to_h5(datasets, dump_depth=False, path="data.h5"):
                                          np.shape(labels),
                                          data=labels)
       if dump_depth:
-        dataset_depth = grp.create_dataset("depth", np.shape(depth), data=depth)
+        dataset_depth = grp.create_dataset("depth",
+                                           np.shape(depth),
+                                           data=depth,
+                                           compression="gzip")
 
       # Now store metadata (camera and timestamp for each image)
       metadata = hf.require_group("metadata").require_group(name)
