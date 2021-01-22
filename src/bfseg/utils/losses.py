@@ -13,9 +13,7 @@ def ignorant_depth_loss(depth_label, y_pred_depth):
   depth_label = tf.where(tf.math.is_nan(depth_label),
                          tf.zeros_like(depth_label), depth_label)
 
-  return depth_loss_function(
-      depth_label, y_pred_depth_ignorant
-  )  # tf.keras.losses.ber(depth_label, y_pred_depth_ignorant)
+  return depth_loss_function(depth_label, y_pred_depth_ignorant)
 
 
 def depth_loss_function(y_true, y_pred, theta=0.1, maxDepthVal=1000.0 / 10.0):
