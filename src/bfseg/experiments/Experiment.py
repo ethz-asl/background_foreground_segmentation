@@ -161,7 +161,8 @@ class Experiment():
     # Get rid of all custom losses and metrics as they mess up load_model later.
     model.compile(optimizer=tf.keras.optimizers.Adam(0.0001))
     # save it
-    model.save(outFolder + "/model.h5")
+    tf.saved_model.save(model, outFolder + "/model")
+
     # Export predictions + results
     self.scoreModel(model, outFolder, exportImages=True, tag="vicon")
     print("Scored model. Finished")
