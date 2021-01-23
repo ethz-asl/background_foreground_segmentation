@@ -7,13 +7,7 @@ import os
 import numpy as np
 import datetime
 
-
-@tf.function
-def normalize_img(image, label):
-  """Normalizes images: `uint8` -> `float32`."""
-  label = tf.expand_dims(label, axis=2)
-  image = tf.cast(image, tf.float32) / 255.
-  return image, label
+from bfseg.utils.utils import normalize_img
 
 
 def create_mask(pred_mask):
