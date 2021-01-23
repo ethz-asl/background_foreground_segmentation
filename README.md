@@ -1,8 +1,24 @@
 # background_foreground_segmentation
 
-structure allows for standalone python useage and useage within ROS.
+Structure allows for standalone python usage and usage within ROS.
 
-To use the python package `cd src; pip install -e .`
+## Setting up the Python package
+### Create virtualenv
+```bash
+mkvirtualenv background_foreground_segmentation --python=$(which python3)
+```
+### Install dependencies
+Letting `$BFSEG_ROOT` be the folder of this repo (i.e., where this README is located), assuming the virtualenv created above is always sourced:
+- Install required dependencies:
+  ```bash
+  cd $BFSEG_ROOT
+  pip install -r requirements.txt
+  ```
+- Install Python package in this repo:
+  ```bash
+  cd $BFSEG_ROOT/src
+  pip install -e .
+  ```
 
 ## Dataset Creator
 ### Overview

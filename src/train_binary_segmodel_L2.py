@@ -80,7 +80,7 @@ def load_data(dataset, step, batch_size):
   else:
     train_ds = train_ds.shuffle(
         int(train_info.splits['test'].num_examples * 0.8))
-  train_ds = train_ds.batch(batch_size)  #.repeat()
+  train_ds = train_ds.batch(batch_size)
   train_ds = train_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
   val_ds = val_ds.map(normalize_img,
@@ -188,7 +188,8 @@ class Model:
       tf.summary.scalar('accuracy,lambda=' + str(self.lambda_distillation),
                         self.acc_metric.result(),
                         step=epoch)
-    template = 'Epoch {}, ' + mode + ' Loss: {}, ' + mode + ' Loss_ce: {}, ' + mode + ' Loss_mse: {}, ' + mode + ' Accuracy: {}'
+    template = ('Epoch {}, ' + mode + ' Loss: {}, ' + mode + ' Loss_ce: {}, ' +
+                mode + ' Loss_mse: {}, ' + mode + ' Accuracy: {}')
     print(
         template.format(epoch + 1, self.loss_tracker.result(),
                         self.loss_ce_tracker.result(),
@@ -207,7 +208,8 @@ def main():
   batch_size = 8
   epochs = 40
   step = "step2"
-  lambda_distillation = 1  # range: [0,1], lambda=0: no distillation, lambda=1: no train on 2nd task
+  # Range: [0,1], lambda=0: no distillation, lambda=1: no train on 2nd task.
+  lambda_distillation = 1
   print("lambda_distillation is " + str(lambda_distillation))
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
@@ -221,7 +223,8 @@ def main():
     saved_weights_dir = None
     lambda_distillation = 0
   else:
-    saved_weights_dir = "exp/lambda0-epoch20/saved_model/step1/model.16-0.899.h5"
+    saved_weights_dir = ("exp/lambda0-epoch20/saved_model/step1/"
+                         "model.16-0.899.h5")
   try:
     os.makedirs(log_dir + '/train')
     os.makedirs(log_dir + '/val')
@@ -249,59 +252,6 @@ def main():
     for (test_x, test_y) in test_ds:
       model.test_step(test_x, test_y)
     model.on_epoch_end(model.test_summary_writer, epoch, mode="Test")
-
-  # i = 0
-  # for image, _ in train_ds:
-  #   features_maps = encoder(image)
-  #   features_maps = np.array(features_maps)
-  #   np.save("old_features/batch_"+str('{:03d}'.format(i)+".npy"),features_maps)
-  #   print("Predicting train batch %d" % i)
-  #   i = i + 1
-
-  # testing_save_path = './test_result_epoch10_diffscene/'
-  # validating_save_path = './val_result_epoch10_diffscene/'
-  # if os.path.exists(testing_save_path) == False:
-  #   os.mkdir(testing_save_path)
-  # if os.path.exists(validating_save_path) == False:
-  #   os.mkdir(validating_save_path)
-  # i = 0
-  # for image, label in test_ds:
-  #   for j in range(image.shape[0]):
-  #     pred_label = model.predict(image)
-  #     Image.save_img(
-  #         os.path.join(testing_save_path,
-  #                      str(i * batch_size + j).zfill(4) + '_image.png'),
-  #         image[j])
-  #     Image.save_img(
-  #         os.path.join(testing_save_path,
-  #                      str(i * batch_size + j).zfill(4) + '_trueseg.png'),
-  #         label[j])
-  #     # print(label[j])
-  #     Image.save_img(
-  #         os.path.join(testing_save_path,
-  #                      str(i * batch_size + j).zfill(4) + '_preddeg.png'),
-  #         create_mask(pred_label[j]))
-  #     # print(create_mask(pred_label[j]))
-  #   print("Predicting test batch %d" % i)
-  #   i = i + 1
-  # i = 0
-  # for image, label in val_ds:
-  #   for j in range(image.shape[0]):
-  #     pred_label = model.predict(image)
-  #     Image.save_img(
-  #         os.path.join(validating_save_path,
-  #                      str(i * batch_size + j).zfill(4) + '_image.png'),
-  #         image[j])
-  #     Image.save_img(
-  #         os.path.join(validating_save_path,
-  #                      str(i * batch_size + j).zfill(4) + '_trueseg.png'),
-  #         label[j])
-  #     Image.save_img(
-  #         os.path.join(validating_save_path,
-  #                      str(i * batch_size + j).zfill(4) + '_preddeg.png'),
-  #         create_mask(pred_label[j]))
-  #   print("Predicting train batch %d" % i)
-  #   i = i + 1
 
 
 if __name__ == "__main__":

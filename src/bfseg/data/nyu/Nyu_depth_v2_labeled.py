@@ -26,10 +26,11 @@ _URL = 'http://horatio.cs.nyu.edu/mit/silberman/nyu_depth_v2/nyu_depth_v2_labele
 class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for Nyu_depth_v2_labeled dataset."""
 
-  VERSION = tfds.core.Version('2.0.0')
+  VERSION = tfds.core.Version('2.1.0')
   RELEASE_NOTES = {
       # '1.0.0': 'Initial release.',
-      '2.0.0': 'different scenes for train/test',
+      # '2.0.0': 'different scenes for train/test',
+      '2.1.0': 'additional "full" split',
   }
 
   # MANUAL_DOWNLOAD_INSTRUCTIONS = 1
@@ -71,6 +72,13 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
                 'scene_type': 'bedroom',
             },
         ),
+        tfds.core.SplitGenerator(
+            name='full',
+            gen_kwargs={
+                'dataset_path': download_dir,
+                'scene_type': None,
+            },
+        ),
     ]
 
   def _generate_examples(self, dataset_path, scene_type):
@@ -82,13 +90,13 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
       labels = f['labels']
       images = np.array(f['images'], dtype=f['images'].dtype).T.squeeze()
       labels = np.array(f['labels'], dtype=f['labels'].dtype).T.squeeze()
-      scene_type = [
+      scene_types = [
           f[f["sceneTypes"][0, i]][:, 0].tobytes().decode("utf-16")
           for i in range(f["sceneTypes"].shape[1])
       ]
       for i in range(images.shape[-1]):
         # Label_expand = np.expand_dims(labels[:,:,i], axis=2)
-        if scene_type[i] == scene_type:
+        if scene_type is None or scene_types[i] == scene_type:
           label = labels[:, :, i]
           combine_label = np.logical_or(
               label == 4,
