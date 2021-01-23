@@ -188,6 +188,20 @@ class Progress(Base):
     self.loss_tracker.update_state(loss)
     self.acc_metric.update_state(test_y_masked, pred_y_masked)
 
+  def on_epoch_end(self, epoch, val_ds):
+    """ save models after every several epochs
+        """
+    if (epoch + 1) % self.config.model_save_freq == 0:
+      # compute validation accuracy as part of the model name
+      for val_x, val_y, val_m in val_ds:
+        self.test_step(val_x, val_y, val_m)
+      self.new_model.save(
+          os.path.join(
+              self.model_save_dir, 'model.' + str(epoch) + '-' +
+              str(self.acc_metric.result().numpy())[:5] + '.tf'))
+      self.loss_tracker.reset_states()
+      self.acc_metric.reset_states()
+
   def training(self, train_ds, val_ds, test_ds):
     """
         train for assigned epochs, and validate & test after each epoch/batch,
