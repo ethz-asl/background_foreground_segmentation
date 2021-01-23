@@ -6,9 +6,10 @@ from os import path
 import re
 import tensorflow as tf
 
+
 @tf.function
 def normalize_img(image, label):
-  """Normalizes images: `uint8` -> `float32`."""
+  """Normalizes images to [0, 1]: `uint8` -> `float32`."""
   label = tf.expand_dims(label, axis=2)
   image = tf.cast(image, tf.float32) / 255.
   return image, label
