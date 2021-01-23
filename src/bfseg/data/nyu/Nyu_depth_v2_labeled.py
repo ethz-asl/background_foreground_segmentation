@@ -86,8 +86,6 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
     # (Nyu_depth_v2_labeled): Yields (key, example) tuples from the dataset
     h5py = tfds.core.lazy_imports.h5py
     with h5py.File(dataset_path, 'r') as f:
-      images = f['images']
-      labels = f['labels']
       images = np.array(f['images'], dtype=f['images'].dtype).T.squeeze()
       labels = np.array(f['labels'], dtype=f['labels'].dtype).T.squeeze()
       scene_types = [
