@@ -1,5 +1,4 @@
 import tensorflow as tf
-import tensorflow_datasets as tfds
 from Nyu_depth_v2_labeled.Nyu_depth_v2_labeled import NyuDepthV2Labeled
 import segmentation_models as sm
 from tensorflow import keras
@@ -7,80 +6,7 @@ import os
 import numpy as np
 import datetime
 
-from bfseg.utils.utils import normalize_img
-
-
-def load_data(dataset, step, batch_size):
-  # load data
-  if step == "step1":
-    train_ds, train_info = tfds.load(
-        dataset,
-        split='train[:80%]',
-        shuffle_files=True,
-        as_supervised=True,
-        with_info=True,
-    )
-    val_ds, _ = tfds.load(
-        dataset,
-        split='train[80%:]',
-        shuffle_files=False,
-        as_supervised=True,
-        with_info=True,
-    )
-    test_ds, _ = tfds.load(
-        dataset,
-        split='test[80%:]',
-        shuffle_files=False,
-        as_supervised=True,
-        with_info=True,
-    )
-    lr = 1e-4
-  else:
-    train_ds, train_info = tfds.load(
-        dataset,
-        split='test[:80%]',
-        shuffle_files=True,
-        as_supervised=True,
-        with_info=True,
-    )
-    val_ds, _ = tfds.load(
-        dataset,
-        split='test[80%:]',
-        shuffle_files=False,
-        as_supervised=True,
-        with_info=True,
-    )
-    test_ds, _ = tfds.load(
-        dataset,
-        split='train[80%:]',
-        shuffle_files=False,
-        as_supervised=True,
-        with_info=True,
-    )
-    lr = 1e-5
-
-  train_ds = train_ds.map(normalize_img,
-                          num_parallel_calls=tf.data.experimental.AUTOTUNE)
-  train_ds = train_ds.cache()
-  if step == "step1":
-    train_ds = train_ds.shuffle(
-        int(train_info.splits['train'].num_examples * 0.8))
-  else:
-    train_ds = train_ds.shuffle(
-        int(train_info.splits['test'].num_examples * 0.8))
-  train_ds = train_ds.batch(batch_size)
-  train_ds = train_ds.prefetch(tf.data.experimental.AUTOTUNE)
-
-  val_ds = val_ds.map(normalize_img,
-                      num_parallel_calls=tf.data.experimental.AUTOTUNE)
-  val_ds = val_ds.cache().batch(batch_size).prefetch(
-      tf.data.experimental.AUTOTUNE)
-
-  test_ds = test_ds.map(normalize_img,
-                        num_parallel_calls=tf.data.experimental.AUTOTUNE)
-  test_ds = test_ds.cache().batch(batch_size).prefetch(
-      tf.data.experimental.AUTOTUNE)
-  return train_ds, val_ds, test_ds, lr
+from bfseg.utils.utils import load_data, normalize_img
 
 
 class Model:
@@ -220,8 +146,10 @@ def main():
     os.makedirs(model_save_dir)
   except os.error:
     pass
-  train_ds, val_ds, test_ds, lr = load_data('NyuDepthV2Labeled', step,
-                                            batch_size)
+  lr, train_ds, val_ds, test_ds = load_data(dataset_name='NyuDepthV2Labeled',
+                                            step=step,
+                                            batch_size=batch_size,
+                                            use_pretrain_dataset=False)
   model = Model(log_dir=log_dir,
                 model_save_dir=model_save_dir,
                 lr=lr,
