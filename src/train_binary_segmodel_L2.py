@@ -10,12 +10,6 @@ import datetime
 from bfseg.utils.utils import normalize_img
 
 
-def create_mask(pred_mask):
-  pred_mask = tf.argmax(pred_mask, axis=-1)
-  pred_mask = pred_mask[..., tf.newaxis]
-  return pred_mask
-
-
 def load_data(dataset, step, batch_size):
   # load data
   if step == "step1":
