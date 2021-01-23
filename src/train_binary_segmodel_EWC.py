@@ -47,7 +47,6 @@ def load_data(dataset, step, batch_size):
         with_info=True,
     )
     lr = 1e-4
-    # encoder_freezed = False
   else:
     train_ds, train_info = tfds.load(
         dataset,
@@ -78,7 +77,6 @@ def load_data(dataset, step, batch_size):
         with_info=True,
     )
     lr = 1e-5
-    # encoder_freezed = True
 
   train_ds = train_ds.map(normalize_img,
                           num_parallel_calls=tf.data.experimental.AUTOTUNE)
@@ -89,7 +87,7 @@ def load_data(dataset, step, batch_size):
   else:
     train_ds = train_ds.shuffle(
         int(train_info.splits['test'].num_examples * 0.8))
-  train_ds = train_ds.batch(batch_size)  #.repeat()
+  train_ds = train_ds.batch(batch_size)
   train_ds = train_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
   val_ds = val_ds.map(normalize_img,
@@ -154,8 +152,9 @@ class Model:
 
   def create_fisher_params(self, dataset):
     self.fisher_params = []
-    grads_list = [
-    ]  # list of list of gradients, outer: for different batches, inner: for different network parameters
+    # List of list of gradients, outer: for different batches, inner: for
+    # different network parameters.
+    grads_list = []
     for step, (x, y) in enumerate(dataset):
       if step > 40:
         break
@@ -192,7 +191,6 @@ class Model:
     return tf.reduce_sum(losses)
 
   def train_step(self, train_x, train_y):
-    # print(self.new_model.trainable_weights[0])
     with tf.GradientTape() as tape:
       [_, pred_y] = self.new_model(train_x, training=True)
       output_loss = self.loss_ce(train_y, pred_y)
@@ -239,7 +237,8 @@ class Model:
       tf.summary.scalar('accuracy,lambda=' + str(self.lambda_weights),
                         self.acc_metric.result(),
                         step=epoch)
-    template = 'Epoch {}, ' + mode + ' Loss: {}, ' + mode + ' Loss_ce: {}, ' + mode + ' Loss_mse: {}, ' + mode + ' Accuracy: {}'
+    template = ('Epoch {}, ' + mode + ' Loss: {}, ' + mode + ' Loss_ce: {}, ' +
+                mode + ' Loss_mse: {}, ' + mode + ' Accuracy: {}')
     print(
         template.format(epoch + 1, self.loss_tracker.result(),
                         self.loss_ce_tracker.result(),
@@ -258,7 +257,9 @@ def main():
   batch_size = 8
   epochs = 40
   step = "step2"
-  lambda_weights = 0  # range: [0,1], lambda=0: no weight constraints, lambda=1: no train on 2nd task
+  # Range: [0,1], lambda=0: no weight constraints, lambda=1: no train on 2nd
+  # task.
+  lambda_weights = 0
   print("lambda_weights is " + str(lambda_weights))
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
@@ -273,7 +274,8 @@ def main():
     saved_weights_dir = None
     lambda_weights = 0
   else:
-    saved_weights_dir = "exp/lambda0-epoch20/saved_model/step1/model.16-0.899.h5"
+    saved_weights_dir = ("exp/lambda0-epoch20/saved_model/step1/"
+                         "model.16-0.899.h5")
   try:
     os.makedirs(log_dir + '/train')
     os.makedirs(log_dir + '/val')
