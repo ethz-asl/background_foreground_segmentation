@@ -194,7 +194,8 @@ class Progress(Base):
     if (epoch + 1) % self.config.model_save_freq == 0:
       # compute validation accuracy as part of the model name
       for val_x, val_y, val_m in val_ds:
-        self.test_step(val_x, val_y, val_m)
+        if val_x.shape[0] == self.config.batch_size:
+          self.test_step(val_x, val_y, val_m)
       self.new_model.save(
           os.path.join(
               self.model_save_dir, 'model.' + str(epoch) + '-' +

@@ -30,5 +30,5 @@ Different experiment settings:
 
 2-8. -pretrained_dir="../experiments_diffscene/exp_stage1/saved_model/model.24-0.903.h5"
 
-+[-exp_dir="../experiments_diffscene" -train_dataset="NyuDepthV2Labeled" -train_scene="bedroom" -test_scene="kitchen"]
++[-tensorboard_write_freq="epoch" -exp_dir="../experiments_diffscene" -train_dataset="NyuDepthV2Labeled" -train_scene="bedroom" -test_scene="kitchen"]
 
