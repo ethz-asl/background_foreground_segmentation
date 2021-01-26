@@ -112,6 +112,7 @@ class Base():
   def preprocess_nyu(self, image, label):
     """ Preprocess NYU dataset:
             Normalize images: `uint8` -> `float32`.
+            label: 1 if belong to background, 0 if foreground
             create all-True mask since nyu labels are all known
         """
     mask = tf.not_equal(label, -1)  #all true
@@ -123,13 +124,14 @@ class Base():
   def preprocess_cla(self, image, label):
     """ Preprocess our auto-labeled CLA dataset:
             It consists of three labels (0,1,2) where all classes that belong to the background 
-            (e.g. floor, wall, roof) are assigned the '2' label. Foreground has assigned the 
-            '0' label and unknown the '1' label,
+            (e.g. floor, wall, roof) are assigned the '1' label. Foreground has assigned the 
+            '0' label and unknown the '2' label,
             Let CLA label format to be consistent with NYU
-            Mask element is True if it's known, mask is used to compute masked loss
+            label: 1 if belong to background, 0 if foreground / unknown(does not matter since we are using masked loss)
+            Mask element is True if it's known (label '0' or '1'), mask is used to compute masked loss
         """
-    label = tf.cast(label == 2, tf.uint8)
-    mask = tf.squeeze(tf.not_equal(label, 1))
+    mask = tf.squeeze(tf.not_equal(label, 2))
+    label = tf.cast(label == 1, tf.uint8)
     image = tf.cast(image, tf.float32)
     return image, label, mask
 
