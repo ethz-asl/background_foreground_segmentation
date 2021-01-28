@@ -32,7 +32,6 @@ sensor_msgs::ImageConstPtr image;
 tf::TransformListener *tf_listener;
 ros::Publisher *publisher;
 
-
 pcl::PointCloud<pcl::PointXYZI>
 filter_pc(const pcl::PointCloud<pcl::PointXYZ> &cloud,
           const sensor_msgs::ImageConstPtr &image,
@@ -42,7 +41,7 @@ filter_pc(const pcl::PointCloud<pcl::PointXYZ> &cloud,
 
   std::shared_ptr<tf::StampedTransform> t(new tf::StampedTransform);
   try {
-  tf_listener->lookupTransform(image_frame, cloud_frame, ros::Time(0), *t);
+    tf_listener->lookupTransform(image_frame, cloud_frame, ros::Time(0), *t);
   } catch (const std::exception &e) {
     ROS_WARN("TF Failed %s", e.what());
     return out_cloud;
