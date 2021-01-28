@@ -33,6 +33,13 @@ cs_add_executable(pose_recorder_node
     src/pose_recorder_node.cpp
 )
 
+cs_add_executable(cloud_coloring_node
+        src/cloud_coloring_node.cpp
+        )
+cs_add_executable(cloud_filtering_node
+        src/cloud_filtering_node.cpp
+        )
+
 target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME})
 
 ############
