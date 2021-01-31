@@ -66,7 +66,8 @@ class BaseSegExperiment():
     - Training the model
     """
 
-  def __init__(self):
+  def __init__(self, run):
+    self.run = run
     self.log_dir = os.path.join(TMPDIR, ex.current_run.config['exp_name'],
                                 'logs')
     self.model_save_dir = os.path.join(TMPDIR,
@@ -324,7 +325,7 @@ def run(_run, batch_size, num_training_epochs, image_w, image_h, exp_name,
   """ Whole Training pipeline"""
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
-  seg_experiment = BaseSegExperiment()
+  seg_experiment = BaseSegExperiment(run=_run)
   # Set up the experiment.
   seg_experiment.make_dirs()
   seg_experiment.build_model()
