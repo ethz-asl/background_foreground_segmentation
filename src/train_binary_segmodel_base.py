@@ -213,16 +213,34 @@ class BaseSegExperiment():
         'val': keras.metrics.Accuracy('validation_accuracy')
     }
 
+  def forward_pass(self, training, x, y, mask):
+    r"""Forward pass.
+
+    Args:
+      training (bool): Whether or not the model should be in training mode.
+      x (tf.Tensor): Input to the network.
+      y (tf.Tensor): Ground-truth labels corresponding to the given input.
+      mask (tf.Tensor): Mask for the input to consider.
+
+    Return:
+      pred_y (tf.Tensor): Network prediction.
+      pred_y_masked (tf.Tensor): Masked network prediction.
+      loss (tf.Tensor): Loss from performing the forward pass.
+    """
+    [_, pred_y] = self.new_model(x, training=training)
+    pred_y_masked = tf.boolean_mask(pred_y, mask)
+    y_masked = tf.boolean_mask(y, mask)
+    loss = self.loss_ce(y_masked, pred_y_masked)
+
+    return pred_y, pred_y_masked, loss
+
   def train_step(self, train_x, train_y, train_m, step):
     """ Training on one batch:
             Compute masked cross entropy loss(true label, predicted label),
             update losses & metrics
         """
     with tf.GradientTape() as tape:
-      [_, pred_y] = self.new_model(train_x, training=True)
-      pred_y_masked = tf.boolean_mask(pred_y, train_m)
-      train_y_masked = tf.boolean_mask(train_y, train_m)
-      loss = self.loss_ce(train_y_masked, pred_y_masked)
+      self.forward_pass(training=True, x=train_x, y=train_y, mask=train_m)
     grads = tape.gradient(loss, self.new_model.trainable_weights)
     self.optimizer.apply_gradients(zip(grads, self.new_model.trainable_weights))
     pred_y = tf.math.argmax(pred_y, axis=-1)
@@ -241,10 +259,7 @@ class BaseSegExperiment():
             update losses & metrics
         """
     assert (dataset_type in ["test", "val"])
-    [_, pred_y] = self.new_model(test_x, training=False)
-    pred_y_masked = tf.boolean_mask(pred_y, test_m)
-    test_y_masked = tf.boolean_mask(test_y, test_m)
-    loss = self.loss_ce(test_y_masked, pred_y_masked)
+    self.forward_pass(training=False, x=test_x, y=test_y, mask=test_m)
     pred_y = keras.backend.argmax(pred_y, axis=-1)
     pred_y_masked = tf.boolean_mask(pred_y, test_m)
     # Update val/test metrics
