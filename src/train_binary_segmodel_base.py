@@ -18,7 +18,7 @@ ex = Experiment()
 ex.observers.append(get_observer())
 
 
-class Base():
+class BaseSegExperiment():
   """
     Base class to specify an experiment.
     An experiment is a standalone class that supports:

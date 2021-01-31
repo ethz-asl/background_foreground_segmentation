@@ -5,10 +5,10 @@ os.environ["SM_FRAMEWORK"] = "tf.keras"
 import datetime
 import tensorflow as tf
 from tensorflow import keras
-from train_binary_segmodel_base import Base
+from train_binary_segmodel_base import BaseSegExperiment
 
 
-class EWC(Base):
+class EWC(BaseSegExperiment):
   """
     Experiment to train on 2nd task with EWC algorithm 
     "Overcoming catastrophic forgetting in neural networks"

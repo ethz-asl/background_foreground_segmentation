@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import segmentation_models as sm
-from train_binary_segmodel_base import Base
+from train_binary_segmodel_base import BaseSegExperiment
 
 
 class myMultiply(layers.Layer):
@@ -56,7 +56,7 @@ def add_lateral_connect(new_layer, old_layer, new_input, old_input,
   return new_output, old_output
 
 
-class Progress(Base):
+class Progress(BaseSegExperiment):
   """
     Experiment to train on 2nd task with lateral connection: Step1->progress
     "Progress & Compress: A scalable framework for continual learning (P&C)"

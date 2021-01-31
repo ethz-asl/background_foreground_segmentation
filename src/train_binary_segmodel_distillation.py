@@ -5,10 +5,10 @@ os.environ["SM_FRAMEWORK"] = "tf.keras"
 import tensorflow as tf
 from tensorflow import keras
 import segmentation_models as sm
-from train_binary_segmodel_base import Base
+from train_binary_segmodel_base import BaseSegExperiment
 
 
-class Distillation(Base):
+class Distillation(BaseSegExperiment):
   """
     Experiment to train on 2nd task with extra distillation loss:
     Distillation loss: 1. feature -> Distillation on Intermediate Feature Space (Encoder output)
