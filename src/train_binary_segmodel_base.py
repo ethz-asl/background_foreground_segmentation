@@ -338,17 +338,16 @@ def run(_run):
   """ Whole Training pipeline"""
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
-  self.make_dirs()
-  self.build_model()
-  self.build_tensorboard_writer()
-  self.build_loss_and_metric()
-  train_ds, val_ds, test_ds = self.load_dataset(self.config.train_dataset,
-                                                self.config.train_scene,
-                                                self.config.test_dataset,
-                                                self.config.test_scene,
-                                                self.config.data_dir,
-                                                self.config.batch_size)
-  self.training(train_ds, val_ds, test_ds)
+  seg_experiment = BaseSegExperiment()
+  seg_experiment.make_dirs()
+  seg_experiment.build_model()
+  seg_experiment.build_tensorboard_writer()
+  seg_experiment.build_loss_and_metric()
+  train_ds, val_ds, test_ds = seg_experiment.load_dataset(
+      seg_experiment.config.train_dataset, seg_experiment.config.train_scene,
+      seg_experiment.config.test_dataset, seg_experiment.config.test_scene,
+      seg_experiment.config.data_dir, seg_experiment.config.batch_size)
+  seg_experiment.training(train_ds, val_ds, test_ds)
 
 
 if __name__ == "__main__":
