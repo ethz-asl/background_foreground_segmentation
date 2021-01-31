@@ -2,16 +2,9 @@ import sys
 sys.path.append("..")
 import os
 os.environ["SM_FRAMEWORK"] = "tf.keras"
-import argparse
-import numpy as np
 import datetime
 import tensorflow as tf
-import tensorflow_datasets as tfds
 from tensorflow import keras
-import bfseg.data.nyu.Nyu_depth_v2_labeled
-import bfseg.data.meshdist.bfseg_cla_meshdist_labels
-import segmentation_models as sm
-import tensorflow.keras.preprocessing.image as Image
 from train_binary_segmodel_base import Base
 
 
