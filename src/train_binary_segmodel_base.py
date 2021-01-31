@@ -9,7 +9,13 @@ import tensorflow_datasets as tfds
 from tensorflow import keras
 import bfseg.data.nyu.Nyu_depth_v2_labeled
 import bfseg.data.meshdist.bfseg_cla_meshdist_labels
+from bfseg.sacred_utils import get_observer
+from bfseg.settings import TMPDIR
+from sacred import Experiment
 import segmentation_models as sm
+
+ex = Experiment()
+ex.observers.append(get_observer())
 
 
 class Base():
@@ -326,23 +332,24 @@ class Base():
         self.write_to_tensorboard(self.test_summary_writer, epoch)
       self.on_epoch_end(epoch, val_ds)
 
-  def run(self):
-    """ Whole Training pipeline"""
-    current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    print("Current time is " + current_time)
-    self.make_dirs()
-    self.build_model()
-    self.build_tensorboard_writer()
-    self.build_loss_and_metric()
-    train_ds, val_ds, test_ds = self.load_dataset(self.config.train_dataset,
-                                                  self.config.train_scene,
-                                                  self.config.test_dataset,
-                                                  self.config.test_scene,
-                                                  self.config.data_dir,
-                                                  self.config.batch_size)
-    self.training(train_ds, val_ds, test_ds)
+
+@ex.main
+def run(_run):
+  """ Whole Training pipeline"""
+  current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+  print("Current time is " + current_time)
+  self.make_dirs()
+  self.build_model()
+  self.build_tensorboard_writer()
+  self.build_loss_and_metric()
+  train_ds, val_ds, test_ds = self.load_dataset(self.config.train_dataset,
+                                                self.config.train_scene,
+                                                self.config.test_dataset,
+                                                self.config.test_scene,
+                                                self.config.data_dir,
+                                                self.config.batch_size)
+  self.training(train_ds, val_ds, test_ds)
 
 
 if __name__ == "__main__":
-  experiment = Base()
-  experiment.run()
+  ex.run_commandline()
