@@ -1,52 +1,63 @@
-import tensorflow as tf
-from Nyu_depth_v2_labeled.Nyu_depth_v2_labeled import NyuDepthV2Labeled
-import segmentation_models as sm
-from tensorflow import keras
+import sys
+sys.path.append("..")
 import os
+os.environ["SM_FRAMEWORK"] = "tf.keras"
+import argparse
 import numpy as np
 import datetime
+import tensorflow as tf
+import tensorflow_datasets as tfds
+from tensorflow import keras
+import bfseg.data.nyu.Nyu_depth_v2_labeled
+import bfseg.data.meshdist.bfseg_cla_meshdist_labels
+import segmentation_models as sm
+import tensorflow.keras.preprocessing.image as Image
+from train_binary_segmodel_base import Base
 
-from bfseg.utils.utils import load_data, normalize_img
 
+class EWC(Base):
+  """
+    Experiment to train on 2nd task with EWC algorithm 
+    "Overcoming catastrophic forgetting in neural networks"
+    https://arxiv.org/abs/1612.00796
+    """
 
-class Model:
+  def __init__(self):
+    super(EWC, self).__init__()
+    print("lambda is " + str(self.config.lambda_weights))
+    self.log_dir = os.path.join('../experiments', self.config.exp_name,
+                                'lambda' + str(self.config.lambda_weights),
+                                'logs')
+    self.model_save_dir = os.path.join(
+        '../experiments', self.config.exp_name,
+        'lambda' + str(self.config.lambda_weights), 'saved_model')
 
-  def __init__(self,
-               log_dir,
-               model_save_dir,
-               lr,
-               lambda_weights,
-               backbone="vgg16",
-               weights=None):
-    self.log_dir = log_dir
-    self.model_save_dir = model_save_dir
-    self.lambda_weights = lambda_weights
-    self.encoder, self.model = sm.Unet(backbone,
-                                       input_shape=(480, 640, 3),
-                                       classes=2,
-                                       activation='sigmoid',
-                                       weights=weights,
-                                       encoder_freeze=False)
-    self.new_model = keras.Model(
-        inputs=self.model.input,
-        outputs=[self.encoder.output, self.model.output])
+  def _addArguments(self, parser):
+    """ Add custom arguments that are needed for this experiment """
+    super(EWC, self)._addArguments(parser)
+    parser.add_argument(
+        '-lambda_weights',
+        default=0,
+        type=float,
+        help=
+        'weighting constant, range: [0,1], lambda=0: no weight constraints, lambda=1: no train on 2nd task'
+    )
 
-    self.train_summary_writer = tf.summary.create_file_writer(self.log_dir +
-                                                              "/train")
-    self.val_summary_writer = tf.summary.create_file_writer(self.log_dir +
-                                                            "/val")
-    self.test_summary_writer = tf.summary.create_file_writer(self.log_dir +
-                                                             "/test")
-    self.optimizer = keras.optimizers.Adam(lr)
-
-    self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
-    # self.loss_mse = keras.losses.MeanSquaredError()
-    self.loss_tracker = keras.metrics.Mean('loss', dtype=tf.float32)
-    self.loss_ce_tracker = keras.metrics.Mean('loss_ce', dtype=tf.float32)
-    self.loss_mse_tracker = keras.metrics.Mean('loss_mse', dtype=tf.float32)
-    self.acc_metric = keras.metrics.Accuracy('accuracy')
+  def load_dataset(self, train_dataset, train_scene, test_dataset, test_scene,
+                   data_dir, batch_size):
+    """ Create 3 dataloaders for training, validation and testing """
+    train_ds = self.load_data(train_dataset, data_dir, 'train', batch_size,
+                              train_scene)
+    val_ds = self.load_data(train_dataset, data_dir, 'val', batch_size,
+                            train_scene)
+    test_ds = self.load_data(test_dataset, data_dir, 'test', batch_size,
+                             test_scene)
+    pretrain_ds = self.load_data(test_dataset, data_dir, 'train', batch_size,
+                                 test_scene)
+    return train_ds, val_ds, test_ds, pretrain_ds
 
   def create_old_params(self):
+    """ Keep old weights of the model"""
     self.old_params = []
     for param in self.new_model.trainable_weights:
       old_param_name = param.name.replace(':0', '_old')
@@ -54,14 +65,13 @@ class Model:
           tf.Variable(param, trainable=False, name=old_param_name))
 
   def create_fisher_params(self, dataset):
+    """ Compute sqaured fisher information, representing relative importance"""
     self.fisher_params = []
-    # List of list of gradients, outer: for different batches, inner: for
-    # different network parameters.
-    grads_list = []
-    for step, (x, y) in enumerate(dataset):
+    grads_list = [
+    ]  # list of list of gradients, outer: for different batches, inner: for different network parameters
+    for step, (x, y, m) in enumerate(dataset):
       if step > 40:
         break
-      # log_liklihoods = []
       with tf.GradientTape() as tape:
         [_, pred_y] = self.new_model(x, training=True)
         log_y = tf.math.log(pred_y)
@@ -86,6 +96,7 @@ class Model:
           tf.Variable(param, trainable=False, name=param_name))
 
   def compute_consolidation_loss(self):
+    """ Compute weight regularization term """
     losses = []
     for i, param in enumerate(self.new_model.trainable_weights):
       losses.append(
@@ -93,126 +104,136 @@ class Model:
                         (param - self.old_params[i])**2))
     return tf.reduce_sum(losses)
 
-  def train_step(self, train_x, train_y):
+  def build_loss_and_metric(self):
+    """ Add loss criteria and metrics"""
+    self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+    self.loss_mse = keras.losses.MeanSquaredError()
+    self.loss_tracker = keras.metrics.Mean('loss', dtype=tf.float32)
+    self.loss_ce_tracker = keras.metrics.Mean('loss_ce', dtype=tf.float32)
+    self.loss_mse_tracker = keras.metrics.Mean('loss_weights', dtype=tf.float32)
+    self.acc_metric = keras.metrics.Accuracy('accuracy')
+
+  def train_step(self, train_x, train_y, train_m, step):
+    """ Training on one batch:
+            Compute masked cross entropy loss(true label, predicted label)
+            + Weight consolidation loss(new weights, old weights)
+            update losses & metrics
+        """
     with tf.GradientTape() as tape:
       [_, pred_y] = self.new_model(train_x, training=True)
-      output_loss = self.loss_ce(train_y, pred_y)
-      loss = (
-          1 - self.lambda_weights
-      ) * output_loss + self.lambda_weights * self.compute_consolidation_loss()
+      pred_y_masked = tf.boolean_mask(pred_y, train_m)
+      train_y_masked = tf.boolean_mask(train_y, train_m)
+      output_loss = self.loss_ce(train_y_masked, pred_y_masked)
+      consolidation_loss = self.compute_consolidation_loss()
+      loss = (1 - self.config.lambda_weights
+             ) * output_loss + self.config.lambda_weights * consolidation_loss
     grads = tape.gradient(loss, self.new_model.trainable_weights)
     self.optimizer.apply_gradients(zip(grads, self.new_model.trainable_weights))
     pred_y = tf.math.argmax(pred_y, axis=-1)
-    self.loss_tracker.update_state(loss)
-    self.loss_ce_tracker.update_state(output_loss)
-    self.loss_mse_tracker.update_state(self.compute_consolidation_loss())
-    self.acc_metric.update_state(train_y, pred_y)
+    pred_y_masked = tf.boolean_mask(pred_y, train_m)
+    self.acc_metric.update_state(train_y_masked, pred_y_masked)
 
-  def test_step(self, test_x, test_y):
-    [_, pred_y] = self.new_model(test_x, training=False)
-    output_loss = self.loss_ce(test_y, pred_y)
-    loss = (
-        1 - self.lambda_weights
-    ) * output_loss + self.lambda_weights * self.compute_consolidation_loss()
+    if self.config.tensorboard_write_freq == "batch":
+      with self.train_summary_writer.as_default():
+        tf.summary.scalar('loss,lambda=' + str(self.config.lambda_weights),
+                          loss,
+                          step=step)
+        tf.summary.scalar('loss_ce,lambda=' + str(self.config.lambda_weights),
+                          output_loss,
+                          step=step)
+        tf.summary.scalar('loss_weights,lambda=' +
+                          str(self.config.lambda_weights),
+                          consolidation_loss,
+                          step=step)
+        tf.summary.scalar('accuracy,lambda=' + str(self.config.lambda_weights),
+                          self.acc_metric.result(),
+                          step=step)
+      self.acc_metric.reset_states()
+    elif self.config.tensorboard_write_freq == "epoch":
+      self.loss_tracker.update_state(loss)
+      self.loss_ce_tracker.update_state(output_loss)
+      self.loss_mse_tracker.update_state(consolidation_loss)
+    else:
+      raise Exception("Invalid tensorboard_write_freq: %s!" %
+                      self.config.tensorboard_write_freq)
+
+  def test_step(self, test_x, test_y, test_m):
+    """ Validating/Testing on one batch
+            update losses & metrics
+        """
+    [_, pred_y] = self.new_model(test_x, training=True)
+    pred_y_masked = tf.boolean_mask(pred_y, test_m)
+    test_y_masked = tf.boolean_mask(test_y, test_m)
+    output_loss = self.loss_ce(test_y_masked, pred_y_masked)
+    consolidation_loss = self.compute_consolidation_loss()
+    loss = (1 - self.config.lambda_weights
+           ) * output_loss + self.config.lambda_weights * consolidation_loss
     pred_y = tf.math.argmax(pred_y, axis=-1)
+    pred_y_masked = tf.boolean_mask(pred_y, test_m)
     # Update val/test metrics
     self.loss_tracker.update_state(loss)
     self.loss_ce_tracker.update_state(output_loss)
-    self.loss_mse_tracker.update_state(self.compute_consolidation_loss())
-    self.acc_metric.update_state(test_y, pred_y)
+    self.loss_mse_tracker.update_state(consolidation_loss)
+    self.acc_metric.update_state(test_y_masked, pred_y_masked)
 
-  def on_epoch_end(self, summary_writer, epoch, mode):
-    if mode == "Val" and (epoch + 1) % 10 == 0:
+  def on_epoch_end(self, epoch, val_ds):
+    """save models after every several epochs
+        """
+    if (epoch + 1) % self.config.model_save_freq == 0:
+      # compute validation accuracy as part of the model name
+      for val_x, val_y, val_m in val_ds:
+        self.test_step(val_x, val_y, val_m)
       self.new_model.save(
           os.path.join(
               self.model_save_dir, 'model.' + str(epoch) + '-' +
               str(self.acc_metric.result().numpy())[:5] + '.h5'))
+      self.loss_tracker.reset_states()
+      self.loss_ce_tracker.reset_states()
+      self.loss_mse_tracker.reset_states()
+      self.acc_metric.reset_states()
+
+  def write_to_tensorboard(self, summary_writer, step):
+    """
+            write losses and metrics to tensorboard
+        """
     with summary_writer.as_default():
-      tf.summary.scalar('loss,lambda=' + str(self.lambda_weights),
+      tf.summary.scalar('loss,lambda=' + str(self.config.lambda_weights),
                         self.loss_tracker.result(),
-                        step=epoch)
-      tf.summary.scalar('loss_ce,lambda=' + str(self.lambda_weights),
+                        step=step)
+      tf.summary.scalar('loss_ce,lambda=' + str(self.config.lambda_weights),
                         self.loss_ce_tracker.result(),
-                        step=epoch)
-      tf.summary.scalar('loss_mse,lambda=' + str(self.lambda_weights),
+                        step=step)
+      tf.summary.scalar('loss_weights,lambda=' +
+                        str(self.config.lambda_weights),
                         self.loss_mse_tracker.result(),
-                        step=epoch)
-      tf.summary.scalar('accuracy,lambda=' + str(self.lambda_weights),
+                        step=step)
+      tf.summary.scalar('accuracy,lambda=' + str(self.config.lambda_weights),
                         self.acc_metric.result(),
-                        step=epoch)
-    template = ('Epoch {}, ' + mode + ' Loss: {}, ' + mode + ' Loss_ce: {}, ' +
-                mode + ' Loss_mse: {}, ' + mode + ' Accuracy: {}')
-    print(
-        template.format(epoch + 1, self.loss_tracker.result(),
-                        self.loss_ce_tracker.result(),
-                        self.loss_mse_tracker.result(),
-                        self.acc_metric.result() * 100))
-    # Reset metrics every epoch
+                        step=step)
     self.loss_tracker.reset_states()
     self.loss_ce_tracker.reset_states()
     self.loss_mse_tracker.reset_states()
     self.acc_metric.reset_states()
 
-
-def main():
-  # setting parameters
-  BACKBONE = "vgg16"
-  batch_size = 8
-  epochs = 40
-  step = "step2"
-  # Range: [0,1], lambda=0: no weight constraints, lambda=1: no train on 2nd
-  # task.
-  lambda_weights = 0
-  print("lambda_weights is " + str(lambda_weights))
-  current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-  print("Current time is " + current_time)
-  log_dir = os.path.join(
-      'exp_PC', 'Progress', 'finetune',
-      'lambda' + str(lambda_weights) + "-epoch" + str(epochs), 'logs', step)
-  model_save_dir = os.path.join(
-      'exp_PC', 'Progress', 'finetune',
-      'lambda' + str(lambda_weights) + "-epoch" + str(epochs), 'saved_model',
-      step)
-  if step == "step1":
-    saved_weights_dir = None
-    lambda_weights = 0
-  else:
-    saved_weights_dir = ("exp/lambda0-epoch20/saved_model/step1/"
-                         "model.16-0.899.h5")
-  try:
-    os.makedirs(log_dir + '/train')
-    os.makedirs(log_dir + '/val')
-    os.makedirs(log_dir + '/test')
-    os.makedirs(model_save_dir)
-  except os.error:
-    pass
-  lr, train_ds, val_ds, test_ds, pretrain_ds = load_data(
-      dataset_name='NyuDepthV2Labeled',
-      step=step,
-      batch_size=batch_size,
-      use_pretrain_dataset=True)
-  model = Model(log_dir=log_dir,
-                model_save_dir=model_save_dir,
-                lr=lr,
-                lambda_weights=lambda_weights,
-                backbone=BACKBONE,
-                weights=saved_weights_dir)
-  #   model.new_model.summary()
-  model.create_old_params()
-  model.create_fisher_params(pretrain_ds)
-  for epoch in range(epochs):
-    print("\nStart of epoch %d" % (epoch,))
-    for step, (train_x, train_y) in enumerate(train_ds):
-      model.train_step(train_x, train_y)
-    model.on_epoch_end(model.train_summary_writer, epoch, mode="Train")
-    for (val_x, val_y) in val_ds:
-      model.test_step(val_x, val_y)
-    model.on_epoch_end(model.val_summary_writer, epoch, mode="Val")
-    for (test_x, test_y) in test_ds:
-      model.test_step(test_x, test_y)
-    model.on_epoch_end(model.test_summary_writer, epoch, mode="Test")
+  def run(self):
+    """ Whole Training pipeline.
+            store old weights and compute fisher info before training
+        """
+    current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    print("Current time is " + current_time)
+    self.make_dirs()
+    self.build_model()
+    self.build_tensorboard_writer()
+    self.build_loss_and_metric()
+    train_ds, val_ds, test_ds, pretrain_ds = self.load_dataset(
+        self.config.train_dataset, self.config.train_scene,
+        self.config.test_dataset, self.config.test_scene, self.config.data_dir,
+        self.config.batch_size)
+    self.create_old_params()
+    self.create_fisher_params(pretrain_ds)
+    self.training(train_ds, val_ds, test_ds)
 
 
 if __name__ == "__main__":
-  sm.set_framework('tf.keras')
-  main()
+  experiment = EWC()
+  experiment.run()
