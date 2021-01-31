@@ -31,17 +31,15 @@ class BaseSegExperiment():
 
   def __init__(self):
     self.config = self.getConfig()
-    self.log_dir = os.path.join(self.config.exp_dir, self.config.exp_name,
-                                'logs')
-    self.model_save_dir = os.path.join(self.config.exp_dir,
-                                       self.config.exp_name, 'saved_model')
+    self.log_dir = os.path.join(TMPDIR, self.config.exp_name, 'logs')
+    self.model_save_dir = os.path.join(TMPDIR, self.config.exp_name, 'model')
     self.optimizer = keras.optimizers.Adam(self.config.lr)
 
   def make_dirs(self):
     try:
-      os.makedirs(self.log_dir + '/train')
-      os.makedirs(self.log_dir + '/val')
-      os.makedirs(self.log_dir + '/test')
+      os.makedirs(os.path.join(self.log_dir, 'train'))
+      os.makedirs(os.path.join(self.log_dir, 'val'))
+      os.makedirs(os.path.join(self.log_dir, 'test'))
       os.makedirs(self.model_save_dir)
     except os.error:
       pass
