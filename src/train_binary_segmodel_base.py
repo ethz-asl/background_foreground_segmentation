@@ -77,9 +77,6 @@ class BaseSegExperiment():
 
   def make_dirs(self):
     try:
-      os.makedirs(os.path.join(self.log_dir, 'train'))
-      os.makedirs(os.path.join(self.log_dir, 'val'))
-      os.makedirs(os.path.join(self.log_dir, 'test'))
       os.makedirs(self.model_save_dir)
     except os.error:
       pass
@@ -202,15 +199,6 @@ class BaseSegExperiment():
         inputs=self.model.input,
         outputs=[self.encoder.output, self.model.output])
 
-  def build_tensorboard_writer(self):
-    """ Create tensorboard writers"""
-    self.train_summary_writer = tf.summary.create_file_writer(self.log_dir +
-                                                              "/train")
-    self.val_summary_writer = tf.summary.create_file_writer(self.log_dir +
-                                                            "/val")
-    self.test_summary_writer = tf.summary.create_file_writer(self.log_dir +
-                                                             "/test")
-
   def build_loss_and_metric(self):
     """ Add loss criteria and metrics"""
     self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -231,19 +219,14 @@ class BaseSegExperiment():
     self.optimizer.apply_gradients(zip(grads, self.new_model.trainable_weights))
     pred_y = tf.math.argmax(pred_y, axis=-1)
     pred_y_masked = tf.boolean_mask(pred_y, train_m)
+    # Update accuracy and loss.
     self.acc_metric.update_state(train_y_masked, pred_y_masked)
+    self.loss_tracker.update_state(loss)
 
+    # Log loss and accuracy.
     tensorboard_write_freq = ex.current_run.config['tensorboard_write_freq']
     if (tensorboard_write_freq == "batch"):
-      with self.train_summary_writer.as_default():
-        tf.summary.scalar('loss', loss, step=step)
-        tf.summary.scalar('accuracy', self.acc_metric.result(), step=step)
-      self.acc_metric.reset_states()
-    elif (tensorboard_write_freq == "epoch"):
-      self.loss_tracker.update_state(loss)
-    else:
-      raise Exception("Invalid tensorboard_write_freq: %s!" %
-                      tensorboard_write_freq)
+      self.log_metrics(metric_type='train', step=step)
 
   def test_step(self, test_x, test_y, test_m):
     """ Validating/Testing on one batch
@@ -259,27 +242,24 @@ class BaseSegExperiment():
     self.loss_tracker.update_state(loss)
     self.acc_metric.update_state(test_y_masked, pred_y_masked)
 
-  def on_epoch_end(self, epoch, val_ds):
-    """ save models after every several epochs
-        """
+  def on_epoch_end(self, epoch):
+    # Optionally save the model at the end of the current epoch.
     if ((epoch + 1) % ex.current_run.config['model_save_freq'] == 0):
-      # compute validation accuracy as part of the model name
-      for val_x, val_y, val_m in val_ds:
-        self.test_step(val_x, val_y, val_m)
       self.new_model.save(
-          os.path.join(
-              self.model_save_dir, 'model.' + str(epoch) + '-' +
-              str(self.acc_metric.result().numpy())[:5] + '.h5'))
-      self.loss_tracker.reset_states()
-      self.acc_metric.reset_states()
+          os.path.join(self.model_save_dir, f'model_epoch_{epoch}.h5'))
+    # Optionally log the metrics.
+    tensorboard_write_freq = ex.current_run.config['tensorboard_write_freq']
+    if (tensorboard_write_freq == "epoch"):
+      self.log_metrics(metric_type='train', step=step)
 
-  def write_to_tensorboard(self, summary_writer, step):
-    """
-            write losses and metrics to tensorboard
-        """
-    with summary_writer.as_default():
-      tf.summary.scalar('loss', self.loss_tracker.result(), step=step)
-      tf.summary.scalar('accuracy', self.acc_metric.result(), step=step)
+  def log_metrics(self, metric_type, step):
+    assert (metric_type in ["train", "test", "val"])
+    self.run.log_scalar(f'{metric_type}_loss',
+                        self.loss_tracker.result(),
+                        step=step)
+    self.run.log_scalar(f'{metric_type}_accuracy',
+                        self.acc_metric.result(),
+                        step=step)
     self.loss_tracker.reset_states()
     self.acc_metric.reset_states()
 
@@ -297,24 +277,24 @@ class BaseSegExperiment():
           self.train_step(train_x, train_y, train_m, step)
           for val_x, val_y, val_m in val_ds:
             self.test_step(val_x, val_y, val_m)
-          self.write_to_tensorboard(self.val_summary_writer, step)
+          self.log_metrics("val", step)
           for test_x, test_y, test_m in test_ds:
             self.test_step(test_x, test_y, test_m)
-          self.write_to_tensorboard(self.test_summary_writer, step)
+          self.log_metrics("test", step)
           step += 1
         if epoch == 0:
           print("There are %d batches in the training dataset" % step)
       elif (tensorboard_write_freq == "epoch"):
         for train_x, train_y, train_m in train_ds:
           self.train_step(train_x, train_y, train_m, step)
-        self.write_to_tensorboard(self.train_summary_writer, epoch)
+        self.log_metrics("train", epoch)
         for val_x, val_y, val_m in val_ds:
           self.test_step(val_x, val_y, val_m)
-        self.write_to_tensorboard(self.val_summary_writer, epoch)
+        self.log_metrics("val", epoch)
         for test_x, test_y, test_m in test_ds:
           self.test_step(test_x, test_y, test_m)
-        self.write_to_tensorboard(self.test_summary_writer, epoch)
-      self.on_epoch_end(epoch, val_ds)
+        self.log_metrics("test", epoch)
+      self.on_epoch_end(epoch)
 
 
 @ex.main
@@ -328,7 +308,6 @@ def run(_run, batch_size, num_training_epochs, image_w, image_h, exp_name,
   # Set up the experiment.
   seg_experiment.make_dirs()
   seg_experiment.build_model()
-  seg_experiment.build_tensorboard_writer()
   seg_experiment.build_loss_and_metric()
   train_ds, val_ds, test_ds = seg_experiment.load_datasets()
   # Run the training.
