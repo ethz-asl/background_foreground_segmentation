@@ -106,7 +106,7 @@ class EWC(Base):
 
   def build_loss_and_metric(self):
     """ Add loss criteria and metrics"""
-    self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+    self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     self.loss_mse = keras.losses.MeanSquaredError()
     self.loss_tracker = keras.metrics.Mean('loss', dtype=tf.float32)
     self.loss_ce_tracker = keras.metrics.Mean('loss_ce', dtype=tf.float32)

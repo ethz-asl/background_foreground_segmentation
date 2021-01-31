@@ -227,7 +227,7 @@ class Base():
 
   def build_loss_and_metric(self):
     """ Add loss criteria and metrics"""
-    self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+    self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     self.loss_tracker = keras.metrics.Mean('loss', dtype=tf.float32)
     self.acc_metric = keras.metrics.Accuracy('accuracy')
 
