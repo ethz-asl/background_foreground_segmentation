@@ -12,6 +12,7 @@ from sacred import Experiment
 import segmentation_models as sm
 from shutil import make_archive
 
+#TODO(fmilano): Pass this as argument to BaseSegExperiment class.
 ex = Experiment()
 ex.observers.append(get_observer())
 
@@ -56,16 +57,15 @@ def seg_experiment_default_config():
   model_save_freq = 1
 
 
-class BaseSegExperiment():
+class BaseSegExperiment:
+  r"""Base class to specify an experiment. An experiment is a standalone class
+  that supports:
+  - Loading training data
+  - Creating models that can be trained
+  - Creating experiment-specific loss functions
+  - Logging the metrics
+  - Training the model
   """
-    Base class to specify an experiment.
-    An experiment is a standalone class that supports:
-    - Loading training data
-    - Creating models that can be trained
-    - Creating experiment-specific loss functions
-    - Logging the metrics
-    - Training the model
-    """
 
   def __init__(self, run):
     self.run = run
@@ -85,37 +85,51 @@ class BaseSegExperiment():
 
   @tf.function
   def preprocess_nyu(self, image, label):
-    """ Preprocess NYU dataset:
-            Normalize images: `uint8` -> `float32`.
-            label: 1 if belong to background, 0 if foreground
-            create all-True mask since nyu labels are all known
-        """
-    mask = tf.not_equal(label, -1)  #all true
+    r"""Preprocesses NYU dataset:
+    - Normalize images: `uint8` -> `float32`.
+    - Assigns label: 1 if belong to background, 0 if foreground.
+    - Creates all-True mask, since NYU labels are all known.
+    """
+    mask = tf.not_equal(label, -1)  # All true.
     label = tf.expand_dims(label, axis=2)
     image = tf.cast(image, tf.float32) / 255.
     return image, label, mask
 
   @tf.function
   def preprocess_cla(self, image, label):
-    """ Preprocess our auto-labeled CLA dataset:
-            It consists of three labels (0,1,2) where all classes that belong to the background 
-            (e.g. floor, wall, roof) are assigned the '2' label. Foreground has assigned the 
-            '0' label and unknown the '1' label,
-            Let CLA label format to be consistent with NYU
-            label: 1 if belong to background, 0 if foreground / unknown(does not matter since we are using masked loss)
-            Mask element is True if it's known (label '0' or '2'), mask is used to compute masked loss
-        """
+    r"""Preprocesses our auto-labeled CLA dataset. The dataset consists of three
+    labels (0,1,2) where all classes that belong to the background (e.g., floor,
+    wall, roof) are assigned the '2' label. Foreground is assigned the '0' label
+    and unknown the '1' label. To let CLA label format be consistent with NYU,
+    for each input pixel the label outputted by this function is assigned as
+    follows: 1 if the pixel belongs to the background, 0 if it belongs to
+    foreground / unknown (does not matter since we are using masked loss). An
+    element in the output mask is True if the corresponding pixel is of a known
+    class (label '0' or '2'). The mask is used to computed the masked
+    cross-entropy loss.
+    """
     mask = tf.squeeze(tf.not_equal(label, 1))
     label = tf.cast(label == 2, tf.uint8)
     image = tf.cast(image, tf.float32)
     return image, label, mask
 
   def load_data(self, dataset_name, mode, batch_size, scene_type):
-    """ Create a dataloader given:
-            name of dataset: NyuDepthV2Labeled/ BfsegCLAMeshdistLabels,
-            mode: train/ val/ test
-            type of scene: None/ kitchen/ bedroom
-        """
+    r"""Creates a data loader given the dataset parameters as input.
+    TODO(fmilano): Check this whole function.
+
+    Args:
+      dataset_name (str): Name of the dataset. Valid entries are:
+        "NyuDepthV2Labeled" (NYU dataset), "BfsegCLAMeshdistLabels".
+      mode (str): Identifies the type of dataset. Valid entries are: "train",
+        "val", "test".
+      batch_size (int): Batch size.
+      scene_type (str): Scene type. Valid entries are: None, "kitchen",
+        "bedroom".
+
+    Returns:
+      ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Data loader
+        for the dataset with input parameters.
+    """
     if (dataset_name == 'NyuDepthV2Labeled'):
       if (scene_type == None):
         name = 'full'
@@ -155,7 +169,8 @@ class BaseSegExperiment():
     return ds
 
   def load_datasets(self):
-    """create 3 dataloaders for training, validation and testing """
+    r"""Creates 3 data loaders, for training, validation and testing.
+    """
     train_dataset = ex.current_run.config['train_dataset']
     train_scene = ex.current_run.config['train_scene']
     test_dataset = ex.current_run.config['test_dataset']
@@ -176,19 +191,27 @@ class BaseSegExperiment():
     return train_ds, val_ds, test_ds
 
   def create_old_params(self):
-    """ Keep old weights of the model"""
+    r"""Stores the old weights of the model.
+    TODO(fmilano): Check. Maybe transform into property?
+    """
     pass
 
   def create_fisher_params(self, dataset):
-    """ Compute sqaured fisher information, representing relative importance"""
+    r"""Computes squared Fisher information, representing relative importance.
+    TODO(fmilano): Check. Maybe transform into property?
+    """
     pass
 
   def compute_consolidation_loss(self):
-    """ Compute weight regularization term """
+    r"""Computes weight regularization term.
+    TODO(fmilano): Check. Maybe transform into property?
+    """
     pass
 
   def build_model(self):
-    """ Build models"""
+    r"""Builds the models.
+    TODO(fmilano): Check. Make flexible.
+    """
     self.encoder, self.model = sm.Unet(
         backbone_name=ex.current_run.config['backbone'],
         input_shape=(ex.current_run.config['image_h'],
@@ -202,7 +225,9 @@ class BaseSegExperiment():
         outputs=[self.encoder.output, self.model.output])
 
   def build_loss_and_metric(self):
-    """ Add loss criteria and metrics"""
+    r"""Adds loss criteria and metrics.
+    TODO(fmilano): Check. Make flexible.
+    """
     self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     self.loss_trackers = {
         'train': keras.metrics.Mean('training_loss', dtype=tf.float32),
@@ -236,17 +261,26 @@ class BaseSegExperiment():
 
     return pred_y, pred_y_masked, loss
 
-  def train_step(self, train_x, train_y, train_m, step):
-    """ Training on one batch:
-            Compute masked cross entropy loss(true label, predicted label),
-            update losses & metrics
-        """
+  def train_step(self, train_x, train_y, train_mask, step):
+    r"""Performs one training step with the input batch.
+
+    Args:
+      train_x (tf.Tensor): Input sample batch.
+      train_y (tf.Tensor): Ground-truth labels associated to the input sample
+        batch.
+      train_mask (tf.Tensor): Boolean mask for each pixel in the input samples.
+        Pixels with `True` mask are considered for the computation of the loss.
+      step (int): Step number.
+    
+    Returns:
+      None.
+    """
     with tf.GradientTape() as tape:
-      self.forward_pass(training=True, x=train_x, y=train_y, mask=train_m)
+      self.forward_pass(training=True, x=train_x, y=train_y, mask=train_mask)
     grads = tape.gradient(loss, self.new_model.trainable_weights)
     self.optimizer.apply_gradients(zip(grads, self.new_model.trainable_weights))
     pred_y = tf.math.argmax(pred_y, axis=-1)
-    pred_y_masked = tf.boolean_mask(pred_y, train_m)
+    pred_y_masked = tf.boolean_mask(pred_y, train_mask)
     # Update accuracy and loss.
     self.accuracy_trackers['train'].update_state(train_y_masked, pred_y_masked)
     self.loss_trackers['train'].update_state(loss)
@@ -256,15 +290,25 @@ class BaseSegExperiment():
     if (metric_log_frequency == "batch"):
       self.log_metrics(metric_type='train', step=step)
 
-  def test_step(self, test_x, test_y, test_m, dataset_type):
-    """ Validating/Testing on one batch
-            update losses & metrics
-        """
+  def test_step(self, test_x, test_y, test_mask, dataset_type):
+    r"""Performs one evaluation (test/validation) step with the input batch.
+
+    Args:
+      test_x (tf.Tensor): Input sample batch.
+      test_y (tf.Tensor): Ground-truth labels associated to the input sample
+        batch.
+      test_mask (tf.Tensor): Boolean mask for each pixel in the input samples.
+        Pixels with `True` mask are considered for the computation of the loss.
+      step (int): Step number.
+    
+    Returns:
+      None.
+    """
     assert (dataset_type in ["test", "val"])
-    self.forward_pass(training=False, x=test_x, y=test_y, mask=test_m)
+    self.forward_pass(training=False, x=test_x, y=test_y, mask=test_mask)
     pred_y = keras.backend.argmax(pred_y, axis=-1)
-    pred_y_masked = tf.boolean_mask(pred_y, test_m)
-    # Update val/test metrics
+    pred_y_masked = tf.boolean_mask(pred_y, test_mask)
+    # Update val/test metrics.
     self.loss_trackers[dataset_type].update_state(loss)
     self.accuracy_trackers[dataset_type].update_state(test_y_masked,
                                                       pred_y_masked)
@@ -282,12 +326,12 @@ class BaseSegExperiment():
     else:
       val_test_logging_step = epoch
     # Evaluate on validation set.
-    for val_x, val_y, val_m in val_ds:
-      self.test_step(val_x, val_y, val_m, dataset_type="val")
+    for val_x, val_y, val_mask in val_ds:
+      self.test_step(val_x, val_y, val_mask, dataset_type="val")
     self.log_metrics("val", step=val_test_logging_step)
     # Evaluate on test set.
-    for test_x, test_y, test_m in test_ds:
-      self.test_step(test_x, test_y, test_m, dataset_type="test")
+    for test_x, test_y, test_mask in test_ds:
+      self.test_step(test_x, test_y, test_mask, dataset_type="test")
     self.log_metrics("test", step=val_test_logging_step)
 
   def log_metrics(self, metric_type, step):
@@ -302,16 +346,27 @@ class BaseSegExperiment():
     self.accuracy_trackers[metric_type].reset_states()
 
   def training(self, train_ds, val_ds, test_ds):
+    r"""Performs training for the configured number of epochs. Evaluation on
+    validation- and test set is also performed at the end of every epoch. The
+    model is saved with the configured epoch frequency.
+    
+    Args:
+      train_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Data
+        loader for the training set.
+      val_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Data
+        loader for the validation set.
+      test_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Data
+        loader for the test set.
+    
+    Returns:
+      None.
     """
-        train for assigned epochs, and validate & test after each epoch/batch,
-        save models after every several epochs
-        """
     step = 0
     metric_log_frequency = ex.current_run.config['metric_log_frequency']
     for epoch in range(ex.current_run.config['num_training_epochs']):
       print("\nStart of epoch %d" % (epoch,))
-      for train_x, train_y, train_m in train_ds:
-        self.train_step(train_x, train_y, train_m, step)
+      for train_x, train_y, train_mask in train_ds:
+        self.train_step(train_x, train_y, train_mask, step)
         step += 1
       self.on_epoch_end(epoch=epoch,
                         training_step=step,
@@ -323,7 +378,8 @@ class BaseSegExperiment():
 def run(_run, batch_size, num_training_epochs, image_w, image_h, exp_name,
         backbone, learning_rate, train_dataset, test_dataset, train_scene,
         test_scene, pretrained_dir, metric_log_frequency, model_save_freq):
-  """ Whole Training pipeline"""
+  r"""Runs the whole training pipeline.
+  """
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
   seg_experiment = BaseSegExperiment(run=_run)
