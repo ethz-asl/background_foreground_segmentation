@@ -2,7 +2,6 @@ import sys
 sys.path.append("..")
 import os
 os.environ["SM_FRAMEWORK"] = "tf.keras"
-import argparse
 import datetime
 import tensorflow as tf
 import tensorflow_datasets as tfds
@@ -17,6 +16,45 @@ ex = Experiment()
 ex.observers.append(get_observer())
 
 
+@ex.config
+def seg_experiment_default_config():
+  r"""Default configuration for base segmentation experiments.
+  - batch_size (int): Batch size.
+  - num_training_epochs (int): Number of training epochs
+  - image_w (int): Image width.
+  - image_f (int): Image height.
+  - exp_name (str): Name of the current experiment.
+  - backbone (str): Name of the backbone of the U-Net architecture.
+  - learning_rate (float): Learning rate.
+  - train_dataset (str): Name of the training dataset.
+  - test_dataset (str): Name of the test dataset.
+  - train_scene (str): Scene type of the training dataset. Valid values are:
+      None, "kitchen", "bedroom".
+  - test_scene (str): Scene type of the test dataset. Valid values are: None,
+      "kitchen", "bedroom".
+  - pretrained_dir (str): Directory containing the pretrained model weights.
+  - tensorboard_write_freq (str): Tensorboard writing frequency. Valid values
+      are "epoch", "batch".
+  - model_save_freq (int): Frequency (in epochs) for saving models.
+  """
+  batch_size = 8
+  num_training_epochs = 3
+  #TODO (fmilano): Retrieve from first training sample.
+  image_w = 640
+  image_h = 480
+
+  exp_name = "exp_stage1"
+  backbone = "vgg16"
+  learning_rate = 1e-5
+  train_dataset = "BfsegCLAMeshdistLabels"
+  test_dataset = "NyuDepthV2Labeled"
+  train_scene = None
+  test_scene = None
+  pretrained_dir = None
+  tensorboard_write_freq = "batch"
+  model_save_freq = 1
+
+
 class BaseSegExperiment():
   """
     Base class to specify an experiment.
@@ -29,10 +67,13 @@ class BaseSegExperiment():
     """
 
   def __init__(self):
-    self.config = self.getConfig()
-    self.log_dir = os.path.join(TMPDIR, self.config.exp_name, 'logs')
-    self.model_save_dir = os.path.join(TMPDIR, self.config.exp_name, 'models')
-    self.optimizer = keras.optimizers.Adam(self.config.lr)
+    self.log_dir = os.path.join(TMPDIR, ex.current_run.config['exp_name'],
+                                'logs')
+    self.model_save_dir = os.path.join(TMPDIR,
+                                       ex.current_run.config['exp_name'],
+                                       'models')
+    self.optimizer = keras.optimizers.Adam(
+        ex.current_run.config['learning_rate'])
 
   def make_dirs(self):
     try:
@@ -42,72 +83,6 @@ class BaseSegExperiment():
       os.makedirs(self.model_save_dir)
     except os.error:
       pass
-
-  def _addArguments(self, parser):
-    """ Function used to add custom parameters for the experiment."""
-    parser.add_argument('-batch_size', default=8, type=int, help='batch size')
-    parser.add_argument('-epochs',
-                        default=3,
-                        type=int,
-                        help='number of training epoches')
-    parser.add_argument('-image_w', default=640, type=int, help='image width')
-    parser.add_argument('-image_h', default=480, type=int, help='image height')
-    parser.add_argument('-exp_dir',
-                        default='../experiments',
-                        type=str,
-                        help='directory of current experiments')
-    parser.add_argument('-exp_name',
-                        default="exp_stage1",
-                        type=str,
-                        help='name of current experiments')
-    parser.add_argument('-backbone',
-                        default="vgg16",
-                        type=str,
-                        help='name of backbone')
-    parser.add_argument('-data_dir',
-                        default="../tensorflow_datasets",
-                        type=str,
-                        help='directory of dataset')
-    parser.add_argument('-lr', default=1e-5, type=float, help='learning rate')
-    parser.add_argument('-train_dataset',
-                        default="BfsegCLAMeshdistLabels",
-                        type=str,
-                        help='name of training dataset')
-    parser.add_argument('-test_dataset',
-                        default="NyuDepthV2Labeled",
-                        type=str,
-                        help='name of testing dataset')
-    parser.add_argument(
-        '-train_scene',
-        default=None,
-        type=str,
-        help='scene type of training dataset: None/kitchen/bedroom')
-    parser.add_argument(
-        '-test_scene',
-        default=None,
-        type=str,
-        help='scene type of testing dataset: None/kitchen/bedroom')
-    parser.add_argument('-pretrained_dir',
-                        default=None,
-                        type=str,
-                        help='directory of pretrained model weights')
-    parser.add_argument('-tensorboard_write_freq',
-                        default="batch",
-                        type=str,
-                        help='write to tensorboard per epoch/batch')
-    parser.add_argument('-model_save_freq',
-                        default=1,
-                        type=int,
-                        help='frequency of saving models (epochs)')
-
-  def getConfig(self):
-    """ Loads config from argparser """
-    parser = argparse.ArgumentParser(
-        add_help=True,
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        conflict_handler="resolve")
-    self._addArguments(parser)
-    return parser.parse_args()
 
   @tf.function
   def preprocess_nyu(self, image, label):
@@ -180,15 +155,25 @@ class BaseSegExperiment():
     ds = ds.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
     return ds
 
-  def load_dataset(self, train_dataset, train_scene, test_dataset, test_scene,
-                   data_dir, batch_size):
+  def load_datasets(self):
     """create 3 dataloaders for training, validation and testing """
-    train_ds = self.load_data(train_dataset, data_dir, 'train', batch_size,
-                              train_scene)
-    val_ds = self.load_data(train_dataset, data_dir, 'val', batch_size,
-                            train_scene)
-    test_ds = self.load_data(test_dataset, data_dir, 'test', batch_size,
-                             test_scene)
+    train_dataset = ex.current_run.config['train_dataset']
+    train_scene = ex.current_run.config['train_scene']
+    test_dataset = ex.current_run.config['test_dataset']
+    test_scene = ex.current_run.config['test_scene']
+    batch_size = ex.current_run.config['batch_size']
+    train_ds = self.load_data(dataset_name=train_dataset,
+                              mode='train',
+                              batch_size=batch_size,
+                              scene_type=train_scene)
+    val_ds = self.load_data(dataset_name=train_dataset,
+                            mode='val',
+                            batch_size=batch_size,
+                            scene_type=train_scene)
+    test_ds = self.load_data(dataset_name=test_dataset,
+                             mode='test',
+                             batch_size=batch_size,
+                             scene_type=test_scene)
     return train_ds, val_ds, test_ds
 
   def create_old_params(self):
@@ -205,13 +190,14 @@ class BaseSegExperiment():
 
   def build_model(self):
     """ Build models"""
-    self.encoder, self.model = sm.Unet(self.config.backbone,
-                                       input_shape=(self.config.image_h,
-                                                    self.config.image_w, 3),
-                                       classes=2,
-                                       activation='sigmoid',
-                                       weights=self.config.pretrained_dir,
-                                       encoder_freeze=False)
+    self.encoder, self.model = sm.Unet(
+        backbone_name=ex.current_run.config['backbone'],
+        input_shape=(ex.current_run.config['image_h'],
+                     ex.current_run.config['image_w'], 3),
+        classes=2,
+        activation='sigmoid',
+        weights=ex.current_run.config['pretrained_dir'],
+        encoder_freeze=False)
     self.new_model = keras.Model(
         inputs=self.model.input,
         outputs=[self.encoder.output, self.model.output])
@@ -247,16 +233,17 @@ class BaseSegExperiment():
     pred_y_masked = tf.boolean_mask(pred_y, train_m)
     self.acc_metric.update_state(train_y_masked, pred_y_masked)
 
-    if self.config.tensorboard_write_freq == "batch":
+    tensorboard_write_freq = ex.current_run.config['tensorboard_write_freq']
+    if (tensorboard_write_freq == "batch"):
       with self.train_summary_writer.as_default():
         tf.summary.scalar('loss', loss, step=step)
         tf.summary.scalar('accuracy', self.acc_metric.result(), step=step)
       self.acc_metric.reset_states()
-    elif self.config.tensorboard_write_freq == "epoch":
+    elif (tensorboard_write_freq == "epoch"):
       self.loss_tracker.update_state(loss)
     else:
       raise Exception("Invalid tensorboard_write_freq: %s!" %
-                      self.config.tensorboard_write_freq)
+                      tensorboard_write_freq)
 
   def test_step(self, test_x, test_y, test_m):
     """ Validating/Testing on one batch
@@ -275,7 +262,7 @@ class BaseSegExperiment():
   def on_epoch_end(self, epoch, val_ds):
     """ save models after every several epochs
         """
-    if (epoch + 1) % self.config.model_save_freq == 0:
+    if ((epoch + 1) % ex.current_run.config['model_save_freq'] == 0):
       # compute validation accuracy as part of the model name
       for val_x, val_y, val_m in val_ds:
         self.test_step(val_x, val_y, val_m)
@@ -302,9 +289,10 @@ class BaseSegExperiment():
         save models after every several epochs
         """
     step = 0
-    for epoch in range(self.config.epochs):
+    tensorboard_write_freq = ex.current_run.config['tensorboard_write_freq']
+    for epoch in range(ex.current_run.config['num_training_epochs']):
       print("\nStart of epoch %d" % (epoch,))
-      if self.config.tensorboard_write_freq == "batch":
+      if (tensorboard_write_freq == "batch"):
         for train_x, train_y, train_m in train_ds:
           self.train_step(train_x, train_y, train_m, step)
           for val_x, val_y, val_m in val_ds:
@@ -316,7 +304,7 @@ class BaseSegExperiment():
           step += 1
         if epoch == 0:
           print("There are %d batches in the training dataset" % step)
-      elif self.config.tensorboard_write_freq == "epoch":
+      elif (tensorboard_write_freq == "epoch"):
         for train_x, train_y, train_m in train_ds:
           self.train_step(train_x, train_y, train_m, step)
         self.write_to_tensorboard(self.train_summary_writer, epoch)
@@ -330,7 +318,9 @@ class BaseSegExperiment():
 
 
 @ex.main
-def run(_run):
+def run(_run, batch_size, num_training_epochs, image_w, image_h, exp_name,
+        backbone, learning_rate, train_dataset, test_dataset, train_scene,
+        test_scene, pretrained_dir, tensorboard_write_freq, model_save_freq):
   """ Whole Training pipeline"""
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
@@ -340,10 +330,7 @@ def run(_run):
   seg_experiment.build_model()
   seg_experiment.build_tensorboard_writer()
   seg_experiment.build_loss_and_metric()
-  train_ds, val_ds, test_ds = seg_experiment.load_dataset(
-      seg_experiment.config.train_dataset, seg_experiment.config.train_scene,
-      seg_experiment.config.test_dataset, seg_experiment.config.test_scene,
-      seg_experiment.config.data_dir, seg_experiment.config.batch_size)
+  train_ds, val_ds, test_ds = seg_experiment.load_datasets()
   # Run the training.
   seg_experiment.training(train_ds, val_ds, test_ds)
   # Save the data to sacred.
