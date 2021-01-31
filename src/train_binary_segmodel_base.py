@@ -33,8 +33,9 @@ def seg_experiment_default_config():
   - test_scene (str): Scene type of the test dataset. Valid values are: None,
       "kitchen", "bedroom".
   - pretrained_dir (str): Directory containing the pretrained model weights.
-  - tensorboard_write_freq (str): Tensorboard writing frequency. Valid values
-      are "epoch", "batch".
+  - metric_log_frequency (str): Frequency with which the training metrics are
+      logged. Valid values are "epoch" (i.e., every epoch), "batch" (i.e., every
+      batch).
   - model_save_freq (int): Frequency (in epochs) for saving models.
   """
   batch_size = 8
@@ -51,7 +52,7 @@ def seg_experiment_default_config():
   train_scene = None
   test_scene = None
   pretrained_dir = None
-  tensorboard_write_freq = "batch"
+  metric_log_frequency = "batch"
   model_save_freq = 1
 
 
@@ -60,9 +61,9 @@ class BaseSegExperiment():
     Base class to specify an experiment.
     An experiment is a standalone class that supports:
     - Loading training data
-    - Creating Models that can be trained
-    - Creating experiment specific loss functions
-    - Creating tensorboard writer for visualization
+    - Creating models that can be trained
+    - Creating experiment-specific loss functions
+    - Logging the metrics
     - Training the model
     """
 
@@ -251,8 +252,8 @@ class BaseSegExperiment():
     self.loss_trackers['train'].update_state(loss)
 
     # Log loss and accuracy.
-    tensorboard_write_freq = ex.current_run.config['tensorboard_write_freq']
-    if (tensorboard_write_freq == "batch"):
+    metric_log_frequency = ex.current_run.config['metric_log_frequency']
+    if (metric_log_frequency == "batch"):
       self.log_metrics(metric_type='train', step=step)
 
   def test_step(self, test_x, test_y, test_m, dataset_type):
@@ -274,8 +275,8 @@ class BaseSegExperiment():
       self.new_model.save(
           os.path.join(self.model_save_dir, f'model_epoch_{epoch}.h5'))
     # Optionally log the metrics.
-    tensorboard_write_freq = ex.current_run.config['tensorboard_write_freq']
-    if (tensorboard_write_freq == "epoch"):
+    metric_log_frequency = ex.current_run.config['metric_log_frequency']
+    if (metric_log_frequency == "epoch"):
       self.log_metrics(metric_type='train', step=epoch)
       val_test_logging_step = training_step
     else:
@@ -306,7 +307,7 @@ class BaseSegExperiment():
         save models after every several epochs
         """
     step = 0
-    tensorboard_write_freq = ex.current_run.config['tensorboard_write_freq']
+    metric_log_frequency = ex.current_run.config['metric_log_frequency']
     for epoch in range(ex.current_run.config['num_training_epochs']):
       print("\nStart of epoch %d" % (epoch,))
       for train_x, train_y, train_m in train_ds:
@@ -321,7 +322,7 @@ class BaseSegExperiment():
 @ex.main
 def run(_run, batch_size, num_training_epochs, image_w, image_h, exp_name,
         backbone, learning_rate, train_dataset, test_dataset, train_scene,
-        test_scene, pretrained_dir, tensorboard_write_freq, model_save_freq):
+        test_scene, pretrained_dir, metric_log_frequency, model_save_freq):
   """ Whole Training pipeline"""
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
