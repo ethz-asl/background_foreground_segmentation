@@ -7,8 +7,6 @@ import datetime
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow import keras
-import bfseg.data.nyu.Nyu_depth_v2_labeled
-import bfseg.data.meshdist.bfseg_cla_meshdist_labels
 from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
 from sacred import Experiment
