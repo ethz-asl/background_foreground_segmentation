@@ -13,6 +13,7 @@ from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
 from sacred import Experiment
 import segmentation_models as sm
+from shutil import make_archive
 
 ex = Experiment()
 ex.observers.append(get_observer())
@@ -32,7 +33,7 @@ class BaseSegExperiment():
   def __init__(self):
     self.config = self.getConfig()
     self.log_dir = os.path.join(TMPDIR, self.config.exp_name, 'logs')
-    self.model_save_dir = os.path.join(TMPDIR, self.config.exp_name, 'model')
+    self.model_save_dir = os.path.join(TMPDIR, self.config.exp_name, 'models')
     self.optimizer = keras.optimizers.Adam(self.config.lr)
 
   def make_dirs(self):
@@ -337,6 +338,7 @@ def run(_run):
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
   seg_experiment = BaseSegExperiment()
+  # Set up the experiment.
   seg_experiment.make_dirs()
   seg_experiment.build_model()
   seg_experiment.build_tensorboard_writer()
@@ -345,7 +347,12 @@ def run(_run):
       seg_experiment.config.train_dataset, seg_experiment.config.train_scene,
       seg_experiment.config.test_dataset, seg_experiment.config.test_scene,
       seg_experiment.config.data_dir, seg_experiment.config.batch_size)
+  # Run the training.
   seg_experiment.training(train_ds, val_ds, test_ds)
+  # Save the data to sacred.
+  path_to_archive_model = make_archive(seg_experiment.model_save_dir, 'zip',
+                                       seg_experiment.model_save_dir)
+  _run.add_artifact(path_to_archive_model)
 
 
 if __name__ == "__main__":
