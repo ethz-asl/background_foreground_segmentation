@@ -207,10 +207,10 @@ class BaseSegExperiment:
   def log_metrics(self, metric_type, step):
     assert (metric_type in ["train", "test", "val"])
     self.run.log_scalar(f'{metric_type}_loss',
-                        self.loss_trackers[metric_type].result(),
+                        self.loss_trackers[metric_type].result().numpy(),
                         step=step)
     self.run.log_scalar(f'{metric_type}_accuracy',
-                        self.accuracy_trackers[metric_type].result(),
+                        self.accuracy_trackers[metric_type].result().numpy(),
                         step=step)
     self.loss_trackers[metric_type].reset_states()
     self.accuracy_trackers[metric_type].reset_states()
