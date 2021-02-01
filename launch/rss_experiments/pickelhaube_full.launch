@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Launch file for Selective ICP with rviz
+-->
+
+<launch>
+
+  <!-- Proper Output Info -->
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}] (${node}) [${time}]: ${message}\n" />
+
+  <param name="/use_sim_time" value="true" />
+	<arg name="cad_file" default="$(find cpt_selective_icp)/resources/cla.json" />
+	<arg name="rosbag" />
+	<arg name="logprefix" />
+
+	<include file="$(find alphasense_tools)/launch/pickelhaube_from_bag.launch">
+		<arg name="rosbag" value="$(arg rosbag)" />
+	</include>
+
+	<node name="mapper"
+	      type="cpt_selective_icp_node"
+		  pkg="cpt_selective_icp"
+		  output="screen" >
+		  <!--launch-prefix="tmux split-window" -->
+	<rosparam command="load" file="$(find background_foreground_segmentation)/launch/rss_experiments/mapper_parameters.yaml" />
+                <param name="standaloneICP" value="true" />
+                <param name="scanTopic" value="/rslidar_points" />
+		<param name="cadTopic" value="mesh_publisher/mesh_out" />
+		<param name="icpConfig"
+			   value="$(find background_foreground_segmentation)/launch/rss_experiments/full_icp.yaml" />
+		<param name="selectiveIcpConfig"
+			   value="$(find background_foreground_segmentation)/launch/rss_experiments/selective_icp.yaml" />
+		<param name="inputFiltersConfig"
+			   value="$(find background_foreground_segmentation)/launch/rss_experiments/input_filters.yaml" />
+		<param name="mapPostFiltersConfig"
+			   value="$(find background_foreground_segmentation)/launch/rss_experiments/map_post_filter.yaml" />
+		<param name="mapPreFiltersConfig"
+			   value="$(find background_foreground_segmentation)/launch/rss_experiments/map_pre_filter.yaml" />
+		<param name="path"
+				 value="$(find cpt_selective_icp)" />
+	</node>
+
+	<!--node name="mesh_positioning"
+          pkg="cpt_selective_icp"
+          type="position_cad_with_marker.py"
+          output="screen">
+    	<param name="marker_parent_frame" value="map" />
+		<param name="marker_frame_name" value="marker" />
+  	</node-->
+
+	<node name="mesh_publisher"
+	      pkg="cpt_utils"
+		  type="mesh_publisher_node"
+		  output="screen"
+		  launch-prefix="bash -c 'sleep 5; $0 $@'">
+    	<param name="publish_on_start" value="true"/>
+    	<param name="default_filename" value="$(arg cad_file)"/>
+    	<param name="frame_name" value="marker"/>
+  	</node>
+
+
+	<node type="rviz" name="rviz" pkg="rviz" args="-d $(find cpt_selective_icp)/launch/rviz.rviz" />
+
+    <node pkg="background_foreground_segmentation"
+	      type="pose_logger.py"
+		  name="poselogger">
+		<param name="filename" value="/home/blumh/asl/rss_2021_data/$(arg logprefix)_icp.csv" />
+	</node>
+    <node pkg="background_foreground_segmentation"
+	      type="point_logger.py"
+		  name="leicalogger">
+		<param name="filename" value="/home/blumh/asl/rss_2021_data/$(arg logprefix)_leica.csv" />
+		<param name="overwrite" value="true" />
+	</node>
+
+</launch>

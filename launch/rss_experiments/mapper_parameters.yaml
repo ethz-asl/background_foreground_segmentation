@@ -1,0 +1,11 @@
+minReadingPointCount: 1000
+inputQueueSize: 1
+mapSamplingDensity: 100 # sampling density for mesh map
+tfMapFrame: /map
+lidarFrame: rslidar
+minOverlap: 0.5 # for ICP
+mappingTrigger: false # create map
+updateICPRefTrigger: false # update ICP map with new point clouds
+normalICPPrimerTrigger: false # use a fullICP Primer for selectiveICP
+output: false # error metrics are incredible slow
+publishDistance: false # publish pc containing distance to mesh as 'intensity' value
