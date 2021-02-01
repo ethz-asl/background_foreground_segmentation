@@ -1,6 +1,7 @@
-""" Utils to pre-process the datasets.
+""" Utils to pre-process and load the datasets.
 """
 import tensorflow as tf
+import tensorflow_datasets as tfds
 
 
 @tf.function
@@ -32,3 +33,58 @@ def preprocess_cla(image, label):
   label = tf.cast(label == 2, tf.uint8)
   image = tf.cast(image, tf.float32)
   return image, label, mask
+
+
+def load_data(dataset_name, mode, batch_size, scene_type):
+  r"""Creates a data loader given the dataset parameters as input.
+  TODO(fmilano): Check this whole function.
+
+  Args:
+    dataset_name (str): Name of the dataset. Valid entries are:
+      "NyuDepthV2Labeled" (NYU dataset), "BfsegCLAMeshdistLabels".
+    mode (str): Identifies the type of dataset. Valid entries are: "train",
+      "val", "test".
+    batch_size (int): Batch size.
+    scene_type (str): Scene type. Valid entries are: None, "kitchen", "bedroom".
+
+  Returns:
+    ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Data loader for
+      the dataset with input parameters.
+  """
+  if (dataset_name == 'NyuDepthV2Labeled'):
+    if (scene_type == None):
+      name = 'full'
+    elif (scene_type == "kitchen"):
+      name = 'train'
+    elif (scene_type == "bedroom"):
+      name = 'test'
+    else:
+      raise Exception("Invalid scene type: %s!" % scene_type)
+  elif (dataset_name == 'BfsegCLAMeshdistLabels'):
+    name = 'fused'
+  else:
+    raise Exception("Dataset %s not found!" % dataset_name)
+  if (mode == 'train'):
+    split = name + '[:80%]'
+    shuffle = True
+  else:
+    split = name + '[80%:]'
+    shuffle = False
+  ds, info = tfds.load(
+      dataset_name,
+      split=split,
+      shuffle_files=shuffle,
+      as_supervised=True,
+      with_info=True,
+  )
+  if (dataset_name == 'NyuDepthV2Labeled'):
+    ds = ds.map(preprocess_nyu,
+                num_parallel_calls=tf.data.experimental.AUTOTUNE)
+  elif (dataset_name == 'BfsegCLAMeshdistLabels'):
+    ds = ds.map(preprocess_cla,
+                num_parallel_calls=tf.data.experimental.AUTOTUNE)
+  ds = ds.cache()
+  if (mode == 'train'):
+    ds = ds.shuffle(int(info.splits[name].num_examples * 0.8))
+  ds = ds.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+  return ds

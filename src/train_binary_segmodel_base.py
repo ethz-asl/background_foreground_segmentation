@@ -4,11 +4,10 @@ import os
 os.environ["SM_FRAMEWORK"] = "tf.keras"
 import datetime
 import tensorflow as tf
-import tensorflow_datasets as tfds
 from tensorflow import keras
 from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
-from bfseg.utils.datasets import preprocess_nyu, preprocess_cla
+from bfseg.utils.datasets import load_data
 from sacred import Experiment
 import segmentation_models as sm
 from shutil import make_archive
@@ -84,61 +83,6 @@ class BaseSegExperiment:
     except os.error:
       pass
 
-  def load_data(self, dataset_name, mode, batch_size, scene_type):
-    r"""Creates a data loader given the dataset parameters as input.
-    TODO(fmilano): Check this whole function.
-
-    Args:
-      dataset_name (str): Name of the dataset. Valid entries are:
-        "NyuDepthV2Labeled" (NYU dataset), "BfsegCLAMeshdistLabels".
-      mode (str): Identifies the type of dataset. Valid entries are: "train",
-        "val", "test".
-      batch_size (int): Batch size.
-      scene_type (str): Scene type. Valid entries are: None, "kitchen",
-        "bedroom".
-
-    Returns:
-      ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Data loader
-        for the dataset with input parameters.
-    """
-    if (dataset_name == 'NyuDepthV2Labeled'):
-      if (scene_type == None):
-        name = 'full'
-      elif (scene_type == "kitchen"):
-        name = 'train'
-      elif (scene_type == "bedroom"):
-        name = 'test'
-      else:
-        raise Exception("Invalid scene type: %s!" % scene_type)
-    elif (dataset_name == 'BfsegCLAMeshdistLabels'):
-      name = 'fused'
-    else:
-      raise Exception("Dataset %s not found!" % dataset_name)
-    if (mode == 'train'):
-      split = name + '[:80%]'
-      shuffle = True
-    else:
-      split = name + '[80%:]'
-      shuffle = False
-    ds, info = tfds.load(
-        dataset_name,
-        split=split,
-        shuffle_files=shuffle,
-        as_supervised=True,
-        with_info=True,
-    )
-    if (dataset_name == 'NyuDepthV2Labeled'):
-      ds = ds.map(preprocess_nyu,
-                  num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    elif (dataset_name == 'BfsegCLAMeshdistLabels'):
-      ds = ds.map(preprocess_cla,
-                  num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    ds = ds.cache()
-    if (mode == 'train'):
-      ds = ds.shuffle(int(info.splits[name].num_examples * 0.8))
-    ds = ds.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
-    return ds
-
   def load_datasets(self):
     r"""Creates 3 data loaders, for training, validation and testing.
     """
@@ -147,18 +91,18 @@ class BaseSegExperiment:
     test_dataset = ex.current_run.config['test_dataset']
     test_scene = ex.current_run.config['test_scene']
     batch_size = ex.current_run.config['batch_size']
-    train_ds = self.load_data(dataset_name=train_dataset,
-                              mode='train',
-                              batch_size=batch_size,
-                              scene_type=train_scene)
-    val_ds = self.load_data(dataset_name=train_dataset,
-                            mode='val',
-                            batch_size=batch_size,
-                            scene_type=train_scene)
-    test_ds = self.load_data(dataset_name=test_dataset,
-                             mode='test',
-                             batch_size=batch_size,
-                             scene_type=test_scene)
+    train_ds = load_data(dataset_name=train_dataset,
+                         mode='train',
+                         batch_size=batch_size,
+                         scene_type=train_scene)
+    val_ds = load_data(dataset_name=train_dataset,
+                       mode='val',
+                       batch_size=batch_size,
+                       scene_type=train_scene)
+    test_ds = load_data(dataset_name=test_dataset,
+                        mode='test',
+                        batch_size=batch_size,
+                        scene_type=test_scene)
     return train_ds, val_ds, test_ds
 
   def create_old_params(self):

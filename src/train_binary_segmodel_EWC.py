@@ -2,6 +2,7 @@ import sys
 sys.path.append("..")
 import os
 os.environ["SM_FRAMEWORK"] = "tf.keras"
+from bfseg.utils.datasets import load_data
 import datetime
 import tensorflow as tf
 from tensorflow import keras
@@ -39,14 +40,12 @@ class EWC(BaseSegExperiment):
   def load_dataset(self, train_dataset, train_scene, test_dataset, test_scene,
                    data_dir, batch_size):
     """ Create 3 dataloaders for training, validation and testing """
-    train_ds = self.load_data(train_dataset, data_dir, 'train', batch_size,
-                              train_scene)
-    val_ds = self.load_data(train_dataset, data_dir, 'val', batch_size,
-                            train_scene)
-    test_ds = self.load_data(test_dataset, data_dir, 'test', batch_size,
-                             test_scene)
-    pretrain_ds = self.load_data(test_dataset, data_dir, 'train', batch_size,
-                                 test_scene)
+    train_ds = load_data(train_dataset, data_dir, 'train', batch_size,
+                         train_scene)
+    val_ds = load_data(train_dataset, data_dir, 'val', batch_size, train_scene)
+    test_ds = load_data(test_dataset, data_dir, 'test', batch_size, test_scene)
+    pretrain_ds = load_data(test_dataset, data_dir, 'train', batch_size,
+                            test_scene)
     return train_ds, val_ds, test_ds, pretrain_ds
 
   def create_old_params(self):
