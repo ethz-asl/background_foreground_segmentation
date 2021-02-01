@@ -118,6 +118,8 @@ class BaseSegExperiment:
     Return:
       pred_y (tf.Tensor): Network prediction.
       pred_y_masked (tf.Tensor): Masked network prediction.
+      y_masked (tf.Tensor): Masked ground-truth labels (i.e., with labels only
+        from the selected samples).
       loss (tf.Tensor): Loss from performing the forward pass.
     """
     [_, pred_y] = self.new_model(x, training=training)
@@ -125,7 +127,7 @@ class BaseSegExperiment:
     y_masked = tf.boolean_mask(y, mask)
     loss = self.loss_ce(y_masked, pred_y_masked)
 
-    return pred_y, pred_y_masked, loss
+    return pred_y, pred_y_masked, y_masked, loss
 
   def train_step(self, train_x, train_y, train_mask, step):
     r"""Performs one training step with the input batch.
@@ -142,10 +144,8 @@ class BaseSegExperiment:
       None.
     """
     with tf.GradientTape() as tape:
-      pred_y, pred_y_masked, loss = self.forward_pass(training=True,
-                                                      x=train_x,
-                                                      y=train_y,
-                                                      mask=train_mask)
+      pred_y, pred_y_masked, train_y_masked, loss = self.forward_pass(
+          training=True, x=train_x, y=train_y, mask=train_mask)
     grads = tape.gradient(loss, self.new_model.trainable_weights)
     self.optimizer.apply_gradients(zip(grads, self.new_model.trainable_weights))
     pred_y = tf.math.argmax(pred_y, axis=-1)
@@ -174,10 +174,8 @@ class BaseSegExperiment:
       None.
     """
     assert (dataset_type in ["test", "val"])
-    pred_y, pred_y_masked, loss = self.forward_pass(training=False,
-                                                    x=test_x,
-                                                    y=test_y,
-                                                    mask=test_mask)
+    pred_y, pred_y_masked, test_y_masked, loss = self.forward_pass(
+        training=False, x=test_x, y=test_y, mask=test_mask)
     pred_y = keras.backend.argmax(pred_y, axis=-1)
     pred_y_masked = tf.boolean_mask(pred_y, test_mask)
     # Update val/test metrics.
