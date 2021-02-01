@@ -4,10 +4,10 @@ import os
 os.environ["SM_FRAMEWORK"] = "tf.keras"
 import datetime
 import tensorflow as tf
-import tensorflow_datasets as tfds
 from tensorflow import keras
 from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
+from bfseg.utils.datasets import load_data
 from sacred import Experiment
 import segmentation_models as sm
 from shutil import make_archive
@@ -24,6 +24,8 @@ def seg_experiment_default_config():
   - num_training_epochs (int): Number of training epochs
   - image_w (int): Image width.
   - image_f (int): Image height.
+  - validation_percentage (int): Percentage of the training scene to use for
+      validation.
   - exp_name (str): Name of the current experiment.
   - backbone (str): Name of the backbone of the U-Net architecture.
   - learning_rate (float): Learning rate.
@@ -44,6 +46,7 @@ def seg_experiment_default_config():
   #TODO (fmilano): Retrieve from first training sample.
   image_w = 640
   image_h = 480
+  validation_percentage = 20
 
   exp_name = "exp_stage1"
   backbone = "vgg16"
@@ -83,128 +86,45 @@ class BaseSegExperiment:
     except os.error:
       pass
 
-  @tf.function
-  def preprocess_nyu(self, image, label):
-    r"""Preprocesses NYU dataset:
-    - Normalize images: `uint8` -> `float32`.
-    - Assigns label: 1 if belong to background, 0 if foreground.
-    - Creates all-True mask, since NYU labels are all known.
+  def load_datasets(self, train_dataset, train_scene, test_dataset, test_scene,
+                    batch_size, validation_percentage):
+    r"""Creates 3 data loaders, for training, validation and testing..
     """
-    mask = tf.not_equal(label, -1)  # All true.
-    label = tf.expand_dims(label, axis=2)
-    image = tf.cast(image, tf.float32) / 255.
-    return image, label, mask
-
-  @tf.function
-  def preprocess_cla(self, image, label):
-    r"""Preprocesses our auto-labeled CLA dataset. The dataset consists of three
-    labels (0,1,2) where all classes that belong to the background (e.g., floor,
-    wall, roof) are assigned the '2' label. Foreground is assigned the '0' label
-    and unknown the '1' label. To let CLA label format be consistent with NYU,
-    for each input pixel the label outputted by this function is assigned as
-    follows: 1 if the pixel belongs to the background, 0 if it belongs to
-    foreground / unknown (does not matter since we are using masked loss). An
-    element in the output mask is True if the corresponding pixel is of a known
-    class (label '0' or '2'). The mask is used to computed the masked
-    cross-entropy loss.
-    """
-    mask = tf.squeeze(tf.not_equal(label, 1))
-    label = tf.cast(label == 2, tf.uint8)
-    image = tf.cast(image, tf.float32)
-    return image, label, mask
-
-  def load_data(self, dataset_name, mode, batch_size, scene_type):
-    r"""Creates a data loader given the dataset parameters as input.
-    TODO(fmilano): Check this whole function.
-
-    Args:
-      dataset_name (str): Name of the dataset. Valid entries are:
-        "NyuDepthV2Labeled" (NYU dataset), "BfsegCLAMeshdistLabels".
-      mode (str): Identifies the type of dataset. Valid entries are: "train",
-        "val", "test".
-      batch_size (int): Batch size.
-      scene_type (str): Scene type. Valid entries are: None, "kitchen",
-        "bedroom".
-
-    Returns:
-      ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Data loader
-        for the dataset with input parameters.
-    """
-    if (dataset_name == 'NyuDepthV2Labeled'):
-      if (scene_type == None):
-        name = 'full'
-      elif (scene_type == "kitchen"):
-        name = 'train'
-      elif (scene_type == "bedroom"):
-        name = 'test'
-      else:
-        raise Exception("Invalid scene type: %s!" % scene_type)
-    elif (dataset_name == 'BfsegCLAMeshdistLabels'):
-      name = 'fused'
-    else:
-      raise Exception("Dataset %s not found!" % dataset_name)
-    if (mode == 'train'):
-      split = name + '[:80%]'
-      shuffle = True
-    else:
-      split = name + '[80%:]'
-      shuffle = False
-    ds, info = tfds.load(
-        dataset_name,
-        split=split,
-        shuffle_files=shuffle,
-        as_supervised=True,
-        with_info=True,
-    )
-    if (dataset_name == 'NyuDepthV2Labeled'):
-      ds = ds.map(self.preprocess_nyu,
-                  num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    elif (dataset_name == 'BfsegCLAMeshdistLabels'):
-      ds = ds.map(self.preprocess_cla,
-                  num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    ds = ds.cache()
-    if (mode == 'train'):
-      ds = ds.shuffle(int(info.splits[name].num_examples * 0.8))
-    ds = ds.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
-    return ds
-
-  def load_datasets(self):
-    r"""Creates 3 data loaders, for training, validation and testing.
-    """
-    train_dataset = ex.current_run.config['train_dataset']
-    train_scene = ex.current_run.config['train_scene']
-    test_dataset = ex.current_run.config['test_dataset']
-    test_scene = ex.current_run.config['test_scene']
-    batch_size = ex.current_run.config['batch_size']
-    train_ds = self.load_data(dataset_name=train_dataset,
-                              mode='train',
-                              batch_size=batch_size,
-                              scene_type=train_scene)
-    val_ds = self.load_data(dataset_name=train_dataset,
-                            mode='val',
-                            batch_size=batch_size,
-                            scene_type=train_scene)
-    test_ds = self.load_data(dataset_name=test_dataset,
-                             mode='test',
-                             batch_size=batch_size,
-                             scene_type=test_scene)
+    assert (isinstance(validation_percentage, int) and
+            0 <= validation_percentage <= 100)
+    training_percentage = 100 - validation_percentage
+    train_ds = load_data(dataset_name=train_dataset,
+                         scene_type=train_scene,
+                         fraction=f"[:{training_percentage}%]",
+                         batch_size=batch_size,
+                         shuffle_data=True)
+    val_ds = load_data(dataset_name=train_dataset,
+                       scene_type=train_scene,
+                       fraction=f"[{training_percentage}%:]",
+                       batch_size=batch_size,
+                       shuffle_data=False)
+    test_ds = load_data(dataset_name=test_dataset,
+                        scene_type=test_scene,
+                        fraction=None,
+                        batch_size=batch_size,
+                        shuffle_data=False)
     return train_ds, val_ds, test_ds
 
   def create_old_params(self):
     r"""Stores the old weights of the model.
-    TODO(fmilano): Check. Maybe transform into property?
+    TODO(fmilano): Check.
     """
     pass
 
   def create_fisher_params(self, dataset):
     r"""Computes squared Fisher information, representing relative importance.
-    TODO(fmilano): Check. Maybe transform into property?
+    TODO(fmilano): Check.
     """
     pass
 
   def compute_consolidation_loss(self):
     r"""Computes weight regularization term.
-    TODO(fmilano): Check. Maybe transform into property?
+    TODO(fmilano): Check.
     """
     pass
 
@@ -375,9 +295,10 @@ class BaseSegExperiment:
 
 
 @ex.main
-def run(_run, batch_size, num_training_epochs, image_w, image_h, exp_name,
-        backbone, learning_rate, train_dataset, test_dataset, train_scene,
-        test_scene, pretrained_dir, metric_log_frequency, model_save_freq):
+def run(_run, batch_size, num_training_epochs, image_w, image_h,
+        validation_percentage, exp_name, backbone, learning_rate, train_dataset,
+        test_dataset, train_scene, test_scene, pretrained_dir,
+        metric_log_frequency, model_save_freq):
   r"""Runs the whole training pipeline.
   """
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -387,7 +308,13 @@ def run(_run, batch_size, num_training_epochs, image_w, image_h, exp_name,
   seg_experiment.make_dirs()
   seg_experiment.build_model()
   seg_experiment.build_loss_and_metric()
-  train_ds, val_ds, test_ds = seg_experiment.load_datasets()
+  train_ds, val_ds, test_ds = seg_experiment.load_datasets(
+      train_dataset=train_dataset,
+      train_scene=train_scene,
+      test_dataset=test_dataset,
+      test_scene=test_scene,
+      batch_size=batch_size,
+      validation_percentage=validation_percentage)
   # Run the training.
   seg_experiment.training(train_ds, val_ds, test_ds)
   # Save the data to sacred.
