@@ -37,16 +37,25 @@ class EWC(BaseSegExperiment):
         'weighting constant, range: [0,1], lambda=0: no weight constraints, lambda=1: no train on 2nd task'
     )
 
-  def load_dataset(self, train_dataset, train_scene, test_dataset, test_scene,
-                   data_dir, batch_size):
-    """ Create 3 dataloaders for training, validation and testing """
-    train_ds = load_data(train_dataset, data_dir, 'train', batch_size,
-                         train_scene)
-    val_ds = load_data(train_dataset, data_dir, 'val', batch_size, train_scene)
-    test_ds = load_data(test_dataset, data_dir, 'test', batch_size, test_scene)
-    pretrain_ds = load_data(test_dataset, data_dir, 'train', batch_size,
-                            test_scene)
-    return train_ds, val_ds, test_ds, pretrain_ds
+  def load_datasets(self, train_dataset, train_scene, test_dataset, test_scene,
+                    prev_task_dataset, prev_task_scene, batch_size,
+                    validation_percentage):
+    train_ds, val_ds, test_ds = super(EWC, self).load_datasets(
+        train_dataset=train_dataset,
+        train_scene=train_scene,
+        test_dataset=test_dataset,
+        test_scene=test_scene,
+        batch_size=batch_size,
+        validation_percentage=validation_percentage)
+    # Also load the dataset from the previous task, which will be used to
+    # compute the Fisher matrix information for the previous task.
+    prev_task_ds = load_data(dataset_name=prev_task_dataset,
+                             scene_type=prev_task_scene,
+                             fraction=None,
+                             batch_size=batch_size,
+                             shuffle_data=False)
+
+    return train_ds, val_ds, test_ds, prev_task_ds
 
   def create_old_params(self):
     """ Keep old weights of the model"""
@@ -217,12 +226,21 @@ class EWC(BaseSegExperiment):
     self.build_model()
     self.build_tensorboard_writer()
     self.build_loss_and_metric()
-    train_ds, val_ds, test_ds, pretrain_ds = self.load_dataset(
-        self.config.train_dataset, self.config.train_scene,
-        self.config.test_dataset, self.config.test_scene, self.config.data_dir,
-        self.config.batch_size)
+    print(
+        "NOTE: It is assumed that the test dataset coincides with the previous "
+        "task!")
+    #TODO(fmilano): Make validation percentage a parameter.
+    train_ds, val_ds, test_ds, prev_task_ds = self.load_datasets(
+        train_dataset=self.config.train_dataset,
+        train_scene=self.config.train_scene,
+        test_dataset=self.config.test_dataset,
+        test_scene=self.config.test_scene,
+        prev_task_dataset=self.config.test_dataset,
+        prev_task_scene=self.config.test_scene,
+        batch_size=self.config.batch_size,
+        validation_percentage=20)
     self.create_old_params()
-    self.create_fisher_params(pretrain_ds)
+    self.create_fisher_params(prev_task_ds)
     self.training(train_ds, val_ds, test_ds)
 
 
