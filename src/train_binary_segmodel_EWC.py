@@ -6,7 +6,7 @@ from bfseg.utils.datasets import load_data
 import datetime
 import tensorflow as tf
 from tensorflow import keras
-from train_binary_segmodel_base import BaseSegExperiment
+from bfseg.cl_experiments import BaseSegExperiment
 
 
 class EWC(BaseSegExperiment):
