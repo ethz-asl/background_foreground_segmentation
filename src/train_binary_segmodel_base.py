@@ -86,33 +86,28 @@ class BaseSegExperiment:
     except os.error:
       pass
 
-  def load_datasets(self, validation_percentage=20):
-    r"""Creates 3 data loaders, for training, validation and testing.
-
-    Args:
-      validation_percentage (int): Percentage of the training dataset to use for
-        validation.
+  def load_datasets(self, train_dataset, train_scene, test_dataset, test_scene,
+                    batch_size, validation_percentage):
+    r"""Creates 3 data loaders, for training, validation and testing..
     """
     assert (isinstance(validation_percentage, int) and
             0 <= validation_percentage <= 100)
     training_percentage = 100 - validation_percentage
-    train_dataset = ex.current_run.config['train_dataset']
-    train_scene = ex.current_run.config['train_scene']
-    test_dataset = ex.current_run.config['test_dataset']
-    test_scene = ex.current_run.config['test_scene']
-    batch_size = ex.current_run.config['batch_size']
     train_ds = load_data(dataset_name=train_dataset,
-                         mode='train',
+                         scene_type=train_scene,
+                         fraction=f"[:{training_percentage}%]",
                          batch_size=batch_size,
-                         scene_type=train_scene)
+                         shuffle_data=True)
     val_ds = load_data(dataset_name=train_dataset,
-                       mode='val',
+                       scene_type=train_scene,
+                       fraction=f"[{training_percentage}%:]",
                        batch_size=batch_size,
-                       scene_type=train_scene)
+                       shuffle_data=False)
     test_ds = load_data(dataset_name=test_dataset,
-                        mode='test',
+                        scene_type=test_scene,
+                        fraction=None,
                         batch_size=batch_size,
-                        scene_type=test_scene)
+                        shuffle_data=False)
     return train_ds, val_ds, test_ds
 
   def create_old_params(self):
@@ -314,6 +309,11 @@ def run(_run, batch_size, num_training_epochs, image_w, image_h,
   seg_experiment.build_model()
   seg_experiment.build_loss_and_metric()
   train_ds, val_ds, test_ds = seg_experiment.load_datasets(
+      train_dataset=train_dataset,
+      train_scene=train_scene,
+      test_dataset=test_dataset,
+      test_scene=test_scene,
+      batch_size=batch_size,
       validation_percentage=validation_percentage)
   # Run the training.
   seg_experiment.training(train_ds, val_ds, test_ds)
