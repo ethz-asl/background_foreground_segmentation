@@ -72,13 +72,10 @@ class BaseSegExperiment:
 
   def __init__(self, run):
     self.run = run
-    self.log_dir = os.path.join(TMPDIR, ex.current_run.config['exp_name'],
-                                'logs')
-    self.model_save_dir = os.path.join(TMPDIR,
-                                       ex.current_run.config['exp_name'],
+    self.log_dir = os.path.join(TMPDIR, self.run.config['exp_name'], 'logs')
+    self.model_save_dir = os.path.join(TMPDIR, self.run.config['exp_name'],
                                        'models')
-    self.optimizer = keras.optimizers.Adam(
-        ex.current_run.config['learning_rate'])
+    self.optimizer = keras.optimizers.Adam(self.run.config['learning_rate'])
 
   def make_dirs(self):
     try:
@@ -88,7 +85,7 @@ class BaseSegExperiment:
 
   def load_datasets(self, train_dataset, train_scene, test_dataset, test_scene,
                     batch_size, validation_percentage):
-    r"""Creates 3 data loaders, for training, validation and testing..
+    r"""Creates 3 data loaders, for training, validation and testing.
     """
     assert (isinstance(validation_percentage, int) and
             0 <= validation_percentage <= 100)
@@ -133,12 +130,11 @@ class BaseSegExperiment:
     TODO(fmilano): Check. Make flexible.
     """
     self.encoder, self.model = sm.Unet(
-        backbone_name=ex.current_run.config['backbone'],
-        input_shape=(ex.current_run.config['image_h'],
-                     ex.current_run.config['image_w'], 3),
+        backbone_name=self.run.config['backbone'],
+        input_shape=(self.run.config['image_h'], self.run.config['image_w'], 3),
         classes=2,
         activation='sigmoid',
-        weights=ex.current_run.config['pretrained_dir'],
+        weights=self.run.config['pretrained_dir'],
         encoder_freeze=False)
     self.new_model = keras.Model(
         inputs=self.model.input,
@@ -206,7 +202,7 @@ class BaseSegExperiment:
     self.loss_trackers['train'].update_state(loss)
 
     # Log loss and accuracy.
-    metric_log_frequency = ex.current_run.config['metric_log_frequency']
+    metric_log_frequency = self.run.config['metric_log_frequency']
     if (metric_log_frequency == "batch"):
       self.log_metrics(metric_type='train', step=step)
 
@@ -235,11 +231,11 @@ class BaseSegExperiment:
 
   def on_epoch_end(self, epoch, training_step, val_ds, test_ds):
     # Optionally save the model at the end of the current epoch.
-    if ((epoch + 1) % ex.current_run.config['model_save_freq'] == 0):
+    if ((epoch + 1) % self.run.config['model_save_freq'] == 0):
       self.new_model.save(
           os.path.join(self.model_save_dir, f'model_epoch_{epoch}.h5'))
     # Optionally log the metrics.
-    metric_log_frequency = ex.current_run.config['metric_log_frequency']
+    metric_log_frequency = self.run.config['metric_log_frequency']
     if (metric_log_frequency == "epoch"):
       self.log_metrics(metric_type='train', step=epoch)
       val_test_logging_step = training_step
@@ -282,8 +278,8 @@ class BaseSegExperiment:
       None.
     """
     step = 0
-    metric_log_frequency = ex.current_run.config['metric_log_frequency']
-    for epoch in range(ex.current_run.config['num_training_epochs']):
+    metric_log_frequency = self.run.config['metric_log_frequency']
+    for epoch in range(self.run.config['num_training_epochs']):
       print("\nStart of epoch %d" % (epoch,))
       for train_x, train_y, train_mask in train_ds:
         self.train_step(train_x, train_y, train_mask, step)
