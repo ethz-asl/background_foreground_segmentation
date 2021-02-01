@@ -59,5 +59,7 @@ cs_export()
 
 catkin_install_python(PROGRAMS
     src/ros_image_publisher.py
+    src/pose_logger.py
+    src/point_logger.py
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
