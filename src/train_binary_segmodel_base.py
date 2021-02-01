@@ -68,12 +68,17 @@ class BaseSegExperiment:
   - Creating experiment-specific loss functions
   - Logging the metrics
   - Training the model
+
+  Args:
+    run (sacred.run.Run): Object identifying the current sacred run.
+    root_output_dir (str): Path to the folder that will contain the experiment
+      logs and the saved models.
   """
 
-  def __init__(self, run):
+  def __init__(self, run, root_output_dir):
     self.run = run
-    self.model_save_dir = os.path.join(TMPDIR, self.run.config['exp_name'],
-                                       'models')
+    self.model_save_dir = os.path.join(root_output_dir,
+                                       self.run.config['exp_name'], 'models')
     self.optimizer = keras.optimizers.Adam(self.run.config['learning_rate'])
 
   def make_dirs(self):
@@ -298,7 +303,7 @@ def run(_run, batch_size, num_training_epochs, image_w, image_h,
   """
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
-  seg_experiment = BaseSegExperiment(run=_run)
+  seg_experiment = BaseSegExperiment(run=_run, root_output_dir=TMPDIR)
   # Set up the experiment.
   seg_experiment.make_dirs()
   seg_experiment.build_model()
