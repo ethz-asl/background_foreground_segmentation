@@ -72,7 +72,6 @@ class BaseSegExperiment:
 
   def __init__(self, run):
     self.run = run
-    self.log_dir = os.path.join(TMPDIR, self.run.config['exp_name'], 'logs')
     self.model_save_dir = os.path.join(TMPDIR, self.run.config['exp_name'],
                                        'models')
     self.optimizer = keras.optimizers.Adam(self.run.config['learning_rate'])
