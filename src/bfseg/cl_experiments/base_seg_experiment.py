@@ -192,9 +192,9 @@ class BaseSegExperiment:
     metric_log_frequency = self.run.config['metric_log_frequency']
     if (metric_log_frequency == "epoch"):
       self.log_metrics(metric_type='train', step=epoch)
-      val_test_logging_step = training_step
-    else:
       val_test_logging_step = epoch
+    else:
+      val_test_logging_step = training_step
     # Evaluate on validation set.
     for val_x, val_y, val_mask in val_ds:
       self.test_step(val_x, val_y, val_mask, dataset_type="val")
