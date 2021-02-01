@@ -35,48 +35,65 @@ def preprocess_cla(image, label):
   return image, label, mask
 
 
-def load_data(dataset_name, mode, batch_size, scene_type):
+def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
   r"""Creates a data loader given the dataset parameters as input.
-  TODO(fmilano): Check this whole function.
 
   Args:
     dataset_name (str): Name of the dataset. Valid entries are:
       "NyuDepthV2Labeled" (NYU dataset), "BfsegCLAMeshdistLabels".
-    mode (str): Identifies the type of dataset. Valid entries are: "train",
-      "val", "test".
+    scene_type (str): Type of scene in the dataset to use type. Valid entries
+      are:
+      - If `dataset_name` is "NyuDepthV2Labeled":
+        - None: All the scenes in the dataset are selected.
+        - "kitchen": Kitchen scene only.
+        - "bedroom": Bedroom scene only.
+      - If `dataset_name` is "BfsegCLAMeshdistLabels":
+        - None: All the samples in the dataset are selected (no scene
+            subdivision is available).
+    fraction (str): Fraction of the selected scene to load. Must be a valid
+      slice (cf. https://www.tensorflow.org/datasets/splits), e.g., "[:80%]"
+      (first 80% of the samples in the scene), "[80%:]" (last 20% of the samples
+      in the scene), or None (all samples in the scene are selected).
     batch_size (int): Batch size.
-    scene_type (str): Scene type. Valid entries are: None, "kitchen", "bedroom".
+    shuffle_data (bool): Whether or not to shuffle data.
 
   Returns:
     ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Data loader for
       the dataset with input parameters.
   """
+  # Select the scene.
   if (dataset_name == 'NyuDepthV2Labeled'):
     if (scene_type == None):
       name = 'full'
     elif (scene_type == "kitchen"):
+      # The "kitchen" scene is referred to as "train" split in NYU.
       name = 'train'
     elif (scene_type == "bedroom"):
+      # The "bedroom" scene is referred to as "test" split in NYU.
       name = 'test'
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
   elif (dataset_name == 'BfsegCLAMeshdistLabels'):
-    name = 'fused'
+    if (scene_type is None):
+      # The CLA dataset contains a single split called "fused".
+      name = 'fused'
+    else:
+      raise Exception("Invalid scene type: %s!" % scene_type)
   else:
     raise Exception("Dataset %s not found!" % dataset_name)
-  if (mode == 'train'):
-    split = name + '[:80%]'
-    shuffle = True
+
+  # Select the fraction of samples from the scene.
+  if (fraction is not None):
+    split = f"{name}{fraction}"
   else:
-    split = name + '[80%:]'
-    shuffle = False
-  ds, info = tfds.load(
-      dataset_name,
-      split=split,
-      shuffle_files=shuffle,
-      as_supervised=True,
-      with_info=True,
-  )
+    split = name
+
+  # Actually load the dataset.
+  ds = tfds.load(dataset_name,
+                 split=split,
+                 shuffle_files=shuffle_data,
+                 as_supervised=True)
+  # Apply pre-processing.
   if (dataset_name == 'NyuDepthV2Labeled'):
     ds = ds.map(preprocess_nyu,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
@@ -84,7 +101,10 @@ def load_data(dataset_name, mode, batch_size, scene_type):
     ds = ds.map(preprocess_cla,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   ds = ds.cache()
-  if (mode == 'train'):
-    ds = ds.shuffle(int(info.splits[name].num_examples * 0.8))
+  # Further shuffle.
+  if (shuffle_data):
+    ds = ds.shuffle(len(ds))
+
   ds = ds.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+
   return ds
