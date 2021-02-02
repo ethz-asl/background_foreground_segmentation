@@ -22,22 +22,26 @@ def depth_loss_function(y_true, y_pred, theta=0.1, maxDepthVal=1000.0 / 10.0):
   """
 
   # Point-wise depth
-  l_depth = tf.mean(tf.abs(y_pred - y_true), axis=-1)
+  l_depth = tf.keras.backend.mean(tf.keras.backend.abs(y_pred - y_true),
+                                  axis=-1)
   # Edges
   dy_true, dx_true = tf.image.image_gradients(y_true)
   dy_pred, dx_pred = tf.image.image_gradients(y_pred)
-  l_edges = tf.mean(tf.abs(dy_pred - dy_true) + tf.abs(dx_pred - dx_true),
-                    axis=-1)
+  l_edges = tf.keras.backend.mean(tf.keras.backend.abs(dy_pred - dy_true) +
+                                  tf.keras.backend.abs(dx_pred - dx_true),
+                                  axis=-1)
 
   # Structural similarity (SSIM) index
-  l_ssim = tf.clip((1 - tf.image.ssim(y_true, y_pred, maxDepthVal)) * 0.5, 0, 1)
+  l_ssim = tf.keras.backend.clip(
+      (1 - tf.image.ssim(y_true, y_pred, maxDepthVal)) * 0.5, 0, 1)
 
   # Weights
   w1 = 1.0
   w2 = 1.0
   w3 = theta
 
-  return (w1 * l_ssim) + (w2 * tf.mean(l_edges)) + (w3 * tf.mean(l_depth))
+  return (w1 * l_ssim) + (w2 * tf.keras.backend.mean(l_edges)) + (
+      w3 * tf.keras.backend.mean(l_depth))
 
 
 def smooth_consistency_loss(depth_pred, y_pred_semantic, class_number=0):
@@ -64,7 +68,7 @@ def smooth_consistency_loss(depth_pred, y_pred_semantic, class_number=0):
       (phi - phi_y)))
   diffy_no_nan = tf.where(tf.math.is_nan(diffy), tf.zeros_like(diffy), diffy)
 
-  return tf.mean(diffx_no_nan + diffy_no_nan)
+  return tf.keras.backend.mean(diffx_no_nan + diffy_no_nan)
 
 
 class ConsistencyLossFromStackedPrection(LossFunctionWrapper):
@@ -107,7 +111,7 @@ def consistency_loss_from_stacked_prediction(y_true=None,
 
 def reduceGroundTruth(y_true, class_to_ignore=1, num_of_classes=3):
   """ convert true labels to one hot encoded images """
-  labels_one_hot = tf.one_hot(y_true, 3)
+  labels_one_hot = tf.keras.backend.one_hot(y_true, 3)
   # Remove class that should be ignored from one hot encoding
   y_true_one_hot_no_ignore = tf.stack([
       labels_one_hot[..., _class]
@@ -143,7 +147,7 @@ def ignorant_cross_entropy_loss(y_true,
     """
 
   # convert true labels to one hot encoded images
-  labels_one_hot = tf.one_hot(y_true, 3)
+  labels_one_hot = tf.keras.backend.one_hot(y_true, 3)
   # Remove "unknown" class from groundtruth
   classes_to_keep = tf.constant([
       idx_class for idx_class in range(num_classes)
@@ -179,7 +183,7 @@ def ignorant_balanced_cross_entropy_loss(y_true,
     Returns: Cross entropy loss where ground truth labels that have class 'class_to_ignore' are ignored
     """
   # convert true labels to one hot encoded images
-  labels_one_hot = tf.one_hot(y_true, num_of_classes)
+  labels_one_hot = tf.keras.backend.one_hot(y_true, num_of_classes)
   # Remove "unknown" class from groundtruth
   classes_to_keep = tf.constant([
       idx_class for idx_class in range(num_of_classes)
