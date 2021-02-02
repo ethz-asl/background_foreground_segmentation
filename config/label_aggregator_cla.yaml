@@ -1,0 +1,24 @@
+imageTopics:
+  - - '/meshdist/cam0/original' # Original image
+    - '/meshdist/cam0/projected_pc' # Image with distance to closest mesh
+    - '/meshdist/cam0/projected_pc_distance' # Image with distance from lidar for each point
+    -
+  - - '/meshdist/cam1/original'
+    - '/meshdist/cam1/projected_pc'
+    - '/meshdist/cam1/projected_pc_distance'
+
+  - - '/meshdist/cam2/original'
+    - '/meshdist/cam2/projected_pc'
+    - '/meshdist/cam2/projected_pc_distance'
+
+outTopics: # Topics to publish the segmented images
+  - '/camera_stick/cam0/image_seg'
+  - '/camera_stick/cam1/image_seg'
+  - '/camera_stick/cam2/image_seg'
+
+labelOptions:
+  useSuperixel: False
+  foregroundTrustRegion: False
+  downsamplingFactor: 3
+  numberOfSuperPixel: 500
+  fgBgThreshold: 100
