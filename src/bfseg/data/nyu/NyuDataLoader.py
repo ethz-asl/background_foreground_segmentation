@@ -17,10 +17,12 @@ class NyuDataLoader:
     self.loadDepth = loadDepth
 
   @tf.function
-  def normalize_img(self, image, labels):
+  def normalize_img(self, record):
     """Normalizes images: `uint8` -> `float32`."""
-    label = labels[..., 0]
-    depth = labels[..., 1]
+    image = record['image']
+    label = record['label']
+    depth = record['depth']
+
     label = tf.expand_dims(label, axis=2)
     depth = tf.expand_dims(depth, axis=2)
     image = tf.cast(image, tf.float32) / 255.
@@ -38,11 +40,12 @@ class NyuDataLoader:
     depth_cropped = self.cropImageToInputSize(depth,
                                               input_size,
                                               method="nearest")
-    depth_norm = (tf.cast(depth_cropped, dtype=tf.float32) - 255.0) / 131.218
+    # predict inverse depth map as done in paper
+    depth_norm = 10 / tf.cast(depth_cropped, dtype=tf.float32)
 
     # replace invalid depth(0) with NaN
     depth_norm_2 = tf.where(
-        tf.equal(depth_cropped, tf.constant(0, dtype=tf.int64)),
+        tf.equal(depth_cropped, tf.constant(0, dtype=tf.float32)),
         tf.constant(float('nan'), dtype=tf.float32), depth_norm)
 
     return image_cropped, {'depth': depth_norm_2, 'semseg': labels_cropped}
@@ -77,20 +80,20 @@ class NyuDataLoader:
         'NyuDepthV2Labeled',
         split='train[:80%]',
         shuffle_files=True,
-        as_supervised=True,
+        as_supervised=False,
         with_info=True,
     )
     val_ds, val_info = tfds.load(
         'NyuDepthV2Labeled',
         split='train[80%:]',
         shuffle_files=True,
-        as_supervised=True,
+        as_supervised=False,
         with_info=True,
     )
     test_ds, test_info = tfds.load('NyuDepthV2Labeled',
                                    split='test',
                                    shuffle_files=False,
-                                   as_supervised=True,
+                                   as_supervised=False,
                                    with_info=True)
     train_ds = train_ds.map(self.normalize_img,
                             num_parallel_calls=tf.data.experimental.AUTOTUNE)

@@ -26,11 +26,12 @@ _URL = 'http://horatio.cs.nyu.edu/mit/silberman/nyu_depth_v2/nyu_depth_v2_labele
 class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for Nyu_depth_v2_labeled dataset."""
 
-  VERSION = tfds.core.Version('2.1.0')
+  VERSION = tfds.core.Version('2.1.1')
   RELEASE_NOTES = {
       # '1.0.0': 'Initial release.',
       # '2.0.0': 'different scenes for train/test',
-      '2.1.0': 'additional "full" split',
+      #'2.1.0': 'additional "full" split',
+      '2.1.1': 'added depth images',
   }
 
   # MANUAL_DOWNLOAD_INSTRUCTIONS = 1
@@ -44,6 +45,7 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         features=tfds.features.FeaturesDict({
             'image': tfds.features.Image(shape=(480, 640, 3), dtype=tf.uint8),
             'label': tfds.features.Tensor(shape=(480, 640), dtype=tf.uint8),
+            'depth': tfds.features.Tensor(shape=(480, 640), dtype=tf.float32),
         }),
         supervised_keys=("image", "label"),  # e.g. ('image', 'label')
         homepage='https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html/',
@@ -90,6 +92,8 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
       labels = f['labels']
       images = np.array(f['images'], dtype=f['images'].dtype).T.squeeze()
       labels = np.array(f['labels'], dtype=f['labels'].dtype).T.squeeze()
+      depths = np.array(f['depths'], dtype=f['depths'].dtype).T.squeeze()
+
       scene_types = [
           f[f["sceneTypes"][0, i]][:, 0].tobytes().decode("utf-16")
           for i in range(f["sceneTypes"].shape[1])
@@ -98,10 +102,12 @@ class NyuDepthV2Labeled(tfds.core.GeneratorBasedBuilder):
         # Label_expand = np.expand_dims(labels[:,:,i], axis=2)
         if scene_type is None or scene_types[i] == scene_type:
           label = labels[:, :, i]
+          depth = depths[..., i]
           combine_label = np.logical_or(
               label == 4,
               (np.logical_or(label == 11, label == 21))).astype(np.uint8)
           yield str(i).zfill(4), {
               'image': images[:, :, :, i],
+              'depth': depth,
               'label': combine_label
           }
