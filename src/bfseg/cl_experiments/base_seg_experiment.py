@@ -1,6 +1,7 @@
 import os
 import tensorflow as tf
 import segmentation_models as sm
+from shutil import make_archive
 from tensorflow import keras
 
 from bfseg.utils.datasets import load_data
@@ -186,8 +187,16 @@ class BaseSegExperiment:
   def on_epoch_end(self, epoch, training_step, val_ds, test_ds):
     # Optionally save the model at the end of the current epoch.
     if ((epoch + 1) % self.run.config['model_save_freq'] == 0):
-      self.new_model.save(
-          os.path.join(self.model_save_dir, f'model_epoch_{epoch}.h5'))
+      model_filename = f'model_epoch_{epoch}'
+      full_model_filename = os.path.join(self.model_save_dir,
+                                         f'{model_filename}.h5')
+      self.new_model.save(full_model_filename)
+      # Save the model to sacred.
+      path_to_archive_model = make_archive(
+          os.path.join(self.model_save_dir, model_filename), 'zip',
+          self.model_save_dir, f'{model_filename}.h5')
+      self.run.add_artifact(path_to_archive_model)
+
     # Optionally log the metrics.
     metric_log_frequency = self.run.config['metric_log_frequency']
     if (metric_log_frequency == "epoch"):
