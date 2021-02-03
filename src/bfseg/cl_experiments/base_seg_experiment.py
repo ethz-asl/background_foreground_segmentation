@@ -1,10 +1,10 @@
 import os
 import tensorflow as tf
-import segmentation_models as sm
 from shutil import make_archive
 from tensorflow import keras
 
 from bfseg.utils.datasets import load_data
+from bfseg.utils.models import create_model
 
 
 class BaseSegExperiment:
@@ -89,16 +89,10 @@ class BaseSegExperiment:
            ), "Currently, only U-Net architecture is supported."
     assert (self.run.config['cl_params']['cl_framework'] == "finetune"
            ), "Currently, only fine-tuning is supported."
-    self.encoder, self.model = sm.Unet(
-        backbone_name=self.run.config['network_params']['model_params']
-        ['backbone'],
-        input_shape=(
-            self.run.config['network_params']['model_params']['image_h'],
-            self.run.config['network_params']['model_params']['image_w'], 3),
-        classes=2,
-        activation='sigmoid',
-        weights=self.run.config['cl_params']['pretrained_dir'],
-        encoder_freeze=False)
+    self.encoder, self.model = create_model(
+        model_name=self.run.config['network_params']['architecture'],
+        pretrained_dir=self.run.config['cl_params']['pretrained_dir'],
+        **self.run.config['network_params']['model_params'])
     self.new_model = keras.Model(
         inputs=self.model.input,
         outputs=[self.encoder.output, self.model.output])
