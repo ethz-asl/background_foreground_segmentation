@@ -9,7 +9,6 @@ from bfseg.cl_experiments import BaseSegExperiment
 from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
 
-#TODO(fmilano): Pass this as argument to BaseSegExperiment class.
 ex = Experiment()
 ex.observers.append(get_observer())
 
@@ -17,51 +16,77 @@ ex.observers.append(get_observer())
 @ex.config
 def seg_experiment_default_config():
   r"""Default configuration for base segmentation experiments.
-  - batch_size (int): Batch size.
-  - num_training_epochs (int): Number of training epochs
-  - image_w (int): Image width.
-  - image_f (int): Image height.
-  - validation_percentage (int): Percentage of the training scene to use for
+  - Network parameters:
+    - architecture (str): Architecture type. Valid values are:
+      - "unet": U-Net architecture. Required parameters are:
+        - image_w (int): Image width.
+        - image_h (int): Image height.
+        - backbone (str): Name of the backbone of the U-Net architecture.
+  - Training parameters:
+    - batch_size (int): Batch size.
+    - learning_rate (float): Learning rate.
+    - num_training_epochs (int): Number of training epochs.
+  - Dataset parameters:
+    - test_dataset (str): Name of the test dataset.
+    - test_scene (str): Scene type of the test dataset. Valid values are: None,
+        "kitchen", "bedroom".
+    - train_dataset (str): Name of the training dataset.
+    - train_scene (str): Scene type of the training dataset. Valid values are:
+        None, "kitchen", "bedroom".
+    - validation_percentage (int): Percentage of the training scene to use for
       validation.
-  - exp_name (str): Name of the current experiment.
-  - backbone (str): Name of the backbone of the U-Net architecture.
-  - learning_rate (float): Learning rate.
-  - train_dataset (str): Name of the training dataset.
-  - test_dataset (str): Name of the test dataset.
-  - train_scene (str): Scene type of the training dataset. Valid values are:
-      None, "kitchen", "bedroom".
-  - test_scene (str): Scene type of the test dataset. Valid values are: None,
-      "kitchen", "bedroom".
-  - pretrained_dir (str): Directory containing the pretrained model weights.
-  - metric_log_frequency (str): Frequency with which the training metrics are
+  - Logging parameters:
+    - exp_name (str): Name of the current experiment.
+    - metric_log_frequency (str): Frequency with which the training metrics are
       logged. Valid values are "epoch" (i.e., every epoch), "batch" (i.e., every
       batch).
-  - model_save_freq (int): Frequency (in epochs) for saving models.
+    - model_save_freq (int): Frequency (in epochs) for saving models.
+  - CL parameters:
+    - cl_framework (str): CL framework to use. Valid values are:
+      - "finetune": Fine-tuning, using the pretrained model weights in
+        `pretrained_dir`. If no `pretrained_dir` is specified, training is
+        performed from scratch.
+    - pretrained_dir (str): Directory containing the pretrained model weights.
   """
-  batch_size = 8
-  num_training_epochs = 3
-  #TODO (fmilano): Retrieve from first training sample.
-  image_w = 640
-  image_h = 480
-  validation_percentage = 20
+  # Network parameters.
+  network_params = {
+      'architecture': 'unet',
+      'backbone': "vgg16",
+      #TODO (fmilano): Retrieve from first training sample.
+      'image_h': 480,
+      'image_w': 640
+  }
 
-  exp_name = "exp_stage1"
-  backbone = "vgg16"
-  learning_rate = 1e-5
-  train_dataset = "BfsegCLAMeshdistLabels"
-  test_dataset = "NyuDepthV2Labeled"
-  train_scene = None
-  test_scene = None
-  pretrained_dir = None
-  metric_log_frequency = "batch"
-  model_save_freq = 1
+  # Training parameters.
+  training_params = {
+      'batch_size': 8,
+      'learning_rate': 1e-5,
+      'num_training_epochs': 3
+  }
+
+  # Dataset parameters.
+  dataset_params = {
+      'test_dataset': "NyuDepthV2Labeled",
+      'test_scene': None,
+      'train_dataset': "BfsegCLAMeshdistLabels",
+      'train_scene': None,
+      'validation_percentage': 20
+  }
+
+  # Logging parameters.
+  logging_params = {
+      'metric_log_frequency': "batch",
+      'model_save_freq': 1,
+      'exp_name': "exp_stage1"
+  }
+
+  # CL parameters.
+  cl_params = {'cl_framework': "finetune", 'pretrained_dir': None}
 
 
 @ex.main
-def run(_run, batch_size, num_training_epochs, image_w, image_h,
-        validation_percentage, exp_name, backbone, learning_rate, train_dataset,
-        test_dataset, train_scene, test_scene, pretrained_dir,
-        metric_log_frequency, model_save_freq):
+def run(_run, network_params, training_params, dataset_params, logging_params,
+        cl_params):
   r"""Runs the whole training pipeline.
   """
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -72,12 +97,12 @@ def run(_run, batch_size, num_training_epochs, image_w, image_h,
   seg_experiment.build_model()
   seg_experiment.build_loss_and_metric()
   train_ds, val_ds, test_ds = seg_experiment.load_datasets(
-      train_dataset=train_dataset,
-      train_scene=train_scene,
-      test_dataset=test_dataset,
-      test_scene=test_scene,
-      batch_size=batch_size,
-      validation_percentage=validation_percentage)
+      train_dataset=dataset_params['train_dataset'],
+      train_scene=dataset_params['train_scene'],
+      test_dataset=dataset_params['test_dataset'],
+      test_scene=dataset_params['test_scene'],
+      batch_size=training_params['batch_size'],
+      validation_percentage=dataset_params['validation_percentage'])
   # Run the training.
   seg_experiment.training(train_ds, val_ds, test_ds)
   # Save final model.
