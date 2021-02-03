@@ -4,7 +4,6 @@ import os
 os.environ["SM_FRAMEWORK"] = "tf.keras"
 import datetime
 from sacred import Experiment
-from shutil import make_archive
 
 from bfseg.cl_experiments import BaseSegExperiment
 from bfseg.sacred_utils import get_observer
@@ -81,10 +80,8 @@ def run(_run, batch_size, num_training_epochs, image_w, image_h,
       validation_percentage=validation_percentage)
   # Run the training.
   seg_experiment.training(train_ds, val_ds, test_ds)
-  # Save the data to sacred.
-  path_to_archive_model = make_archive(seg_experiment.model_save_dir, 'zip',
-                                       seg_experiment.model_save_dir)
-  _run.add_artifact(path_to_archive_model)
+  # Save final model.
+  seg_experiment.save_model()
 
 
 if __name__ == "__main__":
