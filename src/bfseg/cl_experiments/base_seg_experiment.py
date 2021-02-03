@@ -90,9 +90,11 @@ class BaseSegExperiment:
     assert (self.run.config['cl_params']['cl_framework'] == "finetune"
            ), "Currently, only fine-tuning is supported."
     self.encoder, self.model = sm.Unet(
-        backbone_name=self.run.config['network_params']['backbone'],
-        input_shape=(self.run.config['network_params']['image_h'],
-                     self.run.config['network_params']['image_w'], 3),
+        backbone_name=self.run.config['network_params']['model_params']
+        ['backbone'],
+        input_shape=(
+            self.run.config['network_params']['model_params']['image_h'],
+            self.run.config['network_params']['model_params']['image_w'], 3),
         classes=2,
         activation='sigmoid',
         weights=self.run.config['cl_params']['pretrained_dir'],
