@@ -9,7 +9,6 @@ from bfseg.cl_experiments import BaseSegExperiment
 from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
 
-#TODO(fmilano): Pass this as argument to BaseSegExperiment class.
 ex = Experiment()
 ex.observers.append(get_observer())
 
