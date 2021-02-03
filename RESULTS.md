@@ -64,3 +64,6 @@ bsub -R "rusage[mem=64000,ngpus_excl_p=1]" python background_foreground_segmenta
 bsub -R "rusage[mem=64000,ngpus_excl_p=1]" python background_foreground_segmentation/src/train_experiments/train_sem_seg_for_given_timestamps.py --dataset CLA --train_duration 100 --name_prefix "PSP_CLA_FUSED_BALANCED_100s_pretrained_for_eval" --model_name PSP --num_epochs 10 --backbone "resnet34" --loss_balanced True --train_path "/cluster/scratch/zrene/cla_dataset/fused" --shuffle False --batch_size 1 --output_path "/cluster/scratch/zrene/outputs/results" --image_w 720 --image_h 480   
 bsub -R "rusage[mem=64000,ngpus_excl_p=1]" python background_foreground_segmentation/src/train_experiments/train_sem_seg_for_given_timestamps.py --dataset CLA --train_duration 150 --name_prefix "PSP_CLA_FUSED_BALANCED_150s_pretrained_for_eval" --model_name PSP --num_epochs 10 --backbone "resnet34" --loss_balanced True --train_path "/cluster/scratch/zrene/cla_dataset/fused" --shuffle False --batch_size 1 --output_path "/cluster/scratch/zrene/outputs/results" --image_w 720 --image_h 480
 ```
+
+## Pseudo Label Evaluation
+Pseudo Label Evaluation can be found [here](https://github.com/ethz-asl/background_foreground_segmentation/blob/zrene/stateForResults/notebooks/pseudo_label_eval.ipynb)
