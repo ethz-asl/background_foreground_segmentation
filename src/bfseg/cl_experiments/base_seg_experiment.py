@@ -1,6 +1,7 @@
 import os
 import tensorflow as tf
 import segmentation_models as sm
+from shutil import make_archive
 from tensorflow import keras
 
 from bfseg.utils.datasets import load_data
@@ -26,6 +27,9 @@ class BaseSegExperiment:
     self.model_save_dir = os.path.join(root_output_dir,
                                        self.run.config['exp_name'], 'models')
     self.optimizer = keras.optimizers.Adam(self.run.config['learning_rate'])
+    # Counter for the current training epoch.
+    self._current_epoch = None
+    self._completed_training = False
 
   def make_dirs(self):
     try:
@@ -183,16 +187,15 @@ class BaseSegExperiment:
     self.accuracy_trackers[dataset_type].update_state(test_y_masked,
                                                       pred_y_masked)
 
-  def on_epoch_end(self, epoch, training_step, val_ds, test_ds):
+  def on_epoch_end(self, training_step, val_ds, test_ds):
     # Optionally save the model at the end of the current epoch.
-    if ((epoch + 1) % self.run.config['model_save_freq'] == 0):
-      self.new_model.save(
-          os.path.join(self.model_save_dir, f'model_epoch_{epoch}.h5'))
+    if ((self._current_epoch + 1) % self.run.config['model_save_freq'] == 0):
+      self.save_model()
     # Optionally log the metrics.
     metric_log_frequency = self.run.config['metric_log_frequency']
     if (metric_log_frequency == "epoch"):
-      self.log_metrics(metric_type='train', step=epoch)
-      val_test_logging_step = epoch
+      self.log_metrics(metric_type='train', step=self._current_epoch)
+      val_test_logging_step = self._current_epoch
     else:
       val_test_logging_step = training_step
     # Evaluate on validation set.
@@ -203,6 +206,28 @@ class BaseSegExperiment:
     for test_x, test_y, test_mask in test_ds:
       self.test_step(test_x, test_y, test_mask, dataset_type="test")
     self.log_metrics("test", step=val_test_logging_step)
+
+  def save_model(self):
+    r"""Saves the current model both to the local folder and to sacred.
+
+    Args:
+      None.
+
+    Returns:
+      None.
+    """
+    if (self._completed_training):
+      model_filename = 'model_final'
+    else:
+      model_filename = f'model_epoch_{self._current_epoch}'
+    full_model_filename = os.path.join(self.model_save_dir,
+                                       f'{model_filename}.h5')
+    self.new_model.save(full_model_filename)
+    # Save the model to sacred.
+    path_to_archive_model = make_archive(
+        os.path.join(self.model_save_dir, model_filename), 'zip',
+        self.model_save_dir, f'{model_filename}.h5')
+    self.run.add_artifact(path_to_archive_model)
 
   def log_metrics(self, metric_type, step):
     assert (metric_type in ["train", "test", "val"])
@@ -231,14 +256,14 @@ class BaseSegExperiment:
     Returns:
       None.
     """
+    assert (self._current_epoch is None and not self._completed_training
+           ), "Currently, only training from epoch 0 is supported."
     step = 0
     metric_log_frequency = self.run.config['metric_log_frequency']
-    for epoch in range(self.run.config['num_training_epochs']):
-      print("\nStart of epoch %d" % (epoch,))
+    for self._current_epoch in range(self.run.config['num_training_epochs']):
+      print("\nStart of epoch %d" % (self._current_epoch,))
       for train_x, train_y, train_mask in train_ds:
         self.train_step(train_x, train_y, train_mask, step)
         step += 1
-      self.on_epoch_end(epoch=epoch,
-                        training_step=step,
-                        val_ds=val_ds,
-                        test_ds=test_ds)
+      self.on_epoch_end(training_step=step, val_ds=val_ds, test_ds=test_ds)
+    self._completed_training = True
