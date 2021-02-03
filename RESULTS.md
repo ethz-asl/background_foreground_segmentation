@@ -2,7 +2,7 @@ Notebooks used to generate results:
 
 [Trajectory - Viconroom](https://github.com/ethz-asl/background_foreground_segmentation/blob/zrene/stateForResults/notebooks/evaluate_trajectory_vicon.ipynb)
 
-[Trajectory - CLA]([https://github.com/ethz-asl/background_foreground_segmentation/blob/zrene/stateForResults/notebooks/trajecotry_eval_cla.ipynb)
+[Trajectory - CLA](https://github.com/ethz-asl/background_foreground_segmentation/blob/zrene/stateForResults/notebooks/trajecotry_eval_cla.ipynb)
 
 [Visual Results](https://github.com/ethz-asl/background_foreground_segmentation/blob/zrene/stateForResults/notebooks/visual_results.ipynb)
 
