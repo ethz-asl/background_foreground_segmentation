@@ -33,6 +33,10 @@ class BaseSegExperiment(keras.Model):
     # Counter for the current training epoch.
     self._current_epoch = None
     self._completed_training = False
+    # Logging parameter.
+    self._metric_log_frequency = self.run.config['logging_params'][
+        'metric_log_frequency']
+    assert (self._metric_log_frequency in ["batch", "epoch"])
 
   def make_dirs(self):
     try:
@@ -167,9 +171,7 @@ class BaseSegExperiment(keras.Model):
     self.loss_trackers['train'].update_state(loss)
 
     # Log loss and accuracy.
-    metric_log_frequency = self.run.config['logging_params'][
-        'metric_log_frequency']
-    if (metric_log_frequency == "batch"):
+    if (self._metric_log_frequency == "batch"):
       self.log_metrics(metric_type='train', step=step)
 
   def test_step(self, test_x, test_y, test_mask, dataset_type):
@@ -202,9 +204,7 @@ class BaseSegExperiment(keras.Model):
         self.run.config['logging_params']['model_save_freq'] == 0):
       self.save_model()
     # Optionally log the metrics.
-    metric_log_frequency = self.run.config['logging_params'][
-        'metric_log_frequency']
-    if (metric_log_frequency == "epoch"):
+    if (self._metric_log_frequency == "epoch"):
       self.log_metrics(metric_type='train', step=self._current_epoch)
       val_test_logging_step = self._current_epoch
     else:
@@ -270,8 +270,6 @@ class BaseSegExperiment(keras.Model):
     assert (self._current_epoch is None and not self._completed_training
            ), "Currently, only training from epoch 0 is supported."
     step = 0
-    metric_log_frequency = self.run.config['logging_params'][
-        'metric_log_frequency']
     for self._current_epoch in range(
         self.run.config['training_params']['num_training_epochs']):
       print("\nStart of epoch %d" % (self._current_epoch,))
