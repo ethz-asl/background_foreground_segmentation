@@ -34,6 +34,11 @@ class BaseSegExperiment(keras.Model):
     self._current_epoch = None
     self._current_batch = None
     self._completed_training = False
+    # Evaluation type (either validation or testing). Since tf.keras.Model.fit
+    # first calls validation, and then testing can be optionally run through a
+    # custom `on_epoch_end` callback, here the evaluation type is set to
+    # validation.
+    self.evalation_type = "val"
     # Logging parameter.
     self._metric_log_frequency = self.run.config['logging_params'][
         'metric_log_frequency']
@@ -173,7 +178,7 @@ class BaseSegExperiment(keras.Model):
     if (self._metric_log_frequency == "batch"):
       self.log_metrics(metric_type='train', step=self._current_batch)
 
-  def test_step(self, test_x, test_y, test_mask, dataset_type):
+  def test_step(self, test_x, test_y, test_mask):
     r"""Performs one evaluation (test/validation) step with the input batch.
 
     Args:
@@ -182,20 +187,19 @@ class BaseSegExperiment(keras.Model):
         batch.
       test_mask (tf.Tensor): Boolean mask for each pixel in the input samples.
         Pixels with `True` mask are considered for the computation of the loss.
-      dataset_type (str): Either "test" or "val".
     
     Returns:
       None.
     """
-    assert (dataset_type in ["test", "val"])
+    assert (self.evalation_type in ["test", "val"])
     pred_y, pred_y_masked, test_y_masked, loss = self.forward_pass(
         training=False, x=test_x, y=test_y, mask=test_mask)
     pred_y = keras.backend.argmax(pred_y, axis=-1)
     pred_y_masked = tf.boolean_mask(pred_y, test_mask)
     # Update val/test metrics.
-    self.loss_trackers[dataset_type].update_state(loss)
-    self.accuracy_trackers[dataset_type].update_state(test_y_masked,
-                                                      pred_y_masked)
+    self.loss_trackers[self._evaluation_type].update_state(loss)
+    self.accuracy_trackers[self._evaluation_type].update_state(
+        test_y_masked, pred_y_masked)
 
   def on_epoch_end(self, val_ds, test_ds):
     # Optionally save the model at the end of the current epoch.
@@ -210,11 +214,13 @@ class BaseSegExperiment(keras.Model):
       val_test_logging_step = self._current_batch
     # Evaluate on validation set.
     for val_x, val_y, val_mask in val_ds:
-      self.test_step(val_x, val_y, val_mask, dataset_type="val")
+      self.evalation_type = "val"
+      self.test_step(val_x, val_y, val_mask)
     self.log_metrics("val", step=val_test_logging_step)
     # Evaluate on test set.
     for test_x, test_y, test_mask in test_ds:
-      self.test_step(test_x, test_y, test_mask, dataset_type="test")
+      self.evalation_type = "test"
+      self.test_step(test_x, test_y, test_mask)
     self.log_metrics("test", step=val_test_logging_step)
 
   def save_model(self):
