@@ -7,7 +7,7 @@ from shutil import make_archive
 
 import bfseg.data.nyu.Nyu_depth_v2_labeled
 from bfseg.utils.metrics import IgnorantMeanIoU
-from bfseg.models.fast_scnn import fast_scnn
+from bfseg.models import FastSCNN
 from bfseg.utils.utils import crop_map
 from bfseg.settings import TMPDIR
 from bfseg.sacred_utils import get_observer
@@ -34,9 +34,9 @@ def pretrain_nyu(_run,
     train_data = train_data.take(1)
     val_data = val_data.take(1)
 
-  _, out = fast_scnn(input_shape=train_data.element_spec[0].shape[1:],
-                     num_downsampling_layers=2,
-                     num_classes=2)
+  _, out = FastSCNN(input_shape=train_data.element_spec[0].shape[1:],
+                    num_downsampling_layers=2,
+                    num_classes=2)
   model = tf.keras.Model(inputs=x, outputs=out)
   model.compile(
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),

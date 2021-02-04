@@ -1,8 +1,9 @@
 """ Utils to instantiate models compatible with a generic CL experiment.
 """
 import inspect
-import segmentation_models as sm
 import warnings
+
+from bfseg.models import FastSCNN, UNet
 
 
 def create_model(model_name, pretrained_dir, image_h, image_w, **model_params):
@@ -25,7 +26,7 @@ def create_model(model_name, pretrained_dir, image_h, image_w, **model_params):
       None is returned.
   """
   if (model_name == "unet"):
-    model_fn = sm.Unet
+    model_fn = UNet
   else:
     raise ValueError(
         f"Invalid model name {model_name}. Valid values are: 'unet'.")
