@@ -178,6 +178,8 @@ class BaseSegExperiment(keras.Model):
     if (self._metric_log_frequency == "batch"):
       self.log_metrics(metric_type='train', step=self._current_batch)
 
+    self._current_batch += 1
+
   def test_step(self, data):
     r"""Performs one evaluation (test/validation) step with the input batch.
     Overrides `test_step` called internally by the `evaluate` method of the
@@ -287,6 +289,5 @@ class BaseSegExperiment(keras.Model):
       print("\nStart of epoch %d" % (self._current_epoch,))
       for train_sample in train_ds:
         self.train_step(data=train_sample)
-        self._current_batch += 1
       self.on_epoch_end(val_ds=val_ds, test_ds=test_ds)
     self._completed_training = True
