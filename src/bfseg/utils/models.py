@@ -6,7 +6,12 @@ import warnings
 from bfseg.models import FastSCNN, UNet
 
 
-def create_model(model_name, pretrained_dir, image_h, image_w, **model_params):
+def create_model(model_name,
+                 pretrained_dir,
+                 image_h,
+                 image_w,
+                 log_params_used=False,
+                 **model_params):
   r"""Factory function that creates a model with the given parameters.
 
   Args:
@@ -15,6 +20,8 @@ def create_model(model_name, pretrained_dir, image_h, image_w, **model_params):
     pretrained_dir (str): If not None, path to the pretrained weights to load.
     image_h (int): Image height.
     image_w (int): Image width.
+    log_params_used (bool): If True, the complete list of parameters used to
+      instantiate the model is printed.
     ---
     model_params: Parameters required to instantiate the model. Cf. basic config
       file for list of valid parameters depending on the architecture.
@@ -65,8 +72,6 @@ def create_model(model_name, pretrained_dir, image_h, image_w, **model_params):
         f"Model '{model_name}' missing the following required positional "
         f"arguments: {missing_nonoptional_params}.")
 
-  #TODO(fmilano): Log default values used.
-
   # Ignore invalid input parameters.
   invalid_input_parameters = set(model_params) - set(valid_params)
   if (len(invalid_input_parameters) > 0):
@@ -81,6 +86,10 @@ def create_model(model_name, pretrained_dir, image_h, image_w, **model_params):
       key: model_params.get(key, valid_params_with_defaults[key])
       for key in valid_params
   }
+
+  if (log_params_used):
+    print("\nUsing the following parameters to instantiate the model "
+          f"{model_name}: {model_params}.\n")
 
   encoder, model = model_fn(**model_params)
 
