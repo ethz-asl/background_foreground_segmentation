@@ -30,8 +30,9 @@ class BaseSegExperiment(keras.Model):
         'models')
     self.optimizer = keras.optimizers.Adam(
         self.run.config['training_params']['learning_rate'])
-    # Counter for the current training epoch.
+    # Counter for the current training epoch/batch.
     self._current_epoch = None
+    self._current_batch = None
     self._completed_training = False
     # Logging parameter.
     self._metric_log_frequency = self.run.config['logging_params'][
@@ -157,8 +158,6 @@ class BaseSegExperiment(keras.Model):
       None.
     """
     train_x, train_y, train_mask = data
-    #TODO(fmilano): Fix, this breaks logging.
-    step = 0
     with tf.GradientTape() as tape:
       pred_y, pred_y_masked, train_y_masked, loss = self.forward_pass(
           training=True, x=train_x, y=train_y, mask=train_mask)
@@ -172,7 +171,7 @@ class BaseSegExperiment(keras.Model):
 
     # Log loss and accuracy.
     if (self._metric_log_frequency == "batch"):
-      self.log_metrics(metric_type='train', step=step)
+      self.log_metrics(metric_type='train', step=self._current_batch)
 
   def test_step(self, test_x, test_y, test_mask, dataset_type):
     r"""Performs one evaluation (test/validation) step with the input batch.
@@ -198,7 +197,7 @@ class BaseSegExperiment(keras.Model):
     self.accuracy_trackers[dataset_type].update_state(test_y_masked,
                                                       pred_y_masked)
 
-  def on_epoch_end(self, training_step, val_ds, test_ds):
+  def on_epoch_end(self, val_ds, test_ds):
     # Optionally save the model at the end of the current epoch.
     if ((self._current_epoch + 1) %
         self.run.config['logging_params']['model_save_freq'] == 0):
@@ -208,7 +207,7 @@ class BaseSegExperiment(keras.Model):
       self.log_metrics(metric_type='train', step=self._current_epoch)
       val_test_logging_step = self._current_epoch
     else:
-      val_test_logging_step = training_step
+      val_test_logging_step = self._current_batch
     # Evaluate on validation set.
     for val_x, val_y, val_mask in val_ds:
       self.test_step(val_x, val_y, val_mask, dataset_type="val")
@@ -267,14 +266,15 @@ class BaseSegExperiment(keras.Model):
     Returns:
       None.
     """
-    assert (self._current_epoch is None and not self._completed_training
+    assert (self._current_epoch is None and self._current_batch is None and
+            not self._completed_training
            ), "Currently, only training from epoch 0 is supported."
-    step = 0
+    self._current_batch = 0
     for self._current_epoch in range(
         self.run.config['training_params']['num_training_epochs']):
       print("\nStart of epoch %d" % (self._current_epoch,))
       for train_sample in train_ds:
         self.train_step(data=train_sample)
-        step += 1
-      self.on_epoch_end(training_step=step, val_ds=val_ds, test_ds=test_ds)
+        self._current_batch += 1
+      self.on_epoch_end(val_ds=val_ds, test_ds=test_ds)
     self._completed_training = True
