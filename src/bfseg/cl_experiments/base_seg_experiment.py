@@ -178,20 +178,26 @@ class BaseSegExperiment(keras.Model):
     if (self._metric_log_frequency == "batch"):
       self.log_metrics(metric_type='train', step=self._current_batch)
 
-  def test_step(self, test_x, test_y, test_mask):
+  def test_step(self, data):
     r"""Performs one evaluation (test/validation) step with the input batch.
+    Overrides `test_step` called internally by the `evaluate` method of the
+    `tf.keras.Model`.
 
     Args:
-      test_x (tf.Tensor): Input sample batch.
-      test_y (tf.Tensor): Ground-truth labels associated to the input sample
-        batch.
-      test_mask (tf.Tensor): Boolean mask for each pixel in the input samples.
-        Pixels with `True` mask are considered for the computation of the loss.
+      data (tuple): Input batch. It is expected to be of the form
+        (test_x, test_y, test_mask), where:
+        - test_x (tf.Tensor) is the input sample batch.
+        - test_y (tf.Tensor) are the ground-truth labels associated to the input
+            sample batch.
+        - test_mask (tf.Tensor) is a boolean mask for each pixel in the input
+            samples. Pixels with `True` mask are considered for the computation
+            of the loss.
     
     Returns:
       None.
     """
     assert (self.evalation_type in ["test", "val"])
+    test_x, test_y, test_mask = data
     pred_y, pred_y_masked, test_y_masked, loss = self.forward_pass(
         training=False, x=test_x, y=test_y, mask=test_mask)
     pred_y = keras.backend.argmax(pred_y, axis=-1)
@@ -213,14 +219,14 @@ class BaseSegExperiment(keras.Model):
     else:
       val_test_logging_step = self._current_batch
     # Evaluate on validation set.
-    for val_x, val_y, val_mask in val_ds:
+    for val_sample in val_ds:
       self.evalation_type = "val"
-      self.test_step(val_x, val_y, val_mask)
+      self.test_step(data=val_sample)
     self.log_metrics("val", step=val_test_logging_step)
     # Evaluate on test set.
-    for test_x, test_y, test_mask in test_ds:
+    for test_sample in test_ds:
       self.evalation_type = "test"
-      self.test_step(test_x, test_y, test_mask)
+      self.test_step(data=test_sample)
     self.log_metrics("test", step=val_test_logging_step)
 
   def save_model(self):
