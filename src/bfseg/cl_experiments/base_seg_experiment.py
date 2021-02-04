@@ -231,11 +231,12 @@ class BaseSegExperiment(keras.Model):
       self.test_step(data=test_sample)
     self.log_metrics("test", step=val_test_logging_step)
 
-  def save_model(self):
+  def save_model(self, epoch=None):
     r"""Saves the current model both to the local folder and to sacred.
 
     Args:
-      None.
+      epoch (int or None): If integer, number of the current epoch. Required
+        when training has not completed yet.
 
     Returns:
       None.
@@ -243,7 +244,7 @@ class BaseSegExperiment(keras.Model):
     if (self._completed_training):
       model_filename = 'model_final'
     else:
-      model_filename = f'model_epoch_{self._current_epoch}'
+      model_filename = f'model_epoch_{epoch}'
     full_model_filename = os.path.join(self.model_save_dir,
                                        f'{model_filename}.h5')
     self.new_model.save(full_model_filename)
