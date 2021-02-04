@@ -127,8 +127,8 @@ def fast_scnn(input_shape, num_downsampling_layers=3, num_classes=19):
 
   downsampling_factor = 4 * 2**num_downsampling_layers
   gfe_layer = pyramid_pooling_block(gfe_layer, [2, 4, 6, 8],
-                                    h=input_shape[1] // downsampling_factor,
-                                    w=input_shape[2] // downsampling_factor)
+                                    h=input_shape[0] // downsampling_factor,
+                                    w=input_shape[1] // downsampling_factor)
   """## Step 3: Feature Fusion"""
 
   ff_layer1 = conv_block(lds_layer,
