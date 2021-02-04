@@ -174,7 +174,7 @@ class BaseSegExperiment:
         batch.
       test_mask (tf.Tensor): Boolean mask for each pixel in the input samples.
         Pixels with `True` mask are considered for the computation of the loss.
-      step (int): Step number.
+      dataset_type (str): Either "test" or "val".
     
     Returns:
       None.
