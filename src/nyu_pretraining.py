@@ -34,9 +34,9 @@ def pretrain_nyu(_run,
     train_data = train_data.take(1)
     val_data = val_data.take(1)
 
-  x = tf.keras.Input(shape=train_data.element_spec[0].shape[1:])
-  out = tf.image.convert_image_dtype(x, tf.float32)
-  out = fast_scnn(out, num_downsampling_layers=2, num_classes=2)
+  _, out = fast_scnn(input_shape=train_data.element_spec[0].shape[1:],
+                     num_downsampling_layers=2,
+                     num_classes=2)
   model = tf.keras.Model(inputs=x, outputs=out)
   model.compile(
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
