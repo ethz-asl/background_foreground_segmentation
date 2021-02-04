@@ -89,6 +89,8 @@ class BaseSegExperiment:
            ), "Currently, only U-Net architecture is supported."
     assert (self.run.config['cl_params']['cl_framework'] == "finetune"
            ), "Currently, only fine-tuning is supported."
+    # TODO(fmilano): Pass image_h and image_w explicitly once automatically
+    # inferred from the dataset and not passed by the user anymore.
     self.encoder, self.model = create_model(
         model_name=self.run.config['network_params']['architecture'],
         pretrained_dir=self.run.config['cl_params']['pretrained_dir'],
