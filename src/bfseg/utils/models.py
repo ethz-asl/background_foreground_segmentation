@@ -22,12 +22,12 @@ def create_model(model_name, pretrained_dir, **model_params):
       None is returned.
   """
   if (model_name == "unet"):
-    valid_params = ['backbone', 'image_h', 'image_w']
+    valid_params = ['backbone_name', 'image_h', 'image_w']
     for param in model_params.keys():
       if (param not in valid_params):
         warnings.warn(
             f"Ignoring parameter {param}, invalid for model {model_name}.")
-    encoder, model = sm.Unet(backbone_name=model_params['backbone'],
+    encoder, model = sm.Unet(backbone_name=model_params['backbone_name'],
                              input_shape=(model_params['image_h'],
                                           model_params['image_w'], 3),
                              classes=2,

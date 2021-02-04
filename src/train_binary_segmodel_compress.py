@@ -48,7 +48,7 @@ class Compress(EWC):
     if self.config.type_progress == "lateral_connection":
       self.old_model = keras.models.load_model(self.config.pretrained_dir2)
     elif self.config.type_progress == "fine_tune":
-      _, self.old_model = sm.Unet(self.config.backbone,
+      _, self.old_model = sm.Unet(self.config.backbone_name,
                                   input_shape=(self.config.image_h,
                                                self.config.image_w, 3),
                                   classes=2,
@@ -56,7 +56,7 @@ class Compress(EWC):
                                   weights=self.config.pretrained_dir2,
                                   encoder_freeze=True)
     self.old_model.trainable = False
-    encoder, model = sm.Unet(self.config.backbone,
+    encoder, model = sm.Unet(self.config.backbone_name,
                              input_shape=(self.config.image_h,
                                           self.config.image_w, 3),
                              classes=2,

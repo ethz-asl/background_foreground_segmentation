@@ -19,7 +19,7 @@ def seg_experiment_default_config():
   - Network parameters:
     - architecture (str): Architecture type. Valid values are:
       - "unet": U-Net architecture. Required parameters are:
-        - backbone (str): Name of the backbone of the U-Net architecture.
+        - backbone_name (str): Name of the backbone of the U-Net architecture.
         - image_h (int): Image height.
         - image_w (int): Image width.
   - Training parameters:
@@ -52,7 +52,7 @@ def seg_experiment_default_config():
   network_params = {
       'architecture': 'unet',
       'model_params': {
-          'backbone': "vgg16",
+          'backbone_name': "vgg16",
           #TODO (fmilano): Retrieve from first training sample.
           'image_h': 480,
           'image_w': 640

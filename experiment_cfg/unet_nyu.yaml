@@ -2,7 +2,7 @@
 network_params:
   architecture: unet
   model_params:
-    backbone: vgg16
+    backbone_name: vgg16
     image_h: 480
     image_w: 640
 training_params:
