@@ -10,7 +10,8 @@ def create_model(model_name, pretrained_dir, image_h, image_w, **model_params):
   r"""Factory function that creates a model with the given parameters.
 
   Args:
-    model_name (str): Type of architecture to use. Valid values are: "unet".
+    model_name (str): Type of architecture to use. Valid values are:
+      "fast_scnn", "unet".
     pretrained_dir (str): If not None, path to the pretrained weights to load.
     image_h (int): Image height.
     image_w (int): Image width.
@@ -25,13 +26,17 @@ def create_model(model_name, pretrained_dir, image_h, image_w, **model_params):
       if available. Used to apply intermediate distillation. If not available,
       None is returned.
   """
-  if (model_name == "unet"):
+  # For all models, fix the input shape and the number of classes.
+  if (model_name == "fast_scnn"):
+    model_fn = FastSCNN
+    model_params['num_classes'] = 2
+  elif (model_name == "unet"):
     model_fn = UNet
+    model_params['classes'] = 2
   else:
     raise ValueError(
-        f"Invalid model name {model_name}. Valid values are: 'unet'.")
-  # For all models, fix the input shape and the number of classes.
-  model_params['classes'] = 2
+        f"Invalid model name {model_name}. Valid values are: 'fast_scnn', "
+        "'unet'.")
   model_params['input_shape'] = (image_h, image_w, 3)
 
   if (hasattr(model_fn, '__wrapped__')):
