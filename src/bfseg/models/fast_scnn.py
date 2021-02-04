@@ -116,9 +116,9 @@ def pyramid_pooling_block(input_tensor, bin_sizes, h=15, w=20):
 
 def fast_scnn(input_shape, num_downsampling_layers=3, num_classes=19):
   inputs = tf.keras.Input(shape=input_shape)
-  inputs = tf.image.convert_image_dtype(inputs, tf.float32)
+  inputs_converted = tf.image.convert_image_dtype(inputs, tf.float32)
 
-  lds_layer = _downsampling(inputs,
+  lds_layer = _downsampling(inputs_converted,
                             num_downsampling_layers=num_downsampling_layers)
 
   gfe_layer = bottleneck_block(lds_layer, 64, (3, 3), t=6, strides=2, n=3)
