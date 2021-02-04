@@ -7,7 +7,7 @@ from bfseg.utils.datasets import load_data
 from bfseg.utils.models import create_model
 
 
-class BaseSegExperiment:
+class BaseSegExperiment(keras.Model):
   r"""Base class to specify an experiment. An experiment is a standalone class
   that supports:
   - Loading training data
@@ -23,6 +23,7 @@ class BaseSegExperiment:
   """
 
   def __init__(self, run, root_output_dir):
+    super(BaseSegExperiment, self).__init__()
     self.run = run
     self.model_save_dir = os.path.join(
         root_output_dir, self.run.config['logging_params']['exp_name'],
