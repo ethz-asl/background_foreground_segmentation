@@ -3,6 +3,7 @@ import tensorflow as tf
 from shutil import make_archive
 from tensorflow import keras
 
+from bfseg.utils.callbacks import SaveModelAndLogs, TestCallback
 from bfseg.utils.datasets import load_data
 from bfseg.utils.models import create_model
 
@@ -31,18 +32,19 @@ class BaseSegExperiment(keras.Model):
     self.optimizer = keras.optimizers.Adam(
         self.run.config['training_params']['learning_rate'])
     # Counter for the current training epoch/batch.
-    self._current_epoch = None
-    self._current_batch = None
+    self.current_batch = 0
     self._completed_training = False
+    # Whether or not test evaluation was performed.
+    self.performed_test_evaluation = False
     # Evaluation type (either validation or testing). Since tf.keras.Model.fit
     # first calls validation, and then testing can be optionally run through a
     # custom `on_epoch_end` callback, here the evaluation type is set to
     # validation.
     self.evalation_type = "val"
     # Logging parameter.
-    self._metric_log_frequency = self.run.config['logging_params'][
+    self.metric_log_frequency = self.run.config['logging_params'][
         'metric_log_frequency']
-    assert (self._metric_log_frequency in ["batch", "epoch"])
+    assert (self.metric_log_frequency in ["batch", "epoch"])
 
   def make_dirs(self):
     try:
@@ -175,10 +177,11 @@ class BaseSegExperiment(keras.Model):
     self.loss_trackers['train'].update_state(loss)
 
     # Log loss and accuracy.
-    if (self._metric_log_frequency == "batch"):
-      self.log_metrics(metric_type='train', step=self._current_batch)
+    if (self.metric_log_frequency == "batch"):
+      self.log_metrics(metric_type='train', step=self.current_batch)
 
-    self._current_batch += 1
+    self.current_batch += 1
+    self.performed_test_evaluation = False
 
   def test_step(self, data):
     r"""Performs one evaluation (test/validation) step with the input batch.
@@ -208,28 +211,6 @@ class BaseSegExperiment(keras.Model):
     self.loss_trackers[self._evaluation_type].update_state(loss)
     self.accuracy_trackers[self._evaluation_type].update_state(
         test_y_masked, pred_y_masked)
-
-  def on_epoch_end(self, val_ds, test_ds):
-    # Optionally save the model at the end of the current epoch.
-    if ((self._current_epoch + 1) %
-        self.run.config['logging_params']['model_save_freq'] == 0):
-      self.save_model()
-    # Optionally log the metrics.
-    if (self._metric_log_frequency == "epoch"):
-      self.log_metrics(metric_type='train', step=self._current_epoch)
-      val_test_logging_step = self._current_epoch
-    else:
-      val_test_logging_step = self._current_batch
-    # Evaluate on validation set.
-    for val_sample in val_ds:
-      self.evalation_type = "val"
-      self.test_step(data=val_sample)
-    self.log_metrics("val", step=val_test_logging_step)
-    # Evaluate on test set.
-    for test_sample in test_ds:
-      self.evalation_type = "test"
-      self.test_step(data=test_sample)
-    self.log_metrics("test", step=val_test_logging_step)
 
   def save_model(self, epoch=None):
     r"""Saves the current model both to the local folder and to sacred.
@@ -281,14 +262,11 @@ class BaseSegExperiment(keras.Model):
     Returns:
       None.
     """
-    assert (self._current_epoch is None and self._current_batch is None and
-            not self._completed_training
-           ), "Currently, only training from epoch 0 is supported."
-    self._current_batch = 0
-    for self._current_epoch in range(
-        self.run.config['training_params']['num_training_epochs']):
-      print("\nStart of epoch %d" % (self._current_epoch,))
-      for train_sample in train_ds:
-        self.train_step(data=train_sample)
-      self.on_epoch_end(val_ds=val_ds, test_ds=test_ds)
+    self.compile(optimizer=self.optimizer)
+    self.fit(train_ds,
+             epochs=self.run.config['training_params']['num_training_epochs'],
+             validation_data=val_ds,
+             verbose=2,
+             callbacks=[TestCallback(test_data=test_ds),
+                        SaveModelAndLogs()])
     self._completed_training = True
