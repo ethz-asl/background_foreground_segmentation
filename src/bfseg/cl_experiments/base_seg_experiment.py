@@ -135,20 +135,26 @@ class BaseSegExperiment(keras.Model):
 
     return pred_y, pred_y_masked, y_masked, loss
 
-  def train_step(self, train_x, train_y, train_mask, step):
-    r"""Performs one training step with the input batch.
+  def train_step(self, data):
+    r"""Performs one training step with the input batch. Overrides `train_step`
+    called internally by the `fit` method of the `tf.keras.Model`.
 
     Args:
-      train_x (tf.Tensor): Input sample batch.
-      train_y (tf.Tensor): Ground-truth labels associated to the input sample
-        batch.
-      train_mask (tf.Tensor): Boolean mask for each pixel in the input samples.
-        Pixels with `True` mask are considered for the computation of the loss.
-      step (int): Step number.
+      data (tuple): Input batch. It is expected to be of the form
+        (train_x, train_y, train_mask), where:
+        - train_x (tf.Tensor) is the input sample batch.
+        - train_y (tf.Tensor) are the ground-truth labels associated to the
+            input sample batch.
+        - train_mask (tf.Tensor) is a boolean mask for each pixel in the input
+            samples. Pixels with `True` mask are considered for the computation
+            of the loss.
     
     Returns:
       None.
     """
+    train_x, train_y, train_mask = data
+    #TODO(fmilano): Fix, this breaks logging.
+    step = 0
     with tf.GradientTape() as tape:
       pred_y, pred_y_masked, train_y_masked, loss = self.forward_pass(
           training=True, x=train_x, y=train_y, mask=train_mask)
@@ -269,8 +275,8 @@ class BaseSegExperiment(keras.Model):
     for self._current_epoch in range(
         self.run.config['training_params']['num_training_epochs']):
       print("\nStart of epoch %d" % (self._current_epoch,))
-      for train_x, train_y, train_mask in train_ds:
-        self.train_step(train_x, train_y, train_mask, step)
+      for train_sample in train_ds:
+        self.train_step(data=train_sample)
         step += 1
       self.on_epoch_end(training_step=step, val_ds=val_ds, test_ds=test_ds)
     self._completed_training = True
