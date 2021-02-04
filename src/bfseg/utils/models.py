@@ -10,7 +10,7 @@ def create_model(model_name,
                  pretrained_dir,
                  image_h,
                  image_w,
-                 log_params_used=False,
+                 log_params_used=True,
                  **model_params):
   r"""Factory function that creates a model with the given parameters.
 
