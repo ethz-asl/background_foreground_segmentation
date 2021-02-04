@@ -72,14 +72,14 @@ class Progress(BaseSegExperiment):
     """ Build both new model(train) and old model(guide/constraint)
             Now I hard code using backbone "vgg16" and "Unet"
         """
-    _, new_model = sm.Unet(self.config.backbone,
+    _, new_model = sm.Unet(self.config.backbone_name,
                            input_shape=(self.config.image_h,
                                         self.config.image_w, 3),
                            classes=2,
                            activation='sigmoid',
                            weights=None,
                            encoder_freeze=False)
-    _, old_model = sm.Unet(self.config.backbone,
+    _, old_model = sm.Unet(self.config.backbone_name,
                            input_shape=(self.config.image_h,
                                         self.config.image_w, 3),
                            classes=2,

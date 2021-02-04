@@ -1,0 +1,24 @@
+# Start training from scratch on NYU with U-Net architecture.
+network_params:
+  architecture: unet
+  model_params:
+    backbone_name: vgg16
+    image_h: 480
+    image_w: 640
+training_params:
+  batch_size: 8
+  learning_rate: 0.0001
+  num_training_epochs: 40
+dataset_params:
+  test_dataset: BfsegCLAMeshdistLabels
+  test_scene: null
+  train_dataset: NyuDepthV2Labeled
+  train_scene: null
+  validation_percentage: 20
+logging_params:
+  metric_log_frequency: epoch
+  model_save_freq: 1
+  exp_name: exp_stage1
+cl_params:
+  cl_framework: finetune
+  pretrained_dir: null

@@ -42,7 +42,7 @@ class Distillation(BaseSegExperiment):
 
   def build_model(self):
     """ Build both new model(train) and old model(guide/constraint)"""
-    self.encoder, self.model = sm.Unet(self.config.backbone,
+    self.encoder, self.model = sm.Unet(self.config.backbone_name,
                                        input_shape=(self.config.image_h,
                                                     self.config.image_w, 3),
                                        classes=2,
@@ -53,7 +53,7 @@ class Distillation(BaseSegExperiment):
         inputs=self.model.input,
         outputs=[self.encoder.output, self.model.output])
     if self.config.type_distillation == "feature":
-      self.old_encoder, _ = sm.Unet(self.config.backbone,
+      self.old_encoder, _ = sm.Unet(self.config.backbone_name,
                                     input_shape=(self.config.image_h,
                                                  self.config.image_w, 3),
                                     classes=2,
@@ -62,7 +62,7 @@ class Distillation(BaseSegExperiment):
                                     encoder_freeze=True)
       self.old_encoder.trainable = False
     elif self.config.type_distillation == "output":
-      _, self.old_model = sm.Unet(self.config.backbone,
+      _, self.old_model = sm.Unet(self.config.backbone_name,
                                   input_shape=(self.config.image_h,
                                                self.config.image_w, 3),
                                   classes=2,

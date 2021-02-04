@@ -114,19 +114,21 @@ def pyramid_pooling_block(input_tensor, bin_sizes, h=15, w=20):
 """#### Assembling all the methods"""
 
 
-def fast_scnn(inputs, num_downsampling_layers=3, num_classes=19):
-  lds_layer = _downsampling(inputs,
+def fast_scnn(input_shape, num_downsampling_layers=3, num_classes=19):
+  inputs = tf.keras.Input(shape=input_shape)
+  inputs_converted = tf.image.convert_image_dtype(inputs, tf.float32)
+
+  lds_layer = _downsampling(inputs_converted,
                             num_downsampling_layers=num_downsampling_layers)
 
   gfe_layer = bottleneck_block(lds_layer, 64, (3, 3), t=6, strides=2, n=3)
   gfe_layer = bottleneck_block(gfe_layer, 96, (3, 3), t=6, strides=2, n=3)
   gfe_layer = bottleneck_block(gfe_layer, 128, (3, 3), t=6, strides=1, n=3)
 
-  input_shape = inputs.shape
   downsampling_factor = 4 * 2**num_downsampling_layers
   gfe_layer = pyramid_pooling_block(gfe_layer, [2, 4, 6, 8],
-                                    h=input_shape[1] // downsampling_factor,
-                                    w=input_shape[2] // downsampling_factor)
+                                    h=input_shape[0] // downsampling_factor,
+                                    w=input_shape[1] // downsampling_factor)
   """## Step 3: Feature Fusion"""
 
   ff_layer1 = conv_block(lds_layer,
@@ -182,4 +184,7 @@ def fast_scnn(inputs, num_downsampling_layers=3, num_classes=19):
       (2**num_downsampling_layers, 2**num_downsampling_layers))(classifier)
   # classifier = tf.keras.activations.softmax(classifier)
 
-  return classifier
+  encoder = tf.keras.Model(inputs=inputs, outputs=ff_final)
+  model = tf.keras.Model(inputs=inputs, outputs=classifier)
+
+  return encoder, model
