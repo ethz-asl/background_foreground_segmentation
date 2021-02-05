@@ -27,6 +27,9 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
         cl_params):
   r"""Runs the whole training pipeline.
   """
+  assert (cl_params['cl_framework'] == "finetune"), (
+      "The current training script will perform finetuning. Please select "
+      "CL-framework `finetune`.")
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
   model = BaseCLModel(run=_run, root_output_dir=TMPDIR)
