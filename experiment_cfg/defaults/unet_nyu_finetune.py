@@ -15,8 +15,8 @@ def default_config():
   # Training parameters.
   training_params = {
       'batch_size': 8,
-      'learning_rate': 1e-5,
-      'num_training_epochs': 3,
+      'learning_rate': 1e-4,
+      'num_training_epochs': 40,
       'stopping_patience': 100
   }
 
