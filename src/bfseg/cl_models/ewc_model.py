@@ -124,7 +124,8 @@ class EWC(BaseCLModel):
                       name=curr_weight_name))
 
   def compute_consolidation_loss(self):
-    """ Compute weight regularization term """
+    r"""Computes weight regularization loss.
+    """
     losses = []
     for i, param in enumerate(self.new_model.trainable_weights):
       losses.append(
@@ -141,24 +142,58 @@ class EWC(BaseCLModel):
     self.loss_mse_tracker = keras.metrics.Mean('loss_weights', dtype=tf.float32)
     self.acc_metric = keras.metrics.Accuracy('accuracy')
 
-  def train_step(self, train_x, train_y, train_m, step):
-    """ Training on one batch:
-            Compute masked cross entropy loss(true label, predicted label)
-            + Weight consolidation loss(new weights, old weights)
-            update losses & metrics
-        """
+  def forward_pass(self, training, x, y, mask):
+    r"""Forward pass. Overrides the parent method.
+
+    Args:
+      training (bool): Whether or not the model should be in training mode.
+      x (tf.Tensor): Input to the network.
+      y (tf.Tensor): Ground-truth labels corresponding to the given input.
+      mask (tf.Tensor): Mask for the input to consider.
+
+    Return:
+      pred_y (tf.Tensor): Network prediction.
+      pred_y_masked (tf.Tensor): Masked network prediction.
+      y_masked (tf.Tensor): Masked ground-truth labels (i.e., with labels only
+        from the selected samples).
+      loss (tf.Tensor): Loss from performing the forward pass.
+    """
+    [_, pred_y] = self.new_model(x, training=training)
+    pred_y_masked = tf.boolean_mask(pred_y, mask)
+    y_masked = tf.boolean_mask(y, mask)
+    output_loss = self.loss_ce(y_masked, pred_y_masked)
+    consolidation_loss = self.compute_consolidation_loss()
+
+    loss = (1 - self._lambda_ewc
+           ) * output_loss + self._lambda_ewc * consolidation_loss
+
+    return pred_y, pred_y_masked, y_masked, loss
+
+  def train_step(self, data):
+    r"""Performs one training step with the input batch. Overrides `train_step`
+    called internally by the `fit` method of the `tf.keras.Model`.
+
+    Args:
+      data (tuple): Input batch. It is expected to be of the form
+        (train_x, train_y, train_mask), where:
+        - train_x (tf.Tensor) is the input sample batch.
+        - train_y (tf.Tensor) are the ground-truth labels associated to the
+            input sample batch.
+        - train_mask (tf.Tensor) is a boolean mask for each pixel in the input
+            samples. Pixels with `True` mask are considered for the computation
+            of the loss.
+    
+    Returns:
+      Dictionary of metrics.
+    """
+    train_x, train_y, train_mask = data
     with tf.GradientTape() as tape:
-      [_, pred_y] = self.new_model(train_x, training=True)
-      pred_y_masked = tf.boolean_mask(pred_y, train_m)
-      train_y_masked = tf.boolean_mask(train_y, train_m)
-      output_loss = self.loss_ce(train_y_masked, pred_y_masked)
-      consolidation_loss = self.compute_consolidation_loss()
-      loss = (1 - self._lambda_ewc
-             ) * output_loss + self._lambda_ewc * consolidation_loss
+      pred_y, pred_y_masked, train_y_masked, loss = self.forward_pass(
+          training=True, x=train_x, y=train_y, mask=train_mask)
     grads = tape.gradient(loss, self.new_model.trainable_weights)
     self.optimizer.apply_gradients(zip(grads, self.new_model.trainable_weights))
     pred_y = tf.math.argmax(pred_y, axis=-1)
-    pred_y_masked = tf.boolean_mask(pred_y, train_m)
+    pred_y_masked = tf.boolean_mask(pred_y, train_mask)
     self.acc_metric.update_state(train_y_masked, pred_y_masked)
 
     if self.config.tensorboard_write_freq == "batch":
@@ -184,19 +219,31 @@ class EWC(BaseCLModel):
       raise Exception("Invalid tensorboard_write_freq: %s!" %
                       self.config.tensorboard_write_freq)
 
-  def test_step(self, test_x, test_y, test_m):
-    """ Validating/Testing on one batch
-            update losses & metrics
-        """
-    [_, pred_y] = self.new_model(test_x, training=True)
-    pred_y_masked = tf.boolean_mask(pred_y, test_m)
-    test_y_masked = tf.boolean_mask(test_y, test_m)
-    output_loss = self.loss_ce(test_y_masked, pred_y_masked)
-    consolidation_loss = self.compute_consolidation_loss()
-    loss = (1 - self._lambda_ewc
-           ) * output_loss + self._lambda_ewc * consolidation_loss
+  def test_step(self, data):
+    r"""Performs one evaluation (test/validation) step with the input batch.
+    Overrides `test_step` called internally by the `evaluate` method of the
+    `tf.keras.Model`.
+
+    Args:
+      data (tuple): Input batch. It is expected to be of the form
+        (test_x, test_y, test_mask), where:
+        - test_x (tf.Tensor) is the input sample batch.
+        - test_y (tf.Tensor) are the ground-truth labels associated to the input
+            sample batch.
+        - test_mask (tf.Tensor) is a boolean mask for each pixel in the input
+            samples. Pixels with `True` mask are considered for the computation
+            of the loss.
+    
+    Returns:
+      Dictionary of metrics.
+    """
+    assert (self.evaluation_type in ["test", "val"])
+    test_x, test_y, test_mask = data
+    pred_y, pred_y_masked, test_y_masked, loss = self.forward_pass(
+        training=False, x=test_x, y=test_y, mask=test_mask)
     pred_y = tf.math.argmax(pred_y, axis=-1)
-    pred_y_masked = tf.boolean_mask(pred_y, test_m)
+    pred_y_masked = tf.boolean_mask(pred_y, test_mask)
+
     # Update val/test metrics
     self.loss_tracker.update_state(loss)
     self.loss_ce_tracker.update_state(output_loss)
