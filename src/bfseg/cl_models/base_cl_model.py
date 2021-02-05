@@ -124,6 +124,39 @@ class BaseCLModel(keras.Model):
 
     return pred_y, pred_y_masked, y_masked, loss
 
+  def _handle_multiple_losses(self, loss):
+    r"""Since derived classes might implement auxiliary losses that one also
+    want to keep track of, this method is used to separate the main (total)
+    loss from the auxiliary ones.
+    
+    Args:
+      loss (tensorflow.python.keras.losses.LossFunctionWrapper or dict): If a
+        dict, it contains all the losses to consider, indexed by their name; in
+        this case, it is assumed that the total loss is named `loss`, and the
+        other ones are tracked with their name. If not a dict, the single loss
+        to consider.
+
+    Returns:
+      total_loss (tensorflow.python.keras.losses.LossFunctionWrapper): Main,
+        total loss.
+      auxiliary_losses (dict): Dict with the auxiliary losses indexed by their
+        name. `None` if no auxiliary losses are present.
+    """
+
+    if (isinstance(loss, dict)):
+      try:
+        total_loss = loss.pop('loss')
+        auxiliary_losses = loss
+      except KeyError:
+        raise KeyError(
+            "When returning more than one loss, there must be a main (total) "
+            "loss named `loss`.")
+    else:
+      total_loss = loss
+      auxiliary_losses = None
+
+    return total_loss, auxiliary_losses
+
   def train_step(self, data):
     r"""Performs one training step with the input batch. Overrides `train_step`
     called internally by the `fit` method of the `tf.keras.Model`.
@@ -145,13 +178,17 @@ class BaseCLModel(keras.Model):
     with tf.GradientTape() as tape:
       pred_y, pred_y_masked, train_y_masked, loss = self.forward_pass(
           training=True, x=train_x, y=train_y, mask=train_mask)
-    grads = tape.gradient(loss, self.new_model.trainable_weights)
+
+    grads = tape.gradient(total_loss, self.new_model.trainable_weights)
     self.optimizer.apply_gradients(zip(grads, self.new_model.trainable_weights))
     pred_y = tf.math.argmax(pred_y, axis=-1)
     pred_y_masked = tf.boolean_mask(pred_y, train_mask)
+
+    total_loss, auxiliary_losses = self._handle_multiple_losses(loss)
+
     # Update accuracy and loss.
     self.accuracy_trackers['train'].update_state(train_y_masked, pred_y_masked)
-    self.loss_trackers['train'].update_state(loss)
+    self.loss_trackers['train'].update_state(total_loss)
 
     # Log loss and accuracy.
     if (self.metric_log_frequency == "batch"):
@@ -201,8 +238,11 @@ class BaseCLModel(keras.Model):
         training=False, x=test_x, y=test_y, mask=test_mask)
     pred_y = keras.backend.argmax(pred_y, axis=-1)
     pred_y_masked = tf.boolean_mask(pred_y, test_mask)
+
+    total_loss, auxiliary_losses = self._handle_multiple_losses(loss)
+
     # Update val/test metrics.
-    self.loss_trackers[self.evaluation_type].update_state(loss)
+    self.loss_trackers[self.evaluation_type].update_state(total_loss)
     self.accuracy_trackers[self.evaluation_type].update_state(
         test_y_masked, pred_y_masked)
 
