@@ -26,7 +26,7 @@ class EWC(BaseCLModel):
     if (run.config['cl_params']['pretrained_dir'] is None):
       raise KeyError("Pre-trained weights must be specified when using EWC.")
     try:
-      self._lambda_ewc = self.run.config.cl_params['lambda_ewc']
+      self._lambda_ewc = run.config['cl_params']['lambda_ewc']
       if (not (isinstance(self._lambda_ewc, float) and
                0. <= self._lambda_ewc <= 1.)):
         raise ValueError(
