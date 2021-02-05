@@ -53,8 +53,9 @@ class BaseCLModel(keras.Model):
     r"""Builds the models.
     TODO(fmilano): Check. Make flexible.
     """
-    assert (self.run.config['cl_params']['cl_framework'] == "finetune"
-           ), "Currently, only fine-tuning is supported."
+    assert (self.run.config['cl_params']['cl_framework']
+            in ["ewc", "finetune"
+               ]), "Currently, only EWC and fine-tuning are supported."
     self.encoder, self.model = create_model(
         model_name=self.run.config['network_params']['architecture'],
         **self.run.config['network_params']['model_params'])
