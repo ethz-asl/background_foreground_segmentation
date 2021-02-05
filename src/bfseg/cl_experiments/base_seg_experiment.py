@@ -162,7 +162,7 @@ class BaseSegExperiment(keras.Model):
             of the loss.
     
     Returns:
-      None.
+      Dictionary of metrics.
     """
     train_x, train_y, train_mask = data
     with tf.GradientTape() as tape:
@@ -183,6 +183,8 @@ class BaseSegExperiment(keras.Model):
     self.current_batch += 1
     self.performed_test_evaluation = False
 
+    return {m.name: m.result() for m in self.metrics}
+
   def test_step(self, data):
     r"""Performs one evaluation (test/validation) step with the input batch.
     Overrides `test_step` called internally by the `evaluate` method of the
@@ -199,7 +201,7 @@ class BaseSegExperiment(keras.Model):
             of the loss.
     
     Returns:
-      None.
+      Dictionary of metrics.
     """
     assert (self.evalation_type in ["test", "val"])
     test_x, test_y, test_mask = data
@@ -211,6 +213,8 @@ class BaseSegExperiment(keras.Model):
     self.loss_trackers[self._evaluation_type].update_state(loss)
     self.accuracy_trackers[self._evaluation_type].update_state(
         test_y_masked, pred_y_masked)
+
+    return {m.name: m.result() for m in self.metrics}
 
   def save_model(self, epoch=None):
     r"""Saves the current model both to the local folder and to sacred.
