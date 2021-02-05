@@ -108,3 +108,28 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
   ds = ds.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
   return ds
+
+
+def load_datasets(train_dataset, train_scene, test_dataset, test_scene,
+                  batch_size, validation_percentage):
+  r"""Creates 3 data loaders, for training, validation and testing.
+    """
+  assert (isinstance(validation_percentage, int) and
+          0 <= validation_percentage <= 100)
+  training_percentage = 100 - validation_percentage
+  train_ds = load_data(dataset_name=train_dataset,
+                       scene_type=train_scene,
+                       fraction=f"[:{training_percentage}%]",
+                       batch_size=batch_size,
+                       shuffle_data=True)
+  val_ds = load_data(dataset_name=train_dataset,
+                     scene_type=train_scene,
+                     fraction=f"[{training_percentage}%:]",
+                     batch_size=batch_size,
+                     shuffle_data=False)
+  test_ds = load_data(dataset_name=test_dataset,
+                      scene_type=test_scene,
+                      fraction=None,
+                      batch_size=batch_size,
+                      shuffle_data=False)
+  return train_ds, val_ds, test_ds

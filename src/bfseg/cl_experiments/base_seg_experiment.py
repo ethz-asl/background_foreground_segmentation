@@ -3,14 +3,12 @@ import tensorflow as tf
 from shutil import make_archive
 from tensorflow import keras
 
-from bfseg.utils.datasets import load_data
 from bfseg.utils.models import create_model
 
 
 class BaseSegExperiment(keras.Model):
   r"""Base class to specify an experiment. An experiment is a standalone class
   that supports:
-  - Loading training data
   - Creating models that can be trained
   - Creating experiment-specific loss functions
   - Logging the metrics
@@ -51,30 +49,6 @@ class BaseSegExperiment(keras.Model):
       os.makedirs(self.model_save_dir)
     except os.error:
       pass
-
-  def load_datasets(self, train_dataset, train_scene, test_dataset, test_scene,
-                    batch_size, validation_percentage):
-    r"""Creates 3 data loaders, for training, validation and testing.
-    """
-    assert (isinstance(validation_percentage, int) and
-            0 <= validation_percentage <= 100)
-    training_percentage = 100 - validation_percentage
-    train_ds = load_data(dataset_name=train_dataset,
-                         scene_type=train_scene,
-                         fraction=f"[:{training_percentage}%]",
-                         batch_size=batch_size,
-                         shuffle_data=True)
-    val_ds = load_data(dataset_name=train_dataset,
-                       scene_type=train_scene,
-                       fraction=f"[{training_percentage}%:]",
-                       batch_size=batch_size,
-                       shuffle_data=False)
-    test_ds = load_data(dataset_name=test_dataset,
-                        scene_type=test_scene,
-                        fraction=None,
-                        batch_size=batch_size,
-                        shuffle_data=False)
-    return train_ds, val_ds, test_ds
 
   def create_old_params(self):
     r"""Stores the old weights of the model.

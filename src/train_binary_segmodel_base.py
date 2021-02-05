@@ -10,6 +10,7 @@ from bfseg.cl_experiments import BaseSegExperiment
 from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
 from bfseg.utils.callbacks import SaveModelAndLogs, TestCallback
+from bfseg.utils.datasets import load_datasets
 
 ex = Experiment()
 ex.observers.append(get_observer())
@@ -97,7 +98,7 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   print("Current time is " + current_time)
   seg_experiment = BaseSegExperiment(run=_run, root_output_dir=TMPDIR)
   # Get the datasets.
-  train_ds, val_ds, test_ds = seg_experiment.load_datasets(
+  train_ds, val_ds, test_ds = load_datasets(
       train_dataset=dataset_params['train_dataset'],
       train_scene=dataset_params['train_scene'],
       test_dataset=dataset_params['test_dataset'],
