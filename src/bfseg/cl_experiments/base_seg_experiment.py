@@ -190,8 +190,9 @@ class BaseSegExperiment(keras.Model):
         continue
       # Remove prefix from metrics kept (it is added by `keras.Model.fit()`).
       if (prefix == "train"):
-        m.name = metric_name
-      metrics_to_return[m.name] = m.result()
+        metrics_to_return[metric_name] = m.result()
+      else:
+        metrics_to_return[m.name] = m.result()
 
     return metrics_to_return
 
@@ -238,8 +239,9 @@ class BaseSegExperiment(keras.Model):
         continue
       # Remove prefix from metrics kept (it is added by `keras.Model.fit()`).
       if (prefix == self.evaluation_type):
-        m.name = metric_name
-      metrics_to_return[m.name] = m.result()
+        metrics_to_return[metric_name] = m.result()
+      else:
+        metrics_to_return[m.name] = m.result()
 
     return metrics_to_return
 
