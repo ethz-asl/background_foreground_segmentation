@@ -124,8 +124,8 @@ def load_datasets(train_dataset,
     """
   assert (isinstance(validation_percentage, int) and
           0 <= validation_percentage <= 100)
-  assert ((fisher_params_dataset is None) == (fisher_params_scene is None) ==
-          (fisher_params_sample_percentage is None))
+  assert ((fisher_params_dataset is None) == (fisher_params_sample_percentage is
+                                              None))
   training_percentage = 100 - validation_percentage
   train_ds = load_data(dataset_name=train_dataset,
                        scene_type=train_scene,
