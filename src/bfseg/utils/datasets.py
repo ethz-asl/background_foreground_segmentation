@@ -153,7 +153,7 @@ def load_datasets(train_dataset,
     fisher_params_ds = load_data(
         dataset_name=fisher_params_dataset,
         scene_type=fisher_params_scene,
-        fraction=f"[{fisher_params_sample_percentage}%]",
+        fraction=f"[:{fisher_params_sample_percentage}%]",
         batch_size=1,
         shuffle_data=True)
     return train_ds, val_ds, test_ds, fisher_params_ds
