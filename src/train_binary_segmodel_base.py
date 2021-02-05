@@ -108,7 +108,7 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   # Run the training.
   seg_experiment.training(train_ds, val_ds, test_ds)
   # Save final model.
-  seg_experiment.save_model()
+  seg_experiment.save_model(epoch="final")
 
 
 if __name__ == "__main__":

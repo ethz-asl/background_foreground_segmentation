@@ -33,7 +33,6 @@ class BaseSegExperiment(keras.Model):
         self.run.config['training_params']['learning_rate'])
     # Counter for the current training epoch/batch.
     self.current_batch = 0
-    self._completed_training = False
     # Whether or not test evaluation was performed.
     self.performed_test_evaluation = False
     # Evaluation type (either validation or testing). Since tf.keras.Model.fit
@@ -216,25 +215,18 @@ class BaseSegExperiment(keras.Model):
 
     return {m.name: m.result() for m in self.metrics}
 
-  def save_model(self, epoch=None):
+  def save_model(self, epoch):
     r"""Saves the current model both to the local folder and to sacred.
 
     Args:
-      epoch (int or None): If integer, number of the current epoch. Required
-        when training has not completed yet.
+      epoch (int or str): Number of the current epoch, or string. In both cases,
+        it used to determine the checkpoint filename.
 
     Returns:
       None.
     """
-    if (epoch is not None):
-      model_filename = f'model_epoch_{epoch}'
-    else:
-      if (self._completed_training):
-        model_filename = 'model_final'
-      else:
-        raise KeyError(
-            "Epoch number is required to save the model file if training was "
-            "not completed.")
+    model_filename = f'model_epoch_{epoch}'
+
     full_model_filename = os.path.join(self.model_save_dir,
                                        f'{model_filename}.h5')
     self.new_model.save(full_model_filename)
