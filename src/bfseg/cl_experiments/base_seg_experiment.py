@@ -184,7 +184,7 @@ class BaseSegExperiment(keras.Model):
 
     metrics_to_return = {}
 
-    for m in valid_metrics:
+    for m in self.metrics:
       prefix, metric_name = m.name.split("_", maxsplit=1)
       if (prefix in exclude_metrics):
         continue
@@ -232,7 +232,7 @@ class BaseSegExperiment(keras.Model):
 
     metrics_to_return = {}
 
-    for m in valid_metrics:
+    for m in self.metrics:
       prefix, metric_name = m.name.split("_", maxsplit=1)
       if (prefix in exclude_metrics):
         continue
