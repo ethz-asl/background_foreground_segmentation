@@ -89,6 +89,7 @@ ____
 
 ### Optional parameters
 
-- `lambda_ewc` (`float`): Regularization hyperparameter used to weight the loss.  Valid values are between 0 and 1. In particular, the loss is computed as: `(1 - lambda_ewc) * loss_ce + lambda_ewc * consolidation_loss`, where
+- `ewc_fisher_params_use_gt` (`bool`): Required if using `"ewc"` as `cl_framework`. If `True`, the Fisher matrix uses the ground-truth labels to compute the log-likelihoods; if `False`, it uses the class to which the network assigns the most likelihood.
+- `lambda_ewc` (`float`): Required if using `"ewc"` as `cl_framework`. Regularization hyperparameter used to weight the loss.  Valid values are between 0 and 1. In particular, the loss is computed as: `(1 - lambda_ewc) * loss_ce + lambda_ewc * consolidation_loss`, where
   - `loss_ce` is the cross-entropy loss computed on the current task;
   - `consolidation_loss` is the regularization loss on the parameters from the previous task.

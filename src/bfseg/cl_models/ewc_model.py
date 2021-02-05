@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras
+import warnings
 
 from bfseg.cl_models import BaseCLModel
 from bfseg.utils.datasets import load_data
@@ -37,9 +38,11 @@ class EWC(BaseCLModel):
 
     super(EWC, self).__init__(run=run, root_output_dir=root_output_dir)
 
+    self._fisher_params_ds = fisher_params_ds
 
     self._store_weights_prev_task()
-    self.create_fisher_params(fisher_params_ds)
+    self._started_training_new_task = False
+    self._create_fisher_matrix()
 
   def _store_weights_prev_task(self):
     r"""Stores the network weights for the previous task (i.e., from the
@@ -51,44 +54,82 @@ class EWC(BaseCLModel):
       self._weights_prev_task.append(
           tf.Variable(param, trainable=False, name=old_param_name))
 
-  def create_fisher_params(self, dataset):
-    """ Compute sqaured fisher information, representing relative importance"""
-    self.fisher_params = []
-    grads_list = [
-    ]  # list of list of gradients, outer: for different batches, inner: for different network parameters
-    for step, (x, y, m) in enumerate(dataset):
-      if step > 40:
-        break
+  def _create_fisher_matrix(self):
+    r"""Computes the squared Fisher information matrix, representing the
+    importance of weights for the previous task.
+    """
+    assert (not self._started_training_new_task)
+    self._fisher_params = []
+    # List of list of gradients. Outer: for different samples; inner: for
+    # different network parameters.
+    grads_over_samples = []
+    for sample in self._fisher_params_ds:
+      x, y, mask = sample
       with tf.GradientTape() as tape:
-        [_, pred_y] = self.new_model(x, training=True)
-        log_y = tf.math.log(pred_y)
-        y = tf.cast(y, log_y.dtype)
-        log_likelihood = tf.reduce_sum(y * log_y[:, :, :, 1:2] +
-                                       (1 - y) * log_y[:, :, :, 0:1],
-                                       axis=[1, 2, 3])
-      grads = tape.gradient(log_likelihood, self.new_model.trainable_weights)
-      grads_list.append(grads)
-    fisher_params = []
+        # NOTE: here self.new_model has still the weights loaded from the
+        # previous task.
+        [_, pred_y] = self.new_model(x, training=False)
+        # Consider only the masked pixels.
+        pred_y_masked = tf.boolean_mask(pred_y, mask)
+        # Convert the prediction to log probabilities. NOTE: this assumes that
+        # the network does not already produce normalized activation, i.e., that
+        # the activation function is *not* softmax. This is reflected in the
+        # fact that the `from_logits` argument in
+        # `SparseCategoricalCrossentropy` is set to `True`.
+        #TODO(fmilano): Make this an automatic check.
+        warnings.warn(
+            "NOTE: Computing the Fisher matrix assuming that the network does "
+            "not produce normalized activations, i.e., that its activation "
+            "function is *not* softmax.")
+        if (self.run.config['cl_params']['ewc_fisher_params_use_gt']):
+          # Use the ground-truth labels to compute the log-likelihoods.
+          gt_y_masked = tf.boolean_mask(y, mask)
+        else:
+          # Use the prediction with highest likelihood to compute the
+          # log-likelihoods.
+          gt_y_masked = tf.argmax(pred_y_masked, axis=-1)
+
+        # Sum the log-likelihoods across all pixels.
+        sum_log_likelihood = -tf.keras.losses.SparseCategoricalCrossentropy(
+            reduction=tf.keras.losses.Reduction.SUM, from_logits=True)(
+                gt_y_masked, pred_y_masked)
+      # Compute gradients w.r.t. weights of the model. NOTE: at this point, the
+      # weights have not been updated with the new task, therefore the gradients
+      # are computed at the operating point of the previous task.
+      grads = tape.gradient(sum_log_likelihood,
+                            self.new_model.trainable_weights)
+      grads_over_samples.append(grads)
+
+    # Compute the actual parameter matrix.
     fisher_param_names = [
         param.name.replace(':0', '_fisher')
         for param in self.new_model.trainable_weights
     ]
-    ## compute expectation
-    for i in range(len(fisher_param_names)):
-      single_fisher_param_list = [tf.square(param[i]) for param in grads_list]
-      fisher_params.append(
-          tf.reduce_mean(tf.stack(single_fisher_param_list, 0), 0))
-    for param_name, param in zip(fisher_param_names, fisher_params):
-      self.fisher_params.append(
-          tf.Variable(param, trainable=False, name=param_name))
+    # For each weight, compute the average over all samples of the squared
+    # gradient of the log-likelihood w.r.t. it.
+    for weight_idx, curr_weight_name in enumerate(len(fisher_param_names)):
+      # - Iterate over all samples, and keep the list of the squared gradients.
+      single_fisher_param_list = [
+          tf.square(param_from_curr_sample[weight_idx])
+          for param_from_curr_sample in grads_over_samples
+      ]
+      # - Average over all the samples the list of the squared gradients for the
+      #   current weight.
+      curr_fisher_param = tf.reduce_mean(tf.stack(single_fisher_param_list,
+                                                  axis=0),
+                                         axis=0)
+      # - Store the Fisher parameter.
+      self._fisher_params.append(
+          tf.Variable(curr_fisher_param, trainable=False,
+                      name=curr_weight_name))
 
   def compute_consolidation_loss(self):
     """ Compute weight regularization term """
     losses = []
     for i, param in enumerate(self.new_model.trainable_weights):
       losses.append(
-          tf.reduce_sum(self.fisher_params[i] *
-                        (param - self.old_params[i])**2))
+          tf.reduce_sum(self._fisher_params[i] *
+                        (param - self._weights_prev_task[i])**2))
     return tf.reduce_sum(losses)
 
   def build_loss_and_metric(self):
