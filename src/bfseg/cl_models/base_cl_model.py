@@ -175,12 +175,12 @@ class BaseCLModel(keras.Model):
       pred_y, pred_y_masked, train_y_masked, loss = self.forward_pass(
           training=True, x=train_x, y=train_y, mask=train_mask)
 
+    total_loss, auxiliary_losses = self._handle_multiple_losses(loss)
+
     grads = tape.gradient(total_loss, self.new_model.trainable_weights)
     self.optimizer.apply_gradients(zip(grads, self.new_model.trainable_weights))
     pred_y = tf.math.argmax(pred_y, axis=-1)
     pred_y_masked = tf.boolean_mask(pred_y, train_mask)
-
-    total_loss, auxiliary_losses = self._handle_multiple_losses(loss)
 
     # Update accuracy and loss.
     self.accuracy_trackers['train'].update_state(train_y_masked, pred_y_masked)
