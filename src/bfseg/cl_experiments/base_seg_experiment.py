@@ -110,14 +110,14 @@ class BaseSegExperiment(keras.Model):
     """
     self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     self.loss_trackers = {
-        'train': keras.metrics.Mean('training_loss', dtype=tf.float32),
-        'test': keras.metrics.Mean('test_loss', dtype=tf.float32),
-        'val': keras.metrics.Mean('validation_loss', dtype=tf.float32)
+        dataset_type: keras.metrics.Mean(f'{dataset_type}_loss',
+                                         dtype=tf.float32)
+        for dataset_type in ["test", "train", "val"]
     }
     self.accuracy_trackers = {
-        'train': keras.metrics.Accuracy('training_accuracy'),
-        'test': keras.metrics.Accuracy('test_accuracy'),
-        'val': keras.metrics.Accuracy('validation_accuracy')
+        dataset_type: keras.metrics.Mean(f'{dataset_type}_accuracy',
+                                         dtype=tf.float32)
+        for dataset_type in ["test", "train", "val"]
     }
 
   def forward_pass(self, training, x, y, mask):
