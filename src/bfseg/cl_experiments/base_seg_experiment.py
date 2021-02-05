@@ -6,13 +6,12 @@ from tensorflow import keras
 from bfseg.utils.models import create_model
 
 
-class BaseSegExperiment(keras.Model):
-  r"""Base class to specify an experiment. An experiment is a standalone class
-  that supports:
-  - Creating models that can be trained
-  - Creating experiment-specific loss functions
-  - Logging the metrics
-  - Training the model
+class BaseCLModel(keras.Model):
+  r"""Base class to specify a CL model. It supports the following:
+  - Creating a trainable model;
+  - Creating loss functions specific for the CL framework;
+  - Logging the metrics;
+  - Training the model.
 
   Args:
     run (sacred.run.Run): Object identifying the current sacred run.
@@ -21,7 +20,7 @@ class BaseSegExperiment(keras.Model):
   """
 
   def __init__(self, run, root_output_dir):
-    super(BaseSegExperiment, self).__init__()
+    super(BaseCLModel, self).__init__()
     self.run = run
     self.model_save_dir = os.path.join(
         root_output_dir, self.run.config['logging_params']['exp_name'],

@@ -1,1 +1,1 @@
-from .base_seg_experiment import BaseSegExperiment
+from .base_seg_experiment import BaseCLModel

@@ -6,10 +6,10 @@ from bfseg.utils.datasets import load_data
 import datetime
 import tensorflow as tf
 from tensorflow import keras
-from bfseg.cl_experiments import BaseSegExperiment
+from bfseg.cl_experiments import BaseCLModel
 
 
-class EWC(BaseSegExperiment):
+class EWC(BaseCLModel):
   """
     Experiment to train on 2nd task with EWC algorithm 
     "Overcoming catastrophic forgetting in neural networks"
