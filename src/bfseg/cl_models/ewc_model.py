@@ -58,6 +58,7 @@ class EWC(BaseCLModel):
     importance of weights for the previous task.
     """
     assert (not self._started_training_new_task)
+    print("Computing Fisher matrix...")
     self._fisher_params = []
     # List of list of gradients. Outer: for different samples; inner: for
     # different network parameters.
@@ -121,6 +122,8 @@ class EWC(BaseCLModel):
       self._fisher_params.append(
           tf.Variable(curr_fisher_param, trainable=False,
                       name=curr_weight_name))
+
+    print("Fisher matrix computed.")
 
   def _compute_consolidation_loss(self):
     r"""Computes weight regularization loss.
