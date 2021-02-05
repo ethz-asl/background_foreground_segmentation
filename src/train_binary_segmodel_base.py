@@ -96,10 +96,7 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
   seg_experiment = BaseSegExperiment(run=_run, root_output_dir=TMPDIR)
-  # Set up the experiment.
-  seg_experiment.make_dirs()
-  seg_experiment.build_model()
-  seg_experiment.build_loss_and_metric()
+  # Get the datasets.
   train_ds, val_ds, test_ds = seg_experiment.load_datasets(
       train_dataset=dataset_params['train_dataset'],
       train_scene=dataset_params['train_scene'],

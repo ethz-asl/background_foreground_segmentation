@@ -41,8 +41,12 @@ class BaseSegExperiment(keras.Model):
     self.metric_log_frequency = self.run.config['logging_params'][
         'metric_log_frequency']
     assert (self.metric_log_frequency in ["batch", "epoch"])
+    # Set up the experiment.
+    self._make_dirs()
+    self._build_model()
+    self._build_loss_and_metric()
 
-  def make_dirs(self):
+  def _make_dirs(self):
     try:
       os.makedirs(self.model_save_dir)
     except os.error:
@@ -90,7 +94,7 @@ class BaseSegExperiment(keras.Model):
     """
     pass
 
-  def build_model(self):
+  def _build_model(self):
     r"""Builds the models.
     TODO(fmilano): Check. Make flexible.
     """
@@ -104,7 +108,7 @@ class BaseSegExperiment(keras.Model):
         inputs=self.model.input,
         outputs=[self.encoder.output, self.model.output])
 
-  def build_loss_and_metric(self):
+  def _build_loss_and_metric(self):
     r"""Adds loss criteria and metrics.
     TODO(fmilano): Check. Make flexible.
     """
