@@ -1,12 +1,8 @@
-import sys
-sys.path.append("..")
-import os
-os.environ["SM_FRAMEWORK"] = "tf.keras"
-from bfseg.utils.datasets import load_data
-import datetime
 import tensorflow as tf
 from tensorflow import keras
+
 from bfseg.cl_models import BaseCLModel
+from bfseg.utils.datasets import load_data
 
 
 class EWC(BaseCLModel):
