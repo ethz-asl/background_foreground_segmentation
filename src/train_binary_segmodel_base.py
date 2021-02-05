@@ -5,7 +5,7 @@ os.environ["SM_FRAMEWORK"] = "tf.keras"
 import datetime
 from sacred import Experiment
 import tensorflow as tf
-from tf.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
 from bfseg.cl_models import BaseCLModel
 from bfseg.sacred_utils import get_observer
