@@ -8,6 +8,7 @@ training_params:
   batch_size: 10
   learning_rate: 0.0001
   num_training_epochs: 40
+  stopping_patience: 100
 dataset_params:
   test_dataset: BfsegCLAMeshdistLabels
   test_scene: null

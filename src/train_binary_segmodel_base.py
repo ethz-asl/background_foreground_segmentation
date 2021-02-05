@@ -5,6 +5,7 @@ os.environ["SM_FRAMEWORK"] = "tf.keras"
 import datetime
 from sacred import Experiment
 import tensorflow as tf
+from tf.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
 from bfseg.cl_models import BaseCLModel
 from bfseg.sacred_utils import get_observer
@@ -29,6 +30,8 @@ def seg_experiment_default_config():
     - batch_size (int): Batch size.
     - learning_rate (float): Learning rate.
     - num_training_epochs (int): Number of training epochs.
+    - stopping_patience (int): Patience parameter of the early-stopping
+        callback.
   - Dataset parameters:
     - test_dataset (str): Name of the test dataset.
     - test_scene (str): Scene type of the test dataset. Valid values are: None,
@@ -66,7 +69,8 @@ def seg_experiment_default_config():
   training_params = {
       'batch_size': 8,
       'learning_rate': 1e-5,
-      'num_training_epochs': 3
+      'num_training_epochs': 3,
+      'stopping_patience': 100
   }
 
   # Dataset parameters.
@@ -108,13 +112,16 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   # Run the training.
   model.compile(
       optimizer=tf.keras.optimizers.Adam(training_params['learning_rate']))
-  model.fit(
-      train_ds,
-      epochs=training_params['num_training_epochs'],
-      validation_data=val_ds,
-      verbose=2,
-      callbacks=[TestCallback(test_data=test_ds),
-                 SaveModelAndLogs()])
+  model.fit(train_ds,
+            epochs=training_params['num_training_epochs'],
+            validation_data=val_ds,
+            verbose=2,
+            callbacks=[
+                TestCallback(test_data=test_ds),
+                SaveModelAndLogs(),
+                ReduceLROnPlateau(),
+                EarlyStopping(patience=training_params['stopping_patience'])
+            ])
   # Save final model.
   model.save_model(epoch="final")
 
