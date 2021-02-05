@@ -4,10 +4,14 @@ import os
 os.environ["SM_FRAMEWORK"] = "tf.keras"
 import datetime
 from sacred import Experiment
+import tensorflow as tf
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
-from bfseg.cl_experiments import BaseSegExperiment
+from bfseg.cl_models import BaseCLModel
 from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
+from bfseg.utils.callbacks import SaveModelAndLogs, TestCallback
+from bfseg.utils.datasets import load_datasets
 
 ex = Experiment()
 ex.observers.append(get_observer())
@@ -26,6 +30,8 @@ def seg_experiment_default_config():
     - batch_size (int): Batch size.
     - learning_rate (float): Learning rate.
     - num_training_epochs (int): Number of training epochs.
+    - stopping_patience (int): Patience parameter of the early-stopping
+        callback.
   - Dataset parameters:
     - test_dataset (str): Name of the test dataset.
     - test_scene (str): Scene type of the test dataset. Valid values are: None,
@@ -63,7 +69,8 @@ def seg_experiment_default_config():
   training_params = {
       'batch_size': 8,
       'learning_rate': 1e-5,
-      'num_training_epochs': 3
+      'num_training_epochs': 3,
+      'stopping_patience': 100
   }
 
   # Dataset parameters.
@@ -93,12 +100,9 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   """
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
-  seg_experiment = BaseSegExperiment(run=_run, root_output_dir=TMPDIR)
-  # Set up the experiment.
-  seg_experiment.make_dirs()
-  seg_experiment.build_model()
-  seg_experiment.build_loss_and_metric()
-  train_ds, val_ds, test_ds = seg_experiment.load_datasets(
+  model = BaseCLModel(run=_run, root_output_dir=TMPDIR)
+  # Get the datasets.
+  train_ds, val_ds, test_ds = load_datasets(
       train_dataset=dataset_params['train_dataset'],
       train_scene=dataset_params['train_scene'],
       test_dataset=dataset_params['test_dataset'],
@@ -106,9 +110,20 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
       batch_size=training_params['batch_size'],
       validation_percentage=dataset_params['validation_percentage'])
   # Run the training.
-  seg_experiment.training(train_ds, val_ds, test_ds)
+  model.compile(
+      optimizer=tf.keras.optimizers.Adam(training_params['learning_rate']))
+  model.fit(train_ds,
+            epochs=training_params['num_training_epochs'],
+            validation_data=val_ds,
+            verbose=2,
+            callbacks=[
+                TestCallback(test_data=test_ds),
+                SaveModelAndLogs(),
+                ReduceLROnPlateau(),
+                EarlyStopping(patience=training_params['stopping_patience'])
+            ])
   # Save final model.
-  seg_experiment.save_model()
+  model.save_model(epoch="final")
 
 
 if __name__ == "__main__":
