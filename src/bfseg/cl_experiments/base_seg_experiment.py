@@ -40,7 +40,7 @@ class BaseSegExperiment(keras.Model):
     # first calls validation, and then testing can be optionally run through a
     # custom `on_epoch_end` callback, here the evaluation type is set to
     # validation.
-    self.evalation_type = "val"
+    self.evaluation_type = "val"
     # Logging parameter.
     self.metric_log_frequency = self.run.config['logging_params'][
         'metric_log_frequency']
@@ -203,15 +203,15 @@ class BaseSegExperiment(keras.Model):
     Returns:
       Dictionary of metrics.
     """
-    assert (self.evalation_type in ["test", "val"])
+    assert (self.evaluation_type in ["test", "val"])
     test_x, test_y, test_mask = data
     pred_y, pred_y_masked, test_y_masked, loss = self.forward_pass(
         training=False, x=test_x, y=test_y, mask=test_mask)
     pred_y = keras.backend.argmax(pred_y, axis=-1)
     pred_y_masked = tf.boolean_mask(pred_y, test_mask)
     # Update val/test metrics.
-    self.loss_trackers[self._evaluation_type].update_state(loss)
-    self.accuracy_trackers[self._evaluation_type].update_state(
+    self.loss_trackers[self.evaluation_type].update_state(loss)
+    self.accuracy_trackers[self.evaluation_type].update_state(
         test_y_masked, pred_y_masked)
 
     return {m.name: m.result() for m in self.metrics}

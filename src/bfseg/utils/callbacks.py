@@ -15,10 +15,10 @@ class TestCallback(Callback):
     self._verbose = verbose
 
   def on_epoch_end(self, epoch, logs={}):
-    self.model.evalation_type = "test"
+    self.model.evaluation_type = "test"
     self.model.evaluate(self._data, verbose=self._verbose)
     self.model.performed_test_evaluation = True
-    self.model.evalation_type = "val"
+    self.model.evaluation_type = "val"
 
 
 class SaveModelAndLogs(Callback):
