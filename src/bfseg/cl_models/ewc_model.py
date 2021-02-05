@@ -45,18 +45,17 @@ class EWC(BaseCLModel):
                                        'lambda' + str(self._lambda_ewc),
                                        'saved_model')
 
-    print(
-        "NOTE: It is assumed that the test dataset coincides with the previous "
-        "task!")
-    self.create_old_params()
+    self._store_weights_prev_task()
     self.create_fisher_params(fisher_params_ds)
 
-  def create_old_params(self):
-    """ Keep old weights of the model"""
-    self.old_params = []
+  def _store_weights_prev_task(self):
+    r"""Stores the network weights for the previous task (i.e., from the
+    pre-trained model loaded in the constructor).
+    """
+    self._weights_prev_task = []
     for param in self.new_model.trainable_weights:
       old_param_name = param.name.replace(':0', '_old')
-      self.old_params.append(
+      self._weights_prev_task.append(
           tf.Variable(param, trainable=False, name=old_param_name))
 
   def create_fisher_params(self, dataset):
