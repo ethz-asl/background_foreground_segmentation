@@ -1,7 +1,3 @@
-import sys
-sys.path.append("..")
-import os
-os.environ["SM_FRAMEWORK"] = "tf.keras"
 import datetime
 from sacred import Experiment
 import tensorflow as tf
