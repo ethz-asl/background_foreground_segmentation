@@ -49,6 +49,7 @@ ____
 
 - `fisher_params_dataset` (`str`): Name of the dataset to be used to compute the Fisher information matrix in EWC. Required if the CL parameter `cl_framework` is `ewc`.
 - `fisher_params_scene` (`str`): Scene type of the dataset to be used to compute the Fisher information matrix in EWC. Required if the CL parameter `cl_framework` is `ewc`.
+- `fisher_params_sample_percentage` (`int`): Percentage of samples to be randomly selected from the dataset `fisher_params_dataset` and used to compute the Fisher information matrix in EWC. Required if the CL parameter `cl_framework` is `ewc`.
 
 ### Valid dataset names
 

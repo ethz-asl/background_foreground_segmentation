@@ -118,12 +118,14 @@ def load_datasets(train_dataset,
                   batch_size,
                   validation_percentage,
                   fisher_params_dataset=None,
-                  fisher_params_scene=None):
+                  fisher_params_scene=None,
+                  fisher_params_sample_percentage=None):
   r"""Creates 3 data loaders, for training, validation and testing.
     """
   assert (isinstance(validation_percentage, int) and
           0 <= validation_percentage <= 100)
-  assert ((fisher_params_dataset is None) == (fisher_params_scene is None))
+  assert ((fisher_params_dataset is None) == (fisher_params_scene is None) ==
+          (fisher_params_sample_percentage is None))
   training_percentage = 100 - validation_percentage
   train_ds = load_data(dataset_name=train_dataset,
                        scene_type=train_scene,
@@ -146,9 +148,12 @@ def load_datasets(train_dataset,
     warnings.warn(
         "NOTE: The dataset used to compute Fisher information matrix is loaded "
         "with batch size 1.")
-    fisher_params_ds = load_data(dataset_name=fisher_params_dataset,
-                                 scene_type=fisher_params_scene,
-                                 fraction=None,
-                                 batch_size=1,
-                                 shuffle_data=False)
+    assert (isinstance(fisher_params_sample_percentage, int) and
+            0 <= fisher_params_sample_percentage <= 100)
+    fisher_params_ds = load_data(
+        dataset_name=fisher_params_dataset,
+        scene_type=fisher_params_scene,
+        fraction=f"[{fisher_params_sample_percentage}%]",
+        batch_size=1,
+        shuffle_data=True)
     return train_ds, val_ds, test_ds, fisher_params_ds
