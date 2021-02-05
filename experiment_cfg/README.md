@@ -1,0 +1,90 @@
+# Description of training parameters
+
+## Network parameters
+
+### Required parameters
+
+- `architecture` (`str`): Architecture type. Valid values are:
+  - `'fast_scnn`': Fast-SCNN architecture.
+  - `'unet'`: U-Net architecture.
+- `image_h` (`int`): Image height.
+- `image_w` (`int`): Image width.
+
+### Optional parameters
+
+Optional parameters used to instantiate the selected architecture (cf. `architecture`). Valid parameters can be found where the architectures are defined (cf. `src/bfseg/models/__init__.py` to check from where the model definitions are imported).
+
+____
+
+## Training parameters
+
+### Required parameters
+
+- `batch_size` (`int`): Batch size.
+- `learning_rate` (`float`): Learning rate.
+
+- `num_training_epochs` (`int`): Number of training epochs.
+- `stopping_patience` (`int`): Patience parameter of the early-stopping callback.
+
+### Optional parameters
+
+None.
+
+____
+
+## Dataset parameters
+
+### Required parameters
+
+- `test_dataset` (`str`): Name of the test dataset.
+
+- `test_scene` (`str`): Scene type of the test dataset.
+- `train_dataset` (`str`): Name of the training dataset.
+
+- `train_scene` (`str`): Scene type of the training dataset.
+
+- `validation_percentage` (`int`): Percentage of the training scene to use for validation.
+
+Valid dataset names are:
+
+- `BfsegCLAMeshdistLabels`. Valid dataset scenes:
+  - `None`
+  - `"kitchen"`
+  - `"bedroom"`
+- `NyuDepthV2Labeled`. Valid dataset scenes:
+  - `None`
+
+### Optional parameters
+
+None.
+
+____
+
+## Logging parameters
+
+### Required parameters
+
+- `exp_name` (`str`): Name of the current experiment.
+- `metric_log_frequency` (`str`): Frequency with which the training metrics are logged. Valid values are
+  - `"batch"` (i.e., every batch)
+  - `"epoch"` (i.e., every epoch)
+- `model_save_freq` (`int`): Frequency (in epochs) for saving models.
+
+### Optional parameters
+
+None.
+
+____
+
+## CL parameters
+
+### Required parameters
+
+- `cl_framework` (`str`): CL framework to use. Valid values are:
+  - `"finetune"`: Fine-tuning, using the pre-trained model weights in `pretrained_dir`. If no `pretrained_dir` is specified, training is performed from scratch.
+- `pretrained_dir` (`str`): Directory containing the pre-trained model weights. If `None`, no weights are loaded.
+
+### Optional parameters
+
+None.
+
