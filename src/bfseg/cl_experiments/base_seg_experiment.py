@@ -3,7 +3,6 @@ import tensorflow as tf
 from shutil import make_archive
 from tensorflow import keras
 
-from bfseg.utils.callbacks import SaveModelAndLogs, TestCallback
 from bfseg.utils.datasets import load_data
 from bfseg.utils.models import create_model
 
@@ -29,8 +28,6 @@ class BaseSegExperiment(keras.Model):
     self.model_save_dir = os.path.join(
         root_output_dir, self.run.config['logging_params']['exp_name'],
         'models')
-    self.optimizer = keras.optimizers.Adam(
-        self.run.config['training_params']['learning_rate'])
     # Counter for the current training epoch/batch.
     self.current_batch = 0
     # Whether or not test evaluation was performed.
@@ -246,28 +243,3 @@ class BaseSegExperiment(keras.Model):
                         step=step)
     self.loss_trackers[metric_type].reset_states()
     self.accuracy_trackers[metric_type].reset_states()
-
-  def training(self, train_ds, val_ds, test_ds):
-    r"""Performs training for the configured number of epochs. Evaluation on
-    validation- and test set is also performed at the end of every epoch. The
-    model is saved with the configured epoch frequency.
-    
-    Args:
-      train_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Data
-        loader for the training set.
-      val_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Data
-        loader for the validation set.
-      test_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Data
-        loader for the test set.
-    
-    Returns:
-      None.
-    """
-    self.compile(optimizer=self.optimizer)
-    self.fit(train_ds,
-             epochs=self.run.config['training_params']['num_training_epochs'],
-             validation_data=val_ds,
-             verbose=2,
-             callbacks=[TestCallback(test_data=test_ds),
-                        SaveModelAndLogs()])
-    self._completed_training = True

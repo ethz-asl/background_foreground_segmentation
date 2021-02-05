@@ -4,10 +4,12 @@ import os
 os.environ["SM_FRAMEWORK"] = "tf.keras"
 import datetime
 from sacred import Experiment
+import tensorflow as tf
 
 from bfseg.cl_experiments import BaseSegExperiment
 from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
+from bfseg.utils.callbacks import SaveModelAndLogs, TestCallback
 
 ex = Experiment()
 ex.observers.append(get_observer())
@@ -106,7 +108,15 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
       batch_size=training_params['batch_size'],
       validation_percentage=dataset_params['validation_percentage'])
   # Run the training.
-  seg_experiment.training(train_ds, val_ds, test_ds)
+  seg_experiment.compile(
+      optimizer=tf.keras.optimizers.Adam(training_params['learning_rate']))
+  seg_experiment.fit(
+      train_ds,
+      epochs=training_params['num_training_epochs'],
+      validation_data=val_ds,
+      verbose=2,
+      callbacks=[TestCallback(test_data=test_ds),
+                 SaveModelAndLogs()])
   # Save final model.
   seg_experiment.save_model(epoch="final")
 
