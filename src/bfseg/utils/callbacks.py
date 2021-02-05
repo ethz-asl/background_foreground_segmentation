@@ -16,7 +16,7 @@ class TestCallback(Callback):
 
   def on_epoch_end(self, epoch, logs={}):
     self.model.evaluation_type = "test"
-    self.model.evaluate(self._data, verbose=self._verbose)
+    self.model.evaluate(self._test_data, verbose=self._verbose)
     self.model.performed_test_evaluation = True
     self.model.evaluation_type = "val"
 
