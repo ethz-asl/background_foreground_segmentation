@@ -5,7 +5,7 @@ os.environ["SM_FRAMEWORK"] = "tf.keras"
 import tensorflow as tf
 from tensorflow import keras
 import segmentation_models as sm
-from bfseg.cl_experiments import BaseCLModel
+from bfseg.cl_models import BaseCLModel
 
 
 class Distillation(BaseCLModel):

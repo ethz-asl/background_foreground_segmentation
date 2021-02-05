@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import segmentation_models as sm
-from bfseg.cl_experiments import BaseCLModel
+from bfseg.cl_models import BaseCLModel
 
 
 class myMultiply(layers.Layer):

@@ -6,7 +6,7 @@ import datetime
 from sacred import Experiment
 import tensorflow as tf
 
-from bfseg.cl_experiments import BaseCLModel
+from bfseg.cl_models import BaseCLModel
 from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
 from bfseg.utils.callbacks import SaveModelAndLogs, TestCallback

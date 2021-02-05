@@ -6,7 +6,7 @@ from bfseg.utils.datasets import load_data
 import datetime
 import tensorflow as tf
 from tensorflow import keras
-from bfseg.cl_experiments import BaseCLModel
+from bfseg.cl_models import BaseCLModel
 
 
 class EWC(BaseCLModel):
