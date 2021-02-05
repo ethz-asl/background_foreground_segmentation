@@ -7,7 +7,6 @@ from bfseg.models import FastSCNN, UNet
 
 
 def create_model(model_name,
-                 pretrained_dir,
                  image_h,
                  image_w,
                  log_params_used=True,
@@ -17,7 +16,6 @@ def create_model(model_name,
   Args:
     model_name (str): Type of architecture to use. Valid values are:
       "fast_scnn", "unet".
-    pretrained_dir (str): If not None, path to the pretrained weights to load.
     image_h (int): Image height.
     image_w (int): Image width.
     log_params_used (bool): If True, the complete list of parameters used to

@@ -75,11 +75,15 @@ class BaseCLModel(keras.Model):
            ), "Currently, only fine-tuning is supported."
     self.encoder, self.model = create_model(
         model_name=self.run.config['network_params']['architecture'],
-        pretrained_dir=self.run.config['cl_params']['pretrained_dir'],
         **self.run.config['network_params']['model_params'])
     self.new_model = keras.Model(
         inputs=self.model.input,
         outputs=[self.encoder.output, self.model.output])
+    # Optionally load the model weights.
+    pretrained_dir = self.run.config['cl_params']['pretrained_dir']
+    if (pretrained_dir is not None):
+      print(f"Loading pre-trained weights from f{pretrained_dir}.")
+      self.new_model.load_weights(pretrained_dir)
 
   def _build_loss_and_metric(self):
     r"""Adds loss criteria and metrics.
