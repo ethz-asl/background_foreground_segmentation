@@ -179,7 +179,21 @@ class BaseSegExperiment(keras.Model):
     self.current_batch += 1
     self.performed_test_evaluation = False
 
-    return {m.name: m.result() for m in self.metrics}
+    # Only return the training metrics here.
+    exclude_metrics = ["test", "val"]
+
+    metrics_to_return = {}
+
+    for m in valid_metrics:
+      prefix, metric_name = m.name.split("_", maxsplit=1)
+      if (prefix in exclude_metrics):
+        continue
+      # Remove prefix from metrics kept (it is added by `keras.Model.fit()`).
+      if (prefix == "train"):
+        m.name = metric_name
+      metrics_to_return[m.name] = m.result()
+
+    return metrics_to_return
 
   def test_step(self, data):
     r"""Performs one evaluation (test/validation) step with the input batch.
@@ -210,7 +224,24 @@ class BaseSegExperiment(keras.Model):
     self.accuracy_trackers[self.evaluation_type].update_state(
         test_y_masked, pred_y_masked)
 
-    return {m.name: m.result() for m in self.metrics}
+    # Only return the test/val metrics here, according to the evaluation mode.
+    if (self.evaluation_type == "test"):
+      exclude_metrics = ["train", "val"]
+    else:
+      exclude_metrics = ["test", "train"]
+
+    metrics_to_return = {}
+
+    for m in valid_metrics:
+      prefix, metric_name = m.name.split("_", maxsplit=1)
+      if (prefix in exclude_metrics):
+        continue
+      # Remove prefix from metrics kept (it is added by `keras.Model.fit()`).
+      if (prefix == self.evaluation_type):
+        m.name = metric_name
+      metrics_to_return[m.name] = m.result()
+
+    return metrics_to_return
 
   def save_model(self, epoch):
     r"""Saves the current model both to the local folder and to sacred.
