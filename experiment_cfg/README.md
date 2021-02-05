@@ -45,7 +45,12 @@ ____
 
 - `validation_percentage` (`int`): Percentage of the training scene to use for validation.
 
-Valid dataset names are:
+### Optional parameters
+
+- `fisher_params_dataset` (`str`): Name of the dataset to be used to compute the Fisher information matrix in EWC. Required if the CL parameter `cl_framework` is `ewc`.
+- `fisher_params_scene` (`str`): Scene type of the dataset to be used to compute the Fisher information matrix in EWC. Required if the CL parameter `cl_framework` is `ewc`.
+
+### Valid dataset names
 
 - `BfsegCLAMeshdistLabels`. Valid dataset scenes:
   - `None`
@@ -53,10 +58,6 @@ Valid dataset names are:
   - `"bedroom"`
 - `NyuDepthV2Labeled`. Valid dataset scenes:
   - `None`
-
-### Optional parameters
-
-None.
 
 ____
 
@@ -81,10 +82,12 @@ ____
 ### Required parameters
 
 - `cl_framework` (`str`): CL framework to use. Valid values are:
+  - `"ewc"`: EWC. Requires both the `pretrained_dir` argument to be not `None`, and the `lambda_ewc` argument to be specified.
   - `"finetune"`: Fine-tuning, using the pre-trained model weights in `pretrained_dir`. If no `pretrained_dir` is specified, training is performed from scratch.
 - `pretrained_dir` (`str`): Directory containing the pre-trained model weights. If `None`, no weights are loaded.
 
 ### Optional parameters
 
-None.
-
+- `lambda_ewc` (`float`): Regularization hyperparameter used to weight the loss.  Valid values are between 0 and 1. In particular, the loss is computed as: `(1 - lambda_ewc) * loss_ce + lambda_ewc * consolidation_loss`, where
+  - `loss_ce` is the cross-entropy loss computed on the current task;
+  - `consolidation_loss` is the regularization loss on the parameters from the previous task.
