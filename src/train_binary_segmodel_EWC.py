@@ -31,8 +31,8 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
       test_scene=dataset_params['test_scene'],
       batch_size=training_params['batch_size'],
       validation_percentage=dataset_params['validation_percentage'],
-      fisher_params_dataset=training_params['fisher_params_dataset'],
-      fisher_params_scene=training_params['fisher_params_scene'])
+      fisher_params_dataset=dataset_params['fisher_params_dataset'],
+      fisher_params_scene=dataset_params['fisher_params_scene'])
   # Instantiate the model.
   model = EWC(run=_run,
               root_output_dir=TMPDIR,
