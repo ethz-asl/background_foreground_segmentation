@@ -138,8 +138,8 @@ class BaseCLModel(keras.Model):
           for loss_name in auxiliary_losses:
             setattr(
                 self, f"{loss_name}_trackers", {
-                    dataset_type: keras.metrics.Mean(f'{dataset_type}_loss',
-                                                     dtype=tf.float32)
+                    dataset_type: keras.metrics.Mean(
+                        f'{dataset_type}_{loss_name}', dtype=tf.float32)
                     for dataset_type in ["test", "train", "val"]
                 })
             self._tracked_auxiliary_losses.append(loss_name)
