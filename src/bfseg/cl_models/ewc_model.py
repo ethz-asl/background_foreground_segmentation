@@ -3,7 +3,6 @@ from tensorflow import keras
 import warnings
 
 from bfseg.cl_models import BaseCLModel
-from bfseg.utils.datasets import load_data
 
 
 class EWC(BaseCLModel):
