@@ -107,7 +107,7 @@ class EWC(BaseCLModel):
     ]
     # For each weight, compute the average over all samples of the squared
     # gradient of the log-likelihood w.r.t. it.
-    for weight_idx, curr_weight_name in enumerate(len(fisher_param_names)):
+    for weight_idx, curr_weight_name in enumerate(fisher_param_names):
       # - Iterate over all samples, and keep the list of the squared gradients.
       single_fisher_param_list = [
           tf.square(param_from_curr_sample[weight_idx])
