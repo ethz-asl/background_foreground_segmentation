@@ -87,7 +87,6 @@ class BaseCLModel(keras.Model):
 
   def _build_loss_and_metric(self):
     r"""Adds loss criteria and metrics.
-    TODO(fmilano): Check. Make flexible.
     """
     self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     self.loss_trackers = {
@@ -100,6 +99,8 @@ class BaseCLModel(keras.Model):
                                          dtype=tf.float32)
         for dataset_type in ["test", "train", "val"]
     }
+    # By default, no auxiliary losses are expected to be tracked.
+    self._tracked_auxiliary_losses = None
 
   def forward_pass(self, training, x, y, mask):
     r"""Forward pass.
@@ -127,7 +128,8 @@ class BaseCLModel(keras.Model):
   def _handle_multiple_losses(self, loss):
     r"""Since derived classes might implement auxiliary losses that one also
     want to keep track of, this method is used to separate the main (total)
-    loss from the auxiliary ones.
+    loss from the auxiliary ones. It also sets up loss trackers for the
+    auxiliary losses.
     
     Args:
       loss (tensorflow.python.keras.losses.LossFunctionWrapper or dict): If a
@@ -147,6 +149,17 @@ class BaseCLModel(keras.Model):
       try:
         total_loss = loss.pop('loss')
         auxiliary_losses = loss
+        # Set up trackers for the auxiliary losses if necessary.
+        if (self._tracked_auxiliary_losses is None):
+          self._tracked_auxiliary_losses = []
+          for loss_name in auxiliary_losses:
+            setattr(
+                self, f"{loss_name}_trackers", {
+                    dataset_type: keras.metrics.Mean(f'{dataset_type}_loss',
+                                                     dtype=tf.float32)
+                    for dataset_type in ["test", "train", "val"]
+                })
+            self._tracked_auxiliary_losses.append(loss_name)
       except KeyError:
         raise KeyError(
             "When returning more than one loss, there must be a main (total) "
@@ -189,6 +202,10 @@ class BaseCLModel(keras.Model):
     # Update accuracy and loss.
     self.accuracy_trackers['train'].update_state(train_y_masked, pred_y_masked)
     self.loss_trackers['train'].update_state(total_loss)
+    if (auxiliary_losses is not None):
+      for aux_loss_name, aux_loss in auxiliary_losses.items():
+        getattr(self,
+                f"{aux_loss_name}_trackers")['train'].update_state(aux_loss)
 
     # Log loss and accuracy.
     if (self.metric_log_frequency == "batch"):
@@ -245,6 +262,10 @@ class BaseCLModel(keras.Model):
     self.loss_trackers[self.evaluation_type].update_state(total_loss)
     self.accuracy_trackers[self.evaluation_type].update_state(
         test_y_masked, pred_y_masked)
+    if (auxiliary_losses is not None):
+      for aux_loss_name, aux_loss in auxiliary_losses.items():
+        getattr(self,
+                f"{aux_loss_name}_trackers")['train'].update_state(aux_loss)
 
     # Only return the test/val metrics here, according to the evaluation mode.
     if (self.evaluation_type == "test"):
@@ -297,3 +318,13 @@ class BaseCLModel(keras.Model):
                         step=step)
     self.loss_trackers[metric_type].reset_states()
     self.accuracy_trackers[metric_type].reset_states()
+
+    # If auxiliary losses are being tracked, log them too.
+    if (self._tracked_auxiliary_losses is not None):
+      for aux_loss_name in self._tracked_auxiliary_losses:
+        self.run.log_scalar(
+            f'{metric_type}_{aux_loss_name}',
+            getattr(self,
+                    f"{aux_loss_name}_trackers")[metric_type].result().numpy(),
+            step=step)
+        getattr(self, f"{aux_loss_name}_trackers")[metric_type].reset_states()
