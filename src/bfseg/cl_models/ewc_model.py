@@ -41,9 +41,6 @@ class EWC(BaseCLModel):
 
     super(EWC, self).__init__(run=run, root_output_dir=root_output_dir)
 
-    self.model_save_dir = os.path.join('../experiments', self.config.exp_name,
-                                       'lambda' + str(self._lambda_ewc),
-                                       'saved_model')
 
     self._store_weights_prev_task()
     self.create_fisher_params(fisher_params_ds)
@@ -169,40 +166,4 @@ class EWC(BaseCLModel):
     self.loss_mse_tracker.update_state(consolidation_loss)
     self.acc_metric.update_state(test_y_masked, pred_y_masked)
 
-  def on_epoch_end(self, epoch, val_ds):
-    """save models after every several epochs
-        """
-    if (epoch + 1) % self.config.model_save_freq == 0:
-      # compute validation accuracy as part of the model name
-      for val_x, val_y, val_m in val_ds:
-        self.test_step(val_x, val_y, val_m)
-      self.new_model.save(
-          os.path.join(
-              self.model_save_dir, 'model.' + str(epoch) + '-' +
-              str(self.acc_metric.result().numpy())[:5] + '.h5'))
-      self.loss_tracker.reset_states()
-      self.loss_ce_tracker.reset_states()
-      self.loss_mse_tracker.reset_states()
-      self.acc_metric.reset_states()
-
-  def write_to_tensorboard(self, summary_writer, step):
-    """
-            write losses and metrics to tensorboard
-        """
-    with summary_writer.as_default():
-      tf.summary.scalar('loss,lambda=' + str(self._lambda_ewc),
-                        self.loss_tracker.result(),
-                        step=step)
-      tf.summary.scalar('loss_ce,lambda=' + str(self._lambda_ewc),
-                        self.loss_ce_tracker.result(),
-                        step=step)
-      tf.summary.scalar('loss_weights,lambda=' + str(self._lambda_ewc),
-                        self.loss_mse_tracker.result(),
-                        step=step)
-      tf.summary.scalar('accuracy,lambda=' + str(self._lambda_ewc),
-                        self.acc_metric.result(),
-                        step=step)
-    self.loss_tracker.reset_states()
-    self.loss_ce_tracker.reset_states()
-    self.loss_mse_tracker.reset_states()
-    self.acc_metric.reset_states()
+  #TODO(fmilano): Track and reset consolidation loss.
