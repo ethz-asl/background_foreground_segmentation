@@ -36,8 +36,7 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   # Instantiate the model.
   model = EWC(run=_run,
               root_output_dir=TMPDIR,
-              fisher_params_ds=fisher_params_ds,
-              lambda_ewc=cl_params['lambda_ewc'])
+              fisher_params_ds=fisher_params_ds)
   # Run the training.
   model.compile(
       optimizer=tf.keras.optimizers.Adam(training_params['learning_rate']))

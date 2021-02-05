@@ -20,23 +20,27 @@ class EWC(BaseCLModel):
       Dataset from which the Fisher parameters should be computed. Assuming that
       the current model is being used on the second of two tasks, this dataset
       should be the one used to train the model on the first task.
-    lambda_ewc (float): Regularization hyperparameter used to weight
-      the loss. Valid values are between 0 and 1. In particular, the loss is
-      computed as:
-        (1 - lambda_ewc) * loss_ce + lambda_ewc * consolidation_loss, where
-      - loss_ce is the cross-entropy loss computed on the current task;
-      - consolidation_loss is the regularization loss on the parameters from the
-        previous task.    
   
   References:
     - "Overcoming catastrophic forgetting in neural networks"
        (https://arxiv.org/abs/1612.00796).
   """
 
-  def __init__(self, run, root_output_dir, fisher_params_ds, lambda_ewc):
+  def __init__(self, run, root_output_dir, fisher_params_ds):
+    if (run.config['cl_params']['pretrained_dir'] is None):
+      raise KeyError("Pre-trained weights must be specified when using EWC.")
+    try:
+      self._lambda_ewc = self.run.config.cl_params['lambda_ewc']
+      if (not (isinstance(self._lambda_ewc, float) and
+               0. <= self._lambda_ewc <= 1.)):
+        raise ValueError(
+            "The parameter `lambda_ewc` must be a float between 0.0 and 1.0.")
+    except KeyError:
+      raise KeyError(
+          "EWC requires the CL parameter `lambda_ewc` to be specified.")
+
     super(EWC, self).__init__(run=run, root_output_dir=root_output_dir)
 
-    self._lambda_ewc = lambda_ewc
     self.model_save_dir = os.path.join('../experiments', self.config.exp_name,
                                        'lambda' + str(self._lambda_ewc),
                                        'saved_model')
