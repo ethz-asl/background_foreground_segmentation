@@ -123,7 +123,7 @@ class EWC(BaseCLModel):
           tf.Variable(curr_fisher_param, trainable=False,
                       name=curr_weight_name))
 
-  def compute_consolidation_loss(self):
+  def _compute_consolidation_loss(self):
     r"""Computes weight regularization loss.
     """
     losses = []
@@ -162,7 +162,7 @@ class EWC(BaseCLModel):
     pred_y_masked = tf.boolean_mask(pred_y, mask)
     y_masked = tf.boolean_mask(y, mask)
     output_loss = self.loss_ce(y_masked, pred_y_masked)
-    consolidation_loss = self.compute_consolidation_loss()
+    consolidation_loss = self._compute_consolidation_loss()
 
     loss = (1 - self._lambda_ewc
            ) * output_loss + self._lambda_ewc * consolidation_loss
