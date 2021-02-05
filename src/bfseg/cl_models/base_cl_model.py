@@ -49,24 +49,6 @@ class BaseCLModel(keras.Model):
     except os.error:
       pass
 
-  def create_old_params(self):
-    r"""Stores the old weights of the model.
-    TODO(fmilano): Check.
-    """
-    pass
-
-  def create_fisher_params(self, dataset):
-    r"""Computes squared Fisher information, representing relative importance.
-    TODO(fmilano): Check.
-    """
-    pass
-
-  def compute_consolidation_loss(self):
-    r"""Computes weight regularization term.
-    TODO(fmilano): Check.
-    """
-    pass
-
   def _build_model(self):
     r"""Builds the models.
     TODO(fmilano): Check. Make flexible.
