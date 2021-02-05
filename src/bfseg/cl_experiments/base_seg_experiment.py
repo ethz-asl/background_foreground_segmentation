@@ -222,10 +222,15 @@ class BaseSegExperiment(keras.Model):
     Returns:
       None.
     """
-    if (self._completed_training):
-      model_filename = 'model_final'
-    else:
+    if (epoch is not None):
       model_filename = f'model_epoch_{epoch}'
+    else:
+      if (self._completed_training):
+        model_filename = 'model_final'
+      else:
+        raise KeyError(
+            "Epoch number is required to save the model file if training was "
+            "not completed.")
     full_model_filename = os.path.join(self.model_save_dir,
                                        f'{model_filename}.h5')
     self.new_model.save(full_model_filename)
