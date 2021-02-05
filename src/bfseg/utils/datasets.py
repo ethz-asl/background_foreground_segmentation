@@ -110,12 +110,19 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
   return ds
 
 
-def load_datasets(train_dataset, train_scene, test_dataset, test_scene,
-                  batch_size, validation_percentage):
+def load_datasets(train_dataset,
+                  train_scene,
+                  test_dataset,
+                  test_scene,
+                  batch_size,
+                  validation_percentage,
+                  fisher_params_dataset=None,
+                  fisher_params_scene=None):
   r"""Creates 3 data loaders, for training, validation and testing.
     """
   assert (isinstance(validation_percentage, int) and
           0 <= validation_percentage <= 100)
+  assert ((fisher_params_dataset is None) == (fisher_params_scene is None))
   training_percentage = 100 - validation_percentage
   train_ds = load_data(dataset_name=train_dataset,
                        scene_type=train_scene,
@@ -132,4 +139,12 @@ def load_datasets(train_dataset, train_scene, test_dataset, test_scene,
                       fraction=None,
                       batch_size=batch_size,
                       shuffle_data=False)
-  return train_ds, val_ds, test_ds
+  if (fisher_params_dataset is None):
+    return train_ds, val_ds, test_ds
+  else:
+    fisher_params_ds = load_data(dataset_name=fisher_params_dataset,
+                                 scene_type=fisher_params_scene,
+                                 fraction=None,
+                                 batch_size=batch_size,
+                                 shuffle_data=False)
+    return train_ds, val_ds, test_ds, fisher_params_ds
