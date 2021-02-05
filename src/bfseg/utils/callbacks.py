@@ -1,7 +1,7 @@
 """ Contains custom callbacks for Keras.
 """
 import warnings
-from tensorflow.keras import Callback
+from tensorflow.keras.callbacks import Callback
 
 
 class TestCallback(Callback):
