@@ -2,6 +2,7 @@
 """
 import tensorflow as tf
 import tensorflow_datasets as tfds
+import warnings
 
 
 @tf.function
@@ -142,9 +143,12 @@ def load_datasets(train_dataset,
   if (fisher_params_dataset is None):
     return train_ds, val_ds, test_ds
   else:
+    warnings.warn(
+        "NOTE: The dataset used to compute Fisher information matrix is loaded "
+        "with batch size 1.")
     fisher_params_ds = load_data(dataset_name=fisher_params_dataset,
                                  scene_type=fisher_params_scene,
                                  fraction=None,
-                                 batch_size=batch_size,
+                                 batch_size=1,
                                  shuffle_data=False)
     return train_ds, val_ds, test_ds, fisher_params_ds
