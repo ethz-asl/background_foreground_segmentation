@@ -23,7 +23,7 @@ class TestCallback(Callback):
       metric.reset_states()
     for test_batch in self._test_data:
       logs_test = self.model.test_step(test_batch)
-    self.model.logs_test = logs_test
+    self.model.logs_test = {k: v.numpy() for k, v in logs_test.items()}
     self.model.performed_test_evaluation = True
     self.model.evaluation_type = "val"
 

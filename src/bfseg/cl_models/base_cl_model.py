@@ -254,7 +254,6 @@ class BaseCLModel(keras.Model):
     """
     assert (metric_type in ["train", "test", "val"])
     for metric_name, metric_value in logs.items():
-      metric_value = metric_value.numpy()
       self.run.log_scalar(f'{metric_type}_{metric_name}',
                           metric_value,
                           step=step)
