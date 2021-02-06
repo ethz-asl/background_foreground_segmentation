@@ -16,7 +16,6 @@ dataset_params:
   train_scene: null
   validation_percentage: 10
 logging_params:
-  metric_log_frequency: epoch
   model_save_freq: 1
   exp_name: exp_stage1
 cl_params:

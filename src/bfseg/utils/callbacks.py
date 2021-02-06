@@ -38,7 +38,7 @@ class SaveModelAndLogs(Callback):
     if ((epoch + 1) %
         self.model.run.config['logging_params']['model_save_freq'] == 0):
       self.model.save_model(epoch=epoch)
-    # Optionally log the metrics.
+    # Log the metrics.
     # - Split training and validation logs.
     logs_train = {}
     logs_val = {}
@@ -48,16 +48,10 @@ class SaveModelAndLogs(Callback):
         logs_val[metric_name[4:]] = metric_value
       else:
         logs_train[metric_name] = metric_value
-    if (self.model.metric_log_frequency == "epoch"):
-      self.model.log_metrics(metric_type='train', logs=logs_train, step=epoch)
-      val_test_logging_step = epoch
-    else:
-      val_test_logging_step = self.model.current_batch
+
+    self.model.log_metrics(metric_type='train', logs=logs_train, step=epoch)
     # Log metrics for validation and test set.
-    self.model.log_metrics(metric_type="val",
-                           logs=logs_val,
-                           step=val_test_logging_step)
-    # Evaluate on test set.
+    self.model.log_metrics(metric_type="val", logs=logs_val, step=epoch)
     if (not self.model.performed_test_evaluation):
       warnings.warn(
           "Did not perform test evaluation at the end of this epoch. If you "
@@ -66,4 +60,4 @@ class SaveModelAndLogs(Callback):
     else:
       self.model.log_metrics(metric_type="test",
                              logs=self.model.logs_test,
-                             step=val_test_logging_step)
+                             step=epoch)

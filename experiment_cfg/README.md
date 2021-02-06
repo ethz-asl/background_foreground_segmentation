@@ -67,9 +67,6 @@ ____
 ### Required parameters
 
 - `exp_name` (`str`): Name of the current experiment.
-- `metric_log_frequency` (`str`): Frequency with which the training metrics are logged. Valid values are
-  - `"batch"` (i.e., every batch)
-  - `"epoch"` (i.e., every epoch)
 - `model_save_freq` (`int`): Frequency (in epochs) for saving models.
 
 ### Optional parameters

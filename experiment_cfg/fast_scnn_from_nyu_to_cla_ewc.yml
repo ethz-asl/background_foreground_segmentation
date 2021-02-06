@@ -19,7 +19,6 @@ dataset_params:
   train_scene: null
   validation_percentage: 10
 logging_params:
-  metric_log_frequency: epoch
   model_save_freq: 1
   exp_name: fast_scnn_from_nyu_to_cla_ewc
 cl_params:

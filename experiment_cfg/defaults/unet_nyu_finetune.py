@@ -31,7 +31,6 @@ def default_config():
 
   # Logging parameters.
   logging_params = {
-      'metric_log_frequency': "batch",
       'model_save_freq': 1,
       'exp_name': "exp_stage1"
   }

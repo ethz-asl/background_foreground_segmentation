@@ -34,10 +34,6 @@ class BaseCLModel(keras.Model):
     # custom `on_epoch_end` callback, here the evaluation type is set to
     # validation.
     self.evaluation_type = "val"
-    # Logging parameter.
-    self.metric_log_frequency = self.run.config['logging_params'][
-        'metric_log_frequency']
-    assert (self.metric_log_frequency in ["batch", "epoch"])
     # Set up the experiment.
     self._make_dirs()
     self._build_model()
@@ -180,17 +176,10 @@ class BaseCLModel(keras.Model):
       for aux_loss_name, aux_loss in auxiliary_losses.items():
         getattr(self, f"{aux_loss_name}_tracker").update_state(aux_loss)
 
-    # Log loss and accuracy.
-    logs_train = {m.name: m.result() for m in self.metrics}
-    if (self.metric_log_frequency == "batch"):
-      self.log_metrics(metric_type='train',
-                       logs=logs_train,
-                       step=self.current_batch)
-
     self.current_batch += 1
     self.performed_test_evaluation = False
 
-    return logs_train
+    return {m.name: m.result() for m in self.metrics}
 
   def test_step(self, data):
     r"""Performs one evaluation (test/validation) step with the input batch.
@@ -258,7 +247,7 @@ class BaseCLModel(keras.Model):
         the metrics refer to.
       logs (dict): Dictionary containing the metrics to log, indexed by the
         metric name, with their value at the given step.
-      step (int): Training step/epoch to which the metrics are referred.
+      step (int): Training epoch to which the metrics are referred.
 
     Returns:
       None.
