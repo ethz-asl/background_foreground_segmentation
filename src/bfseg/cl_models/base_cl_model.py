@@ -260,7 +260,6 @@ class BaseCLModel(keras.Model):
     self.loss_tracker.reset_states()
     self.accuracy_tracker.reset_states()
 
-
   @property
   def metrics(self):
     r"""Overrides `tf.keras.Model.metrics.
