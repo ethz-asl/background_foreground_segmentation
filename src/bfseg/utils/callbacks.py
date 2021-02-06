@@ -16,7 +16,12 @@ class TestCallback(Callback):
 
   def on_epoch_end(self, epoch, logs={}):
     self.model.evaluation_type = "test"
-    self.model.evaluate(self._test_data, verbose=self._verbose)
+    # The metrics need to be manually reset, since no `evaluate` methods is
+    # called.
+    for metric in self.model.metrics:
+      metric.reset_states()
+    for test_batch in self._test_data:
+      logs_test = self.model.test_step(test_batch)
     self.model.performed_test_evaluation = True
     self.model.evaluation_type = "val"
 

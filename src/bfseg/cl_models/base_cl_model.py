@@ -72,16 +72,8 @@ class BaseCLModel(keras.Model):
     r"""Adds loss criteria and metrics.
     """
     self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    self.loss_trackers = {
-        dataset_type: keras.metrics.Mean(f'{dataset_type}_loss',
-                                         dtype=tf.float32)
-        for dataset_type in ["test", "train", "val"]
-    }
-    self.accuracy_trackers = {
-        dataset_type: keras.metrics.Mean(f'{dataset_type}_accuracy',
-                                         dtype=tf.float32)
-        for dataset_type in ["test", "train", "val"]
-    }
+    self.loss_tracker = keras.metrics.Mean(f'loss', dtype=tf.float32)
+    self.accuracy_tracker = keras.metrics.Mean(f'accuracy', dtype=tf.float32)
     # By default, no auxiliary losses are expected to be tracked.
     self._tracked_auxiliary_losses = None
 
@@ -136,12 +128,8 @@ class BaseCLModel(keras.Model):
         if (self._tracked_auxiliary_losses is None):
           self._tracked_auxiliary_losses = []
           for loss_name in auxiliary_losses:
-            setattr(
-                self, f"{loss_name}_trackers", {
-                    dataset_type: keras.metrics.Mean(
-                        f'{dataset_type}_{loss_name}', dtype=tf.float32)
-                    for dataset_type in ["test", "train", "val"]
-                })
+            setattr(self, f"{loss_name}_tracker",
+                    keras.metrics.Mean(f'{loss_name}', dtype=tf.float32))
             self._tracked_auxiliary_losses.append(loss_name)
       except KeyError:
         raise KeyError(
@@ -183,12 +171,11 @@ class BaseCLModel(keras.Model):
     pred_y_masked = tf.boolean_mask(pred_y, train_mask)
 
     # Update accuracy and loss.
-    self.accuracy_trackers['train'].update_state(train_y_masked, pred_y_masked)
-    self.loss_trackers['train'].update_state(total_loss)
+    self.accuracy_tracker.update_state(train_y_masked, pred_y_masked)
+    self.loss_tracker.update_state(total_loss)
     if (auxiliary_losses is not None):
       for aux_loss_name, aux_loss in auxiliary_losses.items():
-        getattr(self,
-                f"{aux_loss_name}_trackers")['train'].update_state(aux_loss)
+        getattr(self, f"{aux_loss_name}_tracker").update_state(aux_loss)
 
     # Log loss and accuracy.
     if (self.metric_log_frequency == "batch"):
@@ -197,22 +184,7 @@ class BaseCLModel(keras.Model):
     self.current_batch += 1
     self.performed_test_evaluation = False
 
-    # Only return the training metrics here.
-    exclude_metrics = ["test", "val"]
-
-    metrics_to_return = {}
-
-    for m in self.metrics:
-      prefix, metric_name = m.name.split("_", maxsplit=1)
-      if (prefix in exclude_metrics):
-        continue
-      # Remove prefix from metrics kept (it is added by `keras.Model.fit()`).
-      if (prefix == "train"):
-        metrics_to_return[metric_name] = m.result()
-      else:
-        metrics_to_return[m.name] = m.result()
-
-    return metrics_to_return
+    return {m.name: m.result() for m in self.metrics}
 
   def test_step(self, data):
     r"""Performs one evaluation (test/validation) step with the input batch.
@@ -242,33 +214,13 @@ class BaseCLModel(keras.Model):
     total_loss, auxiliary_losses = self._handle_multiple_losses(loss)
 
     # Update val/test metrics.
-    self.loss_trackers[self.evaluation_type].update_state(total_loss)
-    self.accuracy_trackers[self.evaluation_type].update_state(
-        test_y_masked, pred_y_masked)
+    self.loss_tracker.update_state(total_loss)
+    self.accuracy_tracker.update_state(test_y_masked, pred_y_masked)
     if (auxiliary_losses is not None):
       for aux_loss_name, aux_loss in auxiliary_losses.items():
-        getattr(self,
-                f"{aux_loss_name}_trackers")['train'].update_state(aux_loss)
+        getattr(self, f"{aux_loss_name}_tracker").update_state(aux_loss)
 
-    # Only return the test/val metrics here, according to the evaluation mode.
-    if (self.evaluation_type == "test"):
-      exclude_metrics = ["train", "val"]
-    else:
-      exclude_metrics = ["test", "train"]
-
-    metrics_to_return = {}
-
-    for m in self.metrics:
-      prefix, metric_name = m.name.split("_", maxsplit=1)
-      if (prefix in exclude_metrics):
-        continue
-      # Remove prefix from metrics kept (it is added by `keras.Model.fit()`).
-      if (prefix == self.evaluation_type):
-        metrics_to_return[metric_name] = m.result()
-      else:
-        metrics_to_return[m.name] = m.result()
-
-    return metrics_to_return
+    return {m.name: m.result() for m in self.metrics}
 
   def save_model(self, epoch):
     r"""Saves the current model both to the local folder and to sacred.
@@ -294,20 +246,33 @@ class BaseCLModel(keras.Model):
   def log_metrics(self, metric_type, step):
     assert (metric_type in ["train", "test", "val"])
     self.run.log_scalar(f'{metric_type}_loss',
-                        self.loss_trackers[metric_type].result().numpy(),
+                        self.loss_tracker.result().numpy(),
                         step=step)
     self.run.log_scalar(f'{metric_type}_accuracy',
-                        self.accuracy_trackers[metric_type].result().numpy(),
+                        self.accuracy_tracker.result().numpy(),
                         step=step)
-    self.loss_trackers[metric_type].reset_states()
-    self.accuracy_trackers[metric_type].reset_states()
+    self.loss_tracker.reset_states()
+    self.accuracy_tracker.reset_states()
 
     # If auxiliary losses are being tracked, log them too.
     if (self._tracked_auxiliary_losses is not None):
       for aux_loss_name in self._tracked_auxiliary_losses:
         self.run.log_scalar(
             f'{metric_type}_{aux_loss_name}',
-            getattr(self,
-                    f"{aux_loss_name}_trackers")[metric_type].result().numpy(),
+            getattr(self, f"{aux_loss_name}_tracker").result().numpy(),
             step=step)
-        getattr(self, f"{aux_loss_name}_trackers")[metric_type].reset_states()
+        aux_loss_value = getattr(self,
+                                 f'{aux_loss_name}_tracker').result().numpy()
+        getattr(self, f"{aux_loss_name}_tracker").reset_states()
+        aux_loss_value = getattr(self,
+                                 f'{aux_loss_name}_tracker').result().numpy()
+
+  @property
+  def metrics(self):
+    auxiliary_losses = []
+    if (self._tracked_auxiliary_losses is not None):
+      auxiliary_losses = [
+          getattr(self, f"{loss_name}_tracker")
+          for loss_name in self._tracked_auxiliary_losses
+      ]
+    return [self.loss_tracker, self.accuracy_tracker] + auxiliary_losses
