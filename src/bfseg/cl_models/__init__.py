@@ -1,1 +1,2 @@
-from .base_seg_experiment import BaseCLModel
+from .base_cl_model import BaseCLModel
+from .ewc_model import EWC

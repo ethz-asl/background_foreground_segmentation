@@ -34,10 +34,6 @@ class BaseCLModel(keras.Model):
     # custom `on_epoch_end` callback, here the evaluation type is set to
     # validation.
     self.evaluation_type = "val"
-    # Logging parameter.
-    self.metric_log_frequency = self.run.config['logging_params'][
-        'metric_log_frequency']
-    assert (self.metric_log_frequency in ["batch", "epoch"])
     # Set up the experiment.
     self._make_dirs()
     self._build_model()
@@ -49,53 +45,36 @@ class BaseCLModel(keras.Model):
     except os.error:
       pass
 
-  def create_old_params(self):
-    r"""Stores the old weights of the model.
-    TODO(fmilano): Check.
-    """
-    pass
-
-  def create_fisher_params(self, dataset):
-    r"""Computes squared Fisher information, representing relative importance.
-    TODO(fmilano): Check.
-    """
-    pass
-
-  def compute_consolidation_loss(self):
-    r"""Computes weight regularization term.
-    TODO(fmilano): Check.
-    """
-    pass
-
   def _build_model(self):
     r"""Builds the models.
     TODO(fmilano): Check. Make flexible.
     """
-    assert (self.run.config['cl_params']['cl_framework'] == "finetune"
-           ), "Currently, only fine-tuning is supported."
+    assert (self.run.config['cl_params']['cl_framework']
+            in ["ewc", "finetune"
+               ]), "Currently, only EWC and fine-tuning are supported."
     self.encoder, self.model = create_model(
         model_name=self.run.config['network_params']['architecture'],
-        pretrained_dir=self.run.config['cl_params']['pretrained_dir'],
         **self.run.config['network_params']['model_params'])
     self.new_model = keras.Model(
         inputs=self.model.input,
         outputs=[self.encoder.output, self.model.output])
+    # Optionally load the model weights.
+    pretrained_dir = self.run.config['cl_params']['pretrained_dir']
+    if (pretrained_dir is not None):
+      print(f"Loading pre-trained weights from f{pretrained_dir}.")
+      self.new_model.load_weights(pretrained_dir)
 
   def _build_loss_and_metric(self):
     r"""Adds loss criteria and metrics.
-    TODO(fmilano): Check. Make flexible.
     """
     self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    self.loss_trackers = {
-        dataset_type: keras.metrics.Mean(f'{dataset_type}_loss',
-                                         dtype=tf.float32)
-        for dataset_type in ["test", "train", "val"]
-    }
-    self.accuracy_trackers = {
-        dataset_type: keras.metrics.Mean(f'{dataset_type}_accuracy',
-                                         dtype=tf.float32)
-        for dataset_type in ["test", "train", "val"]
-    }
+    self.loss_tracker = keras.metrics.Mean(f'loss', dtype=tf.float32)
+    self.accuracy_tracker = keras.metrics.Mean(f'accuracy', dtype=tf.float32)
+    # This stores optional logs about the test metrics, which is not
+    # automatically handled by Keras.
+    self.logs_test = {}
+    # By default, no auxiliary losses are expected to be tracked.
+    self._tracked_auxiliary_losses = None
 
   def forward_pass(self, training, x, y, mask):
     r"""Forward pass.
@@ -120,6 +99,47 @@ class BaseCLModel(keras.Model):
 
     return pred_y, pred_y_masked, y_masked, loss
 
+  def _handle_multiple_losses(self, loss):
+    r"""Since derived classes might implement auxiliary losses that one also
+    want to keep track of, this method is used to separate the main (total)
+    loss from the auxiliary ones. It also sets up loss trackers for the
+    auxiliary losses.
+    
+    Args:
+      loss (tensorflow.python.keras.losses.LossFunctionWrapper or dict): If a
+        dict, it contains all the losses to consider, indexed by their name; in
+        this case, it is assumed that the total loss is named `loss`, and the
+        other ones are tracked with their name. If not a dict, the single loss
+        to consider.
+
+    Returns:
+      total_loss (tensorflow.python.keras.losses.LossFunctionWrapper): Main,
+        total loss.
+      auxiliary_losses (dict): Dict with the auxiliary losses indexed by their
+        name. `None` if no auxiliary losses are present.
+    """
+
+    if (isinstance(loss, dict)):
+      try:
+        total_loss = loss.pop('loss')
+        auxiliary_losses = loss
+        # Set up trackers for the auxiliary losses if necessary.
+        if (self._tracked_auxiliary_losses is None):
+          self._tracked_auxiliary_losses = []
+          for loss_name in auxiliary_losses:
+            setattr(self, f"{loss_name}_tracker",
+                    keras.metrics.Mean(f'{loss_name}', dtype=tf.float32))
+            self._tracked_auxiliary_losses.append(loss_name)
+      except KeyError:
+        raise KeyError(
+            "When returning more than one loss, there must be a main (total) "
+            "loss named `loss`.")
+    else:
+      total_loss = loss
+      auxiliary_losses = None
+
+    return total_loss, auxiliary_losses
+
   def train_step(self, data):
     r"""Performs one training step with the input batch. Overrides `train_step`
     called internally by the `fit` method of the `tf.keras.Model`.
@@ -141,37 +161,25 @@ class BaseCLModel(keras.Model):
     with tf.GradientTape() as tape:
       pred_y, pred_y_masked, train_y_masked, loss = self.forward_pass(
           training=True, x=train_x, y=train_y, mask=train_mask)
-    grads = tape.gradient(loss, self.new_model.trainable_weights)
+
+    total_loss, auxiliary_losses = self._handle_multiple_losses(loss)
+
+    grads = tape.gradient(total_loss, self.new_model.trainable_weights)
     self.optimizer.apply_gradients(zip(grads, self.new_model.trainable_weights))
     pred_y = tf.math.argmax(pred_y, axis=-1)
     pred_y_masked = tf.boolean_mask(pred_y, train_mask)
-    # Update accuracy and loss.
-    self.accuracy_trackers['train'].update_state(train_y_masked, pred_y_masked)
-    self.loss_trackers['train'].update_state(loss)
 
-    # Log loss and accuracy.
-    if (self.metric_log_frequency == "batch"):
-      self.log_metrics(metric_type='train', step=self.current_batch)
+    # Update accuracy and loss.
+    self.accuracy_tracker.update_state(train_y_masked, pred_y_masked)
+    self.loss_tracker.update_state(total_loss)
+    if (auxiliary_losses is not None):
+      for aux_loss_name, aux_loss in auxiliary_losses.items():
+        getattr(self, f"{aux_loss_name}_tracker").update_state(aux_loss)
 
     self.current_batch += 1
     self.performed_test_evaluation = False
 
-    # Only return the training metrics here.
-    exclude_metrics = ["test", "val"]
-
-    metrics_to_return = {}
-
-    for m in self.metrics:
-      prefix, metric_name = m.name.split("_", maxsplit=1)
-      if (prefix in exclude_metrics):
-        continue
-      # Remove prefix from metrics kept (it is added by `keras.Model.fit()`).
-      if (prefix == "train"):
-        metrics_to_return[metric_name] = m.result()
-      else:
-        metrics_to_return[m.name] = m.result()
-
-    return metrics_to_return
+    return {m.name: m.result() for m in self.metrics}
 
   def test_step(self, data):
     r"""Performs one evaluation (test/validation) step with the input batch.
@@ -197,30 +205,17 @@ class BaseCLModel(keras.Model):
         training=False, x=test_x, y=test_y, mask=test_mask)
     pred_y = keras.backend.argmax(pred_y, axis=-1)
     pred_y_masked = tf.boolean_mask(pred_y, test_mask)
+
+    total_loss, auxiliary_losses = self._handle_multiple_losses(loss)
+
     # Update val/test metrics.
-    self.loss_trackers[self.evaluation_type].update_state(loss)
-    self.accuracy_trackers[self.evaluation_type].update_state(
-        test_y_masked, pred_y_masked)
+    self.loss_tracker.update_state(total_loss)
+    self.accuracy_tracker.update_state(test_y_masked, pred_y_masked)
+    if (auxiliary_losses is not None):
+      for aux_loss_name, aux_loss in auxiliary_losses.items():
+        getattr(self, f"{aux_loss_name}_tracker").update_state(aux_loss)
 
-    # Only return the test/val metrics here, according to the evaluation mode.
-    if (self.evaluation_type == "test"):
-      exclude_metrics = ["train", "val"]
-    else:
-      exclude_metrics = ["test", "train"]
-
-    metrics_to_return = {}
-
-    for m in self.metrics:
-      prefix, metric_name = m.name.split("_", maxsplit=1)
-      if (prefix in exclude_metrics):
-        continue
-      # Remove prefix from metrics kept (it is added by `keras.Model.fit()`).
-      if (prefix == self.evaluation_type):
-        metrics_to_return[metric_name] = m.result()
-      else:
-        metrics_to_return[m.name] = m.result()
-
-    return metrics_to_return
+    return {m.name: m.result() for m in self.metrics}
 
   def save_model(self, epoch):
     r"""Saves the current model both to the local folder and to sacred.
@@ -243,13 +238,36 @@ class BaseCLModel(keras.Model):
         self.model_save_dir, f'{model_filename}.h5')
     self.run.add_artifact(path_to_archive_model)
 
-  def log_metrics(self, metric_type, step):
+  def log_metrics(self, metric_type, logs, step):
+    r"""Logs to sacred the metrics for the given dataset type ("test", "train",
+    or "val") at the given step.
+
+    Args:
+      metric_type (str): Either "test", "train", or "val": type of the dataset
+        the metrics refer to.
+      logs (dict): Dictionary containing the metrics to log, indexed by the
+        metric name, with their value at the given step.
+      step (int): Training epoch to which the metrics are referred.
+
+    Returns:
+      None.
+    """
     assert (metric_type in ["train", "test", "val"])
-    self.run.log_scalar(f'{metric_type}_loss',
-                        self.loss_trackers[metric_type].result().numpy(),
-                        step=step)
-    self.run.log_scalar(f'{metric_type}_accuracy',
-                        self.accuracy_trackers[metric_type].result().numpy(),
-                        step=step)
-    self.loss_trackers[metric_type].reset_states()
-    self.accuracy_trackers[metric_type].reset_states()
+    for metric_name, metric_value in logs.items():
+      self.run.log_scalar(f'{metric_type}_{metric_name}',
+                          metric_value,
+                          step=step)
+    self.loss_tracker.reset_states()
+    self.accuracy_tracker.reset_states()
+
+  @property
+  def metrics(self):
+    r"""Overrides `tf.keras.Model.metrics.
+    """
+    auxiliary_losses = []
+    if (self._tracked_auxiliary_losses is not None):
+      auxiliary_losses = [
+          getattr(self, f"{loss_name}_tracker")
+          for loss_name in self._tracked_auxiliary_losses
+      ]
+    return [self.loss_tracker, self.accuracy_tracker] + auxiliary_losses
