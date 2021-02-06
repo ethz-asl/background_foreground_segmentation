@@ -254,6 +254,7 @@ class BaseCLModel(keras.Model):
     """
     assert (metric_type in ["train", "test", "val"])
     for metric_name, metric_value in logs.items():
+      metric_value = metric_value.numpy()
       self.run.log_scalar(f'{metric_type}_{metric_name}',
                           metric_value,
                           step=step)
@@ -263,6 +264,8 @@ class BaseCLModel(keras.Model):
 
   @property
   def metrics(self):
+    r"""Overrides `tf.keras.Model.metrics.
+    """
     auxiliary_losses = []
     if (self._tracked_auxiliary_losses is not None):
       auxiliary_losses = [
