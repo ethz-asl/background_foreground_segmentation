@@ -2,18 +2,11 @@ import sys
 sys.path.append("..")
 import os
 os.environ["SM_FRAMEWORK"] = "tf.keras"
-import argparse
-import numpy as np
-import datetime
 import tensorflow as tf
-import tensorflow_datasets as tfds
 from tensorflow import keras
 from tensorflow.keras import layers
-import bfseg.data.nyu.Nyu_depth_v2_labeled
-import bfseg.data.meshdist.bfseg_cla_meshdist_labels
 import segmentation_models as sm
-import tensorflow.keras.preprocessing.image as Image
-from train_binary_segmodel_base import Base
+from bfseg.cl_models import BaseCLModel
 
 
 class myMultiply(layers.Layer):
@@ -63,7 +56,7 @@ def add_lateral_connect(new_layer, old_layer, new_input, old_input,
   return new_output, old_output
 
 
-class Progress(Base):
+class Progress(BaseCLModel):
   """
     Experiment to train on 2nd task with lateral connection: Step1->progress
     "Progress & Compress: A scalable framework for continual learning (P&C)"
@@ -79,14 +72,14 @@ class Progress(Base):
     """ Build both new model(train) and old model(guide/constraint)
             Now I hard code using backbone "vgg16" and "Unet"
         """
-    _, new_model = sm.Unet(self.config.backbone,
+    _, new_model = sm.Unet(self.config.backbone_name,
                            input_shape=(self.config.image_h,
                                         self.config.image_w, 3),
                            classes=2,
                            activation='sigmoid',
                            weights=None,
                            encoder_freeze=False)
-    _, old_model = sm.Unet(self.config.backbone,
+    _, old_model = sm.Unet(self.config.backbone_name,
                            input_shape=(self.config.image_h,
                                         self.config.image_w, 3),
                            classes=2,

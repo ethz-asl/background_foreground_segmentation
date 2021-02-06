@@ -2,20 +2,13 @@ import sys
 sys.path.append("..")
 import os
 os.environ["SM_FRAMEWORK"] = "tf.keras"
-import argparse
-import numpy as np
-import datetime
 import tensorflow as tf
-import tensorflow_datasets as tfds
 from tensorflow import keras
-import bfseg.data.nyu.Nyu_depth_v2_labeled
-import bfseg.data.meshdist.bfseg_cla_meshdist_labels
 import segmentation_models as sm
-import tensorflow.keras.preprocessing.image as Image
-from train_binary_segmodel_base import Base
+from bfseg.cl_models import BaseCLModel
 
 
-class Distillation(Base):
+class Distillation(BaseCLModel):
   """
     Experiment to train on 2nd task with extra distillation loss:
     Distillation loss: 1. feature -> Distillation on Intermediate Feature Space (Encoder output)
@@ -49,7 +42,7 @@ class Distillation(Base):
 
   def build_model(self):
     """ Build both new model(train) and old model(guide/constraint)"""
-    self.encoder, self.model = sm.Unet(self.config.backbone,
+    self.encoder, self.model = sm.Unet(self.config.backbone_name,
                                        input_shape=(self.config.image_h,
                                                     self.config.image_w, 3),
                                        classes=2,
@@ -60,7 +53,7 @@ class Distillation(Base):
         inputs=self.model.input,
         outputs=[self.encoder.output, self.model.output])
     if self.config.type_distillation == "feature":
-      self.old_encoder, _ = sm.Unet(self.config.backbone,
+      self.old_encoder, _ = sm.Unet(self.config.backbone_name,
                                     input_shape=(self.config.image_h,
                                                  self.config.image_w, 3),
                                     classes=2,
@@ -69,7 +62,7 @@ class Distillation(Base):
                                     encoder_freeze=True)
       self.old_encoder.trainable = False
     elif self.config.type_distillation == "output":
-      _, self.old_model = sm.Unet(self.config.backbone,
+      _, self.old_model = sm.Unet(self.config.backbone_name,
                                   input_shape=(self.config.image_h,
                                                self.config.image_w, 3),
                                   classes=2,

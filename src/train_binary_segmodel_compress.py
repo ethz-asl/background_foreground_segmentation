@@ -2,17 +2,9 @@ import sys
 sys.path.append("..")
 import os
 os.environ["SM_FRAMEWORK"] = "tf.keras"
-import argparse
-import numpy as np
-import datetime
 import tensorflow as tf
-import tensorflow_datasets as tfds
 from tensorflow import keras
-from tensorflow.keras import layers
-import bfseg.data.nyu.Nyu_depth_v2_labeled
-import bfseg.data.meshdist.bfseg_cla_meshdist_labels
 import segmentation_models as sm
-import tensorflow.keras.preprocessing.image as Image
 from train_binary_segmodel_EWC import EWC
 
 
@@ -56,7 +48,7 @@ class Compress(EWC):
     if self.config.type_progress == "lateral_connection":
       self.old_model = keras.models.load_model(self.config.pretrained_dir2)
     elif self.config.type_progress == "fine_tune":
-      _, self.old_model = sm.Unet(self.config.backbone,
+      _, self.old_model = sm.Unet(self.config.backbone_name,
                                   input_shape=(self.config.image_h,
                                                self.config.image_w, 3),
                                   classes=2,
@@ -64,7 +56,7 @@ class Compress(EWC):
                                   weights=self.config.pretrained_dir2,
                                   encoder_freeze=True)
     self.old_model.trainable = False
-    encoder, model = sm.Unet(self.config.backbone,
+    encoder, model = sm.Unet(self.config.backbone_name,
                              input_shape=(self.config.image_h,
                                           self.config.image_w, 3),
                              classes=2,
