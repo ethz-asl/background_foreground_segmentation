@@ -74,6 +74,9 @@ class BaseCLModel(keras.Model):
     self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     self.loss_tracker = keras.metrics.Mean(f'loss', dtype=tf.float32)
     self.accuracy_tracker = keras.metrics.Mean(f'accuracy', dtype=tf.float32)
+    # This stores optional logs about the test metrics, which is not
+    # automatically handled by Keras.
+    self.logs_test = {}
     # By default, no auxiliary losses are expected to be tracked.
     self._tracked_auxiliary_losses = None
 
@@ -178,13 +181,16 @@ class BaseCLModel(keras.Model):
         getattr(self, f"{aux_loss_name}_tracker").update_state(aux_loss)
 
     # Log loss and accuracy.
+    logs_train = {m.name: m.result() for m in self.metrics}
     if (self.metric_log_frequency == "batch"):
-      self.log_metrics(metric_type='train', step=self.current_batch)
+      self.log_metrics(metric_type='train',
+                       logs=logs_train,
+                       step=self.current_batch)
 
     self.current_batch += 1
     self.performed_test_evaluation = False
 
-    return {m.name: m.result() for m in self.metrics}
+    return logs_train
 
   def test_step(self, data):
     r"""Performs one evaluation (test/validation) step with the input batch.
@@ -243,29 +249,28 @@ class BaseCLModel(keras.Model):
         self.model_save_dir, f'{model_filename}.h5')
     self.run.add_artifact(path_to_archive_model)
 
-  def log_metrics(self, metric_type, step):
+  def log_metrics(self, metric_type, logs, step):
+    r"""Logs to sacred the metrics for the given dataset type ("test", "train",
+    or "val") at the given step.
+
+    Args:
+      metric_type (str): Either "test", "train", or "val": type of the dataset
+        the metrics refer to.
+      logs (dict): Dictionary containing the metrics to log, indexed by the
+        metric name, with their value at the given step.
+      step (int): Training step/epoch to which the metrics are referred.
+
+    Returns:
+      None.
+    """
     assert (metric_type in ["train", "test", "val"])
-    self.run.log_scalar(f'{metric_type}_loss',
-                        self.loss_tracker.result().numpy(),
-                        step=step)
-    self.run.log_scalar(f'{metric_type}_accuracy',
-                        self.accuracy_tracker.result().numpy(),
-                        step=step)
+    for metric_name, metric_value in logs.items():
+      self.run.log_scalar(f'{metric_type}_{metric_name}',
+                          metric_value,
+                          step=step)
     self.loss_tracker.reset_states()
     self.accuracy_tracker.reset_states()
 
-    # If auxiliary losses are being tracked, log them too.
-    if (self._tracked_auxiliary_losses is not None):
-      for aux_loss_name in self._tracked_auxiliary_losses:
-        self.run.log_scalar(
-            f'{metric_type}_{aux_loss_name}',
-            getattr(self, f"{aux_loss_name}_tracker").result().numpy(),
-            step=step)
-        aux_loss_value = getattr(self,
-                                 f'{aux_loss_name}_tracker').result().numpy()
-        getattr(self, f"{aux_loss_name}_tracker").reset_states()
-        aux_loss_value = getattr(self,
-                                 f'{aux_loss_name}_tracker').result().numpy()
 
   @property
   def metrics(self):
