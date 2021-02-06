@@ -6,9 +6,7 @@ from tensorflow.keras.callbacks import Callback
 
 class TestCallback(Callback):
   r"""Callback to evaluate a model on the test set at the end of every epoch.
-    Adapted from https://github.com/keras-team/keras/issues/
-    2548#issuecomment-215664770.
-    """
+  """
 
   def __init__(self, test_data, verbose=0):
     self._test_data = test_data
