@@ -38,6 +38,7 @@ def pretrain_nyu(_run,
   _, model = create_model(model_name="fast_scnn",
                           image_h=image_h,
                           image_w=image_w,
+                          trainable=True,
                           num_downsampling_layers=2)
 
   model.compile(

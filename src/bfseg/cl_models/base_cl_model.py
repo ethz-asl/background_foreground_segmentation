@@ -52,8 +52,14 @@ class BaseCLModel(keras.Model):
     assert (self.run.config['cl_params']['cl_framework']
             in ["ewc", "finetune"
                ]), "Currently, only EWC and fine-tuning are supported."
+    # NOTE: by default the model is created as trainable. CL frameworks that
+    # require a fixed, non-trainable network from which to distill the
+    # information (e.g., in distillation experiments) should create additional
+    # models by overloading this method and calling `super()._build_model()` in
+    # the overload.
     self.encoder, self.model = create_model(
         model_name=self.run.config['network_params']['architecture'],
+        trainable=True,
         **self.run.config['network_params']['model_params'])
     self.new_model = keras.Model(
         inputs=self.model.input,

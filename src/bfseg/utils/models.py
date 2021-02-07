@@ -9,6 +9,7 @@ from bfseg.models import FastSCNN, UNet
 def create_model(model_name,
                  image_h,
                  image_w,
+                 trainable,
                  log_params_used=True,
                  **model_params):
   r"""Factory function that creates a model with the given parameters.
@@ -18,6 +19,7 @@ def create_model(model_name,
       "fast_scnn", "unet".
     image_h (int): Image height.
     image_w (int): Image width.
+    trainable (bool): Whether or not the model should be trainable.
     log_params_used (bool): If True, the complete list of parameters used to
       instantiate the model is printed.
     ---
@@ -90,5 +92,18 @@ def create_model(model_name,
           f"{model_name}: {model_params}.\n")
 
   encoder, model = model_fn(**model_params)
+
+  # Optionally set the model as non-trainable.
+  if (not trainable):
+    # NOTE: it is particularly important that this command also sets the
+    # batch-normalization layers to non-trainable, which now seems to be the
+    # standard with Tensorflow 2 + Keras, but is not yet handled well by, e.g.,
+    # the models from `segmentation_models`.
+    # Cf. `freeze_model` from `segmentation_models/models/_utils.py` and, e.g.,
+    # https://keras.io/getting_started/faq/#whats-the-difference-between-the-
+    # training-argument-in-call-and-the-trainable-attribute and
+    # https://github.com/keras-team/keras/pull/9965.
+    encoder.trainable = False
+    model.trainable = False
 
   return encoder, model
