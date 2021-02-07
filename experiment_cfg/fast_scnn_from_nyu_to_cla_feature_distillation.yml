@@ -11,9 +11,6 @@ training_params:
   num_training_epochs: 40
   stopping_patience: 100
 dataset_params:
-  fisher_params_dataset: NyuDepthV2Labeled
-  fisher_params_scene: null
-  fisher_params_sample_percentage: 50
   test_dataset: NyuDepthV2Labeled
   test_scene: null
   train_dataset: BfsegCLAMeshdistLabels
@@ -23,8 +20,8 @@ logging_params:
   model_save_freq: 1
   exp_name: fast_scnn_from_nyu_to_cla_ewc
 cl_params:
-  cl_framework: ewc
-  ewc_fisher_params_use_gt: true
-  lambda_ewc: 0.1
+  cl_framework: distillation
+  distillation_type: feature
+  lambda_distillation: 0.1
   # Note: this needs to be specified.
   pretrained_dir: null

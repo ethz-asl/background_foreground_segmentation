@@ -1,6 +1,7 @@
 # Start training from scratch on NYU with Fast-SCNN architecture.
 network_params:
   architecture: fast_scnn
+  freeze_encoder: false
   model_params:
     image_h: 480
     image_w: 640
