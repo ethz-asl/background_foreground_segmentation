@@ -3,6 +3,7 @@ from tensorflow import keras
 import warnings
 
 from bfseg.cl_models import BaseCLModel
+from bfseg.utils.models import create_model
 
 
 class DistillationModel(BaseCLModel):
@@ -51,21 +52,24 @@ class DistillationModel(BaseCLModel):
   def _build_model(self):
     r"""Builds the models. Overrides method from base class.
     """
+    # Create the trainable `new_model`, which has the two outputs `encoder` and
+    # `model`.
     super()._build_model()
-    assert (self.run.config['cl_params']['cl_framework']
-            in ["ewc", "finetune"
-               ]), "Currently, only EWC and fine-tuning are supported."
-    self.encoder, self.model = create_model(
-        model_name=self.run.config['network_params']['architecture'],
-        **self.run.config['network_params']['model_params'])
-    self.new_model = keras.Model(
-        inputs=self.model.input,
-        outputs=[self.encoder.output, self.model.output])
-    # Optionally load the model weights.
-    pretrained_dir = self.run.config['cl_params']['pretrained_dir']
-    if (pretrained_dir is not None):
-      print(f"Loading pre-trained weights from f{pretrained_dir}.")
-      self.new_model.load_weights(pretrained_dir)
+    # Create the fixed model from which distillation will be performed.
+    if (self._distillation_type == "feature"):
+      self.old_encoder, _ = create_model(
+          model_name=self.run.config['network_params']['architecture'],
+          freeze_encoder=True,
+          # NOTE: here it would be enough to just freeze the encoder, since it is
+          # the only part used in feature distillation.
+          freeze_whole_model=True,
+          **self.run.config['network_params']['model_params'])
+    elif (self._distillation_type == "output"):
+      _, self.old_model = create_model(
+          model_name=self.run.config['network_params']['architecture'],
+          freeze_encoder=True,
+          freeze_whole_model=True,
+          **self.run.config['network_params']['model_params'])
 
   def forward_pass(self, training, x, y, mask):
     r"""Forward pass. Overrides the parent method.
