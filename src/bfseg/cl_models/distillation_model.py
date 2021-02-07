@@ -47,8 +47,6 @@ class DistillationModel(BaseCLModel):
     super(DistillationModel, self).__init__(run=run,
                                             root_output_dir=root_output_dir)
 
-    self._started_training_new_task = False
-
   def _build_model(self):
     r"""Builds the models. Overrides method from base class.
     """
