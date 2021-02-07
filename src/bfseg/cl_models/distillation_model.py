@@ -111,8 +111,8 @@ class DistillationModel(BaseCLModel):
       distillation_loss = self.loss_ce(tf.stop_gradient(pseudo_y_masked),
                                        pred_y_masked)
     output_loss = self.loss_ce(y_masked, pred_y_masked)
-    loss = (1 - self.config.lambda_distillation
-           ) * output_loss + self.config.lambda_distillation * distillation_loss
+    loss = (1 - self._lambda_distillation
+           ) * output_loss + self._lambda_distillation * distillation_loss
 
     # Return also the distillation loss for tracking.
     loss = {
