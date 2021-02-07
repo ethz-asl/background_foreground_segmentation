@@ -9,7 +9,8 @@ from bfseg.models import FastSCNN, UNet
 def create_model(model_name,
                  image_h,
                  image_w,
-                 trainable,
+                 freeze_encoder,
+                 freeze_whole_model,
                  log_params_used=True,
                  **model_params):
   r"""Factory function that creates a model with the given parameters.
@@ -19,7 +20,10 @@ def create_model(model_name,
       "fast_scnn", "unet".
     image_h (int): Image height.
     image_w (int): Image width.
-    trainable (bool): Whether or not the model should be trainable.
+    freeze_encoder (bool): If True, the encoder is set as non-trainable. NOTE:
+      it cannot be False while `freeze_whole_model` is True.
+    freeze_whole_model (bool): If True, the whole model is set as non-trainable.
+      NOTE: it cannot be True while `freeze_encoder` is False.  
     log_params_used (bool): If True, the complete list of parameters used to
       instantiate the model is printed.
     ---
@@ -33,6 +37,10 @@ def create_model(model_name,
       if available. Used to apply intermediate distillation. If not available,
       None is returned.
   """
+  if ((not freeze_encoder) and freeze_whole_model):
+    raise ValueError(
+        "The encoder cannot be trainable when the whole model is set to be "
+        "frozen.")
   # For all models, fix the input shape and the number of classes.
   if (model_name == "fast_scnn"):
     model_fn = FastSCNN
@@ -94,16 +102,17 @@ def create_model(model_name,
   encoder, model = model_fn(**model_params)
 
   # Optionally set the model as non-trainable.
-  if (not trainable):
-    # NOTE: it is particularly important that this command also sets the
-    # batch-normalization layers to non-trainable, which now seems to be the
-    # standard with Tensorflow 2 + Keras, but is not yet handled well by, e.g.,
-    # the models from `segmentation_models`.
-    # Cf. `freeze_model` from `segmentation_models/models/_utils.py` and, e.g.,
-    # https://keras.io/getting_started/faq/#whats-the-difference-between-the-
-    # training-argument-in-call-and-the-trainable-attribute and
-    # https://github.com/keras-team/keras/pull/9965.
+  # NOTE: it is particularly important that this command also sets the
+  # batch-normalization layers to non-trainable, which now seems to be the
+  # standard with Tensorflow 2 + Keras, but is not yet handled well by, e.g.,
+  # the models from `segmentation_models`.
+  # Cf. `freeze_model` from `segmentation_models/models/_utils.py` and, e.g.,
+  # https://keras.io/getting_started/faq/#whats-the-difference-between-the-
+  # training-argument-in-call-and-the-trainable-attribute and
+  # https://github.com/keras-team/keras/pull/9965.
+  if (freeze_encoder):
     encoder.trainable = False
+  if (freeze_whole_model):
     model.trainable = False
 
   return encoder, model

@@ -59,7 +59,8 @@ class BaseCLModel(keras.Model):
     # the overload.
     self.encoder, self.model = create_model(
         model_name=self.run.config['network_params']['architecture'],
-        trainable=True,
+        freeze_encoder=False,
+        freeze_whole_model=False,
         **self.run.config['network_params']['model_params'])
     self.new_model = keras.Model(
         inputs=self.model.input,
