@@ -48,12 +48,11 @@ class BaseCLModel(keras.Model):
 
   def _build_model(self):
     r"""Builds the models.
-    TODO(fmilano): Check. Make flexible.
     """
     cl_framework = self.run.config['cl_params']['cl_framework']
-    assert (cl_framework
-            in ["ewc", "finetune"
-               ]), "Currently, only EWC and fine-tuning are supported."
+    assert (cl_framework in [
+        "distillation", "ewc", "finetune"
+    ]), "Currently, only distillation, EWC and fine-tuning are supported."
     # NOTE: by default the model is created as trainable. The encoder can be
     # optionally be set as non-trainable through the config file.
     # CL frameworks that require a fixed, non-trainable network from which to
@@ -63,7 +62,7 @@ class BaseCLModel(keras.Model):
     pretrained_dir = self.run.config['cl_params']['pretrained_dir']
     should_freeze_encoder = self.run.config['network_params']['freeze_encoder']
     if (should_freeze_encoder):
-      if (cl_framework not in ["finetune"]):
+      if (cl_framework not in ["distillation", "finetune"]):
         raise ValueError(
             "Freezing the encoder is only done for finetuning. If you are "
             "really sure that you want to do so for other CL frameworks, "
