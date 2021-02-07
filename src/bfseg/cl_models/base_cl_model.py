@@ -77,6 +77,8 @@ class BaseCLModel(keras.Model):
         model_name=self.run.config['network_params']['architecture'],
         freeze_encoder=should_freeze_encoder,
         freeze_whole_model=False,
+        #TODO(fmilano): Make this a parameter.
+        normalization_type="batch",
         **self.run.config['network_params']['model_params'])
     self.new_model = keras.Model(
         inputs=self.model.input,

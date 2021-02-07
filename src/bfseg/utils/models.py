@@ -11,6 +11,7 @@ def create_model(model_name,
                  image_w,
                  freeze_encoder,
                  freeze_whole_model,
+                 normalization_type,
                  log_params_used=True,
                  **model_params):
   r"""Factory function that creates a model with the given parameters.
@@ -24,6 +25,9 @@ def create_model(model_name,
       it cannot be False while `freeze_whole_model` is True.
     freeze_whole_model (bool): If True, the whole model is set as non-trainable.
       NOTE: it cannot be True while `freeze_encoder` is False.  
+    normalization_type (str): Type of normalization to use in the model, if
+      normalization layers are present. Valid values are: "batch" (batch
+      normalization) and group (group normalization).
     log_params_used (bool): If True, the complete list of parameters used to
       instantiate the model is printed.
     ---
@@ -45,9 +49,15 @@ def create_model(model_name,
   if (model_name == "fast_scnn"):
     model_fn = FastSCNN
     model_params['num_classes'] = 2
+    model_params['normalization_type'] = normalization_type
   elif (model_name == "unet"):
     model_fn = UNet
     model_params['classes'] = 2
+    if (normalization_type != "batch"):
+      #TODO(fmilano): Implement group normalization also for U-Net.
+      raise ValueError(
+          "Currently, the U-Net architecture only supports batch normalization "
+          "as normalization type.")
   else:
     raise ValueError(
         f"Invalid model name {model_name}. Valid values are: 'fast_scnn', "
