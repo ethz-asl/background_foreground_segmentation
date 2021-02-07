@@ -1,7 +1,5 @@
 import datetime
-import os
 from sacred import Experiment
-import sys
 import tensorflow as tf
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
@@ -13,13 +11,6 @@ from bfseg.utils.datasets import load_datasets
 
 ex = Experiment()
 ex.observers.append(get_observer())
-
-# Load default config for the experiment. NOTE: This parameters can be
-# overwritten by running the following script with a `with` command (e.g.,
-# `python train_base_segmodel_base.py with ../experiment_cfg/unet_nyu.yml`).
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from experiment_cfg.defaults import unet_nyu_finetune_def_cfg
-ex.config(unet_nyu_finetune_def_cfg)
 
 
 @ex.main

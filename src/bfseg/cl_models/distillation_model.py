@@ -61,12 +61,16 @@ class DistillationModel(BaseCLModel):
           # NOTE: here it would be enough to just freeze the encoder, since it
           # is the only part used in feature distillation.
           freeze_whole_model=True,
+          normalization_type=self.run.config['network_params']
+          ['normalization_type'],
           **self.run.config['network_params']['model_params'])
     elif (self._distillation_type == "output"):
       _, self.old_model = create_model(
           model_name=self.run.config['network_params']['architecture'],
           freeze_encoder=True,
           freeze_whole_model=True,
+          normalization_type=self.run.config['network_params']
+          ['normalization_type'],
           **self.run.config['network_params']['model_params'])
 
   def _build_loss_and_metric(self):
