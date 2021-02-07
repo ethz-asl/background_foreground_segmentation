@@ -7,7 +7,7 @@
 - `architecture` (`str`): Architecture type. Valid values are:
   - `'fast_scnn`': Fast-SCNN architecture.
   - `'unet'`: U-Net architecture.
-- `freeze_encoder` (`bool`): Whether the encoder should be frozen or not. If `True`, the CL parameter `pretrained_dir` must be specified. Will raise an error if `True` and CL framework used (CL parameter `cl_framework`) is not in: `finetune`.
+- `freeze_encoder` (`bool`): Whether the encoder should be frozen or not. If `True`, the CL parameter `pretrained_dir` must be specified. Will raise an error if `True` and CL framework used (CL parameter `cl_framework`) is not in: `distillation`, `finetune`.
 - `image_h` (`int`): Image height.
 - `image_w` (`int`): Image width.
 
@@ -81,13 +81,20 @@ ____
 ### Required parameters
 
 - `cl_framework` (`str`): CL framework to use. Valid values are:
+  - `"distillation"`: Distillation model. Requires both the `pretrained_dir` argument to be not `None`, and the `lambda_distillation` argument to be specified.
   - `"ewc"`: EWC. Requires both the `pretrained_dir` argument to be not `None`, and the `lambda_ewc` argument to be specified.
   - `"finetune"`: Fine-tuning, using the pre-trained model weights in `pretrained_dir`. If no `pretrained_dir` is specified, training is performed from scratch.
 - `pretrained_dir` (`str`): Directory containing the pre-trained model weights. If `None`, no weights are loaded.
 
 ### Optional parameters
 
+- `distillation_type` (`str`): Required if using `"distillation"` as `cl_framework`. Valid values are:
+  - `"feature"`: Feature on the intermediate feature space (at the output of the encoder);
+  - `"output"`: Distillation on the network output.
 - `ewc_fisher_params_use_gt` (`bool`): Required if using `"ewc"` as `cl_framework`. If `True`, the Fisher matrix uses the ground-truth labels to compute the log-likelihoods; if `False`, it uses the class to which the network assigns the most likelihood.
+- `lambda_distillation` (`float`): Required if using `"distillation"` as `cl_framework`. Regularization hyperparameter used to weight the loss.  Valid values are between 0 and 1. In particular, the loss is computed as: `(1 - lambda_ewc) * loss_ce + lambda_ewc * consolidation_loss`, where
+  - `loss_ce` is the cross-entropy loss computed on the current task;
+  - `consolidation_loss` is the regularization loss on the parameters from the previous task.
 - `lambda_ewc` (`float`): Required if using `"ewc"` as `cl_framework`. Regularization hyperparameter used to weight the loss.  Valid values are between 0 and 1. In particular, the loss is computed as: `(1 - lambda_ewc) * loss_ce + lambda_ewc * consolidation_loss`, where
   - `loss_ce` is the cross-entropy loss computed on the current task;
   - `consolidation_loss` is the regularization loss on the parameters from the previous task.
