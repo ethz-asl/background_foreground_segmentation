@@ -43,7 +43,8 @@ class DistillationModel(BaseCLModel):
           "Distillation model requires the CL parameter `distillation_type` "
           "to be specified.")
 
-    super(DistillationModel, self).__init__(run=run, root_output_dir=root_output_dir)
+    super(DistillationModel, self).__init__(run=run,
+                                            root_output_dir=root_output_dir)
 
     self._started_training_new_task = False
 

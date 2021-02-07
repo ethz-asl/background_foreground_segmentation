@@ -7,6 +7,7 @@
 - `architecture` (`str`): Architecture type. Valid values are:
   - `'fast_scnn`': Fast-SCNN architecture.
   - `'unet'`: U-Net architecture.
+- `freeze_encoder` (`bool`): Whether the encoder should be frozen or not. If `True`, the CL parameter `pretrained_dir` must be specified. Will raise an error if `True` and CL framework used (CL parameter `cl_framework`) is not in: `finetune`.
 - `image_h` (`int`): Image height.
 - `image_w` (`int`): Image width.
 
