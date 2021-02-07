@@ -5,6 +5,7 @@ network_params:
   model_params:
     image_h: 480
     image_w: 640
+  normalization_type: batch
 training_params:
   batch_size: 10
   learning_rate: 0.00001

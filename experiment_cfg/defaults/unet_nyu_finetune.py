@@ -5,6 +5,8 @@ def default_config():
   network_params = {
       'architecture': 'unet',
       'freeze_encoder': False,
+      'freeze_whole_model': False,
+      'normalization_type': "batch",
       'model_params': {
           'backbone_name': "vgg16",
           #TODO (fmilano): Retrieve from first training sample.
