@@ -1,1 +1,0 @@
-from .unet_nyu_finetune import default_config as unet_nyu_finetune_def_cfg
