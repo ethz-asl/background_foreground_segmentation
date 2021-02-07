@@ -2,6 +2,7 @@ import os
 import tensorflow as tf
 from shutil import make_archive
 from tensorflow import keras
+import warnings
 
 from bfseg.utils.models import create_model
 
@@ -71,6 +72,8 @@ class BaseCLModel(keras.Model):
         raise ValueError(
             "It is necessary to specify pretrained weights to be loaded if the "
             "encoder is to be fixed.")
+      warnings.warn(
+          "The encoder of the created model is set to be non-trainable.")
     self.encoder, self.model = create_model(
         model_name=self.run.config['network_params']['architecture'],
         freeze_encoder=should_freeze_encoder,
