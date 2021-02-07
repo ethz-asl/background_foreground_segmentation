@@ -1,6 +1,7 @@
 # Start training from scratch on NYU with U-Net architecture.
 network_params:
   architecture: unet
+  freeze_encoder: false
   model_params:
     backbone_name: vgg16
     image_h: 480

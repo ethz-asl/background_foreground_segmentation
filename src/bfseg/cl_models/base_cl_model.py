@@ -49,24 +49,37 @@ class BaseCLModel(keras.Model):
     r"""Builds the models.
     TODO(fmilano): Check. Make flexible.
     """
-    assert (self.run.config['cl_params']['cl_framework']
+    cl_framework = self.run.config['cl_params']['cl_framework']
+    assert (cl_framework
             in ["ewc", "finetune"
                ]), "Currently, only EWC and fine-tuning are supported."
-    # NOTE: by default the model is created as trainable. CL frameworks that
-    # require a fixed, non-trainable network from which to distill the
-    # information (e.g., in distillation experiments) should create additional
-    # models by overloading this method and calling `super()._build_model()` in
-    # the overload.
+    # NOTE: by default the model is created as trainable. The encoder can be
+    # optionally be set as non-trainable through the config file.
+    # CL frameworks that require a fixed, non-trainable network from which to
+    # distill the information (e.g., in distillation experiments) should create
+    # additional models by overloading this method and calling
+    # `super()._build_model()` in the overload.
+    pretrained_dir = self.run.config['cl_params']['pretrained_dir']
+    should_freeze_encoder = self.run.config['network_params']['freeze_encoder']
+    if (should_freeze_encoder):
+      if (cl_framework not in ["finetune"]):
+        raise ValueError(
+            "Freezing the encoder is only done for finetuning. If you are "
+            "really sure that you want to do so for other CL frameworks, "
+            "manually remove this check.")
+      if (pretrained_dir is None):
+        raise ValueError(
+            "It is necessary to specify pretrained weights to be loaded if the "
+            "encoder is to be fixed.")
     self.encoder, self.model = create_model(
         model_name=self.run.config['network_params']['architecture'],
-        freeze_encoder=False,
+        freeze_encoder=should_freeze_encoder,
         freeze_whole_model=False,
         **self.run.config['network_params']['model_params'])
     self.new_model = keras.Model(
         inputs=self.model.input,
         outputs=[self.encoder.output, self.model.output])
     # Optionally load the model weights.
-    pretrained_dir = self.run.config['cl_params']['pretrained_dir']
     if (pretrained_dir is not None):
       print(f"Loading pre-trained weights from f{pretrained_dir}.")
       self.new_model.load_weights(pretrained_dir)
