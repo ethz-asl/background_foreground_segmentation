@@ -92,9 +92,9 @@ ____
   - `"feature"`: Feature on the intermediate feature space (at the output of the encoder);
   - `"output"`: Distillation on the network output.
 - `ewc_fisher_params_use_gt` (`bool`): Required if using `"ewc"` as `cl_framework`. If `True`, the Fisher matrix uses the ground-truth labels to compute the log-likelihoods; if `False`, it uses the class to which the network assigns the most likelihood.
-- `lambda_distillation` (`float`): Required if using `"distillation"` as `cl_framework`. Regularization hyperparameter used to weight the loss.  Valid values are between 0 and 1. In particular, the loss is computed as: `(1 - lambda_ewc) * loss_ce + lambda_ewc * consolidation_loss`, where
+- `lambda_distillation` (`float`): Required if using `"distillation"` as `cl_framework`. Regularization hyperparameter used to weight the loss.  Valid values are between 0 and 1. In particular, the loss is computed as: `(1 - lambda_distillation) * loss_ce + lambda_distillation * consolidation_loss`, where
   - `loss_ce` is the cross-entropy loss computed on the current task;
-  - `consolidation_loss` is the regularization loss on the parameters from the previous task.
+  - `distillation_loss` is the distillation loss computed between the feature/output of the current network and of the teacher network.
 - `lambda_ewc` (`float`): Required if using `"ewc"` as `cl_framework`. Regularization hyperparameter used to weight the loss.  Valid values are between 0 and 1. In particular, the loss is computed as: `(1 - lambda_ewc) * loss_ce + lambda_ewc * consolidation_loss`, where
   - `loss_ce` is the cross-entropy loss computed on the current task;
   - `consolidation_loss` is the regularization loss on the parameters from the previous task.
