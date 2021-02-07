@@ -75,7 +75,7 @@ class DistillationModel(BaseCLModel):
     r"""Adds loss criteria and metrics. Overrides the parent method.
     """
     # Create the losses and metrics from the base class.
-    super()._build_model()
+    super()._build_loss_and_metric()
     # Add the distillation loss, simply defined as a mean-square-error loss.
     self.loss_distillation = keras.losses.MeanSquaredError()
 
