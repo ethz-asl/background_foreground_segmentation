@@ -18,7 +18,7 @@ dataset_params:
   validation_percentage: 10
 logging_params:
   model_save_freq: 1
-  exp_name: fast_scnn_from_nyu_to_cla_ewc
+  exp_name: fast_scnn_from_nyu_to_cla_feature_distillation
 cl_params:
   cl_framework: distillation
   distillation_type: feature
