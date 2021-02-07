@@ -60,8 +60,8 @@ class DistillationModel(BaseCLModel):
       self.old_encoder, _ = create_model(
           model_name=self.run.config['network_params']['architecture'],
           freeze_encoder=True,
-          # NOTE: here it would be enough to just freeze the encoder, since it is
-          # the only part used in feature distillation.
+          # NOTE: here it would be enough to just freeze the encoder, since it
+          # is the only part used in feature distillation.
           freeze_whole_model=True,
           **self.run.config['network_params']['model_params'])
     elif (self._distillation_type == "output"):
@@ -70,6 +70,14 @@ class DistillationModel(BaseCLModel):
           freeze_encoder=True,
           freeze_whole_model=True,
           **self.run.config['network_params']['model_params'])
+
+  def _build_loss_and_metric(self):
+    r"""Adds loss criteria and metrics. Overrides the parent method.
+    """
+    # Create the losses and metrics from the base class.
+    super()._build_model()
+    # Add the distillation loss, simply defined as a mean-square-error loss.
+    self.loss_distillation = keras.losses.MeanSquaredError()
 
   def forward_pass(self, training, x, y, mask):
     r"""Forward pass. Overrides the parent method.
@@ -92,8 +100,8 @@ class DistillationModel(BaseCLModel):
       [pred_feature, pred_y] = self.new_model(x, training=True)
       pred_y_masked = tf.boolean_mask(pred_y, mask)
       old_feature = self.old_encoder(x, training=False)
-      distillation_loss = self.loss_mse(tf.stop_gradient(old_feature),
-                                        pred_feature)
+      distillation_loss = self.loss_distillation(tf.stop_gradient(old_feature),
+                                                 pred_feature)
     elif (self._distillation_type == "output"):
       [_, pred_y] = self.new_model(x, training=True)
       pred_y_masked = tf.boolean_mask(pred_y, mask)
