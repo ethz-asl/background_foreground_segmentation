@@ -134,7 +134,6 @@ if (__name__ == "__main__"):
                       required=True)
   parser.add_argument(
       "--model_to_save",
-      action="store_true",
       help=
       "If specified, epoch of the model to save (a valid epoch number or the "
       "string 'final', for the final model.",
