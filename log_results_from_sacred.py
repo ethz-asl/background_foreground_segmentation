@@ -18,9 +18,8 @@ class LogExperiment:
     self._experiment_id = experiment_id
     self._experiment = loader.find_by_id(self._experiment_id)
 
-    assert (self._experiment.to_dict()['status'] not in [
-        "FAILED", "INTERRUPTED"
-    ]), f"Experiment {self._experiment_id} failed or was interrupted."
+    assert (self._experiment.to_dict()['status']
+            not in ["FAILED"]), f"Experiment {self._experiment_id} failed."
 
     # Set up folders.
     self._save_folder_models = os.path.join(save_folder, 'models')
@@ -46,11 +45,15 @@ class LogExperiment:
   def save_config_file(self):
     with open(os.path.join(self._save_folder_plots, "config.txt"), "w") as f:
       f.write("Experiment config:\n")
-      for key in self._experiment.config.keys():
+      for key in sorted(self._experiment.config.keys()):
         if (key[-7:] != "_params"):
           continue
         f.write(f"- {key}\n")
-        for subkey, value in self._experiment.config[key].items():
+        for subkey in sorted(self._experiment.config[key].keys()):
+          value = self._experiment.config[key][subkey]
+          # If possible, sort also the value (e.g., if it has keys).
+          if (hasattr(value, "items")):
+            value = dict(sorted(value.items()))
           f.write(f"  - {subkey}: {value}\n")
 
   def save_model(self, epoch_to_save):
@@ -63,7 +66,7 @@ class LogExperiment:
           to_dir=self._save_folder_models)
       complete_model_path = os.path.join(
           self._save_folder_models, f"{self._experiment_id}_{artifact_name}")
-      print(f"Saved model '{complete_model_path}''.")
+      print(f"Saved model '{complete_model_path}'.")
     except KeyError:
       print(f"Experiment {self._experiment_id} does not have artifact "
             f"{artifact_name} (yet).")

@@ -85,7 +85,7 @@ class BaseCLModel(keras.Model):
         outputs=[self.encoder.output, self.model.output])
     # Optionally load the model weights.
     if (pretrained_dir is not None):
-      print(f"Loading pre-trained weights from f{pretrained_dir}.")
+      print(f"Loading pre-trained weights from {pretrained_dir}.")
       self.new_model.load_weights(pretrained_dir)
 
   def _build_loss_and_metric(self):
