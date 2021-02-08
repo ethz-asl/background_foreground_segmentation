@@ -93,7 +93,8 @@ class BaseCLModel(keras.Model):
     """
     self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     self.loss_tracker = keras.metrics.Mean(f'loss', dtype=tf.float32)
-    self.accuracy_tracker = keras.metrics.Mean(f'accuracy', dtype=tf.float32)
+    self.accuracy_tracker = keras.metrics.Accuracy(f'accuracy',
+                                                   dtype=tf.float32)
     # This stores optional logs about the test metrics, which is not
     # automatically handled by Keras.
     self.logs_test = {}
