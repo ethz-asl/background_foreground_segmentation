@@ -88,8 +88,8 @@ class EWC(BaseCLModel):
 
         # Sum the log-likelihoods across all pixels.
         sum_log_likelihood = -tf.keras.losses.SparseCategoricalCrossentropy(
-            reduction=tf.keras.losses.Reduction.SUM, from_logits=True)(
-                gt_y_masked, pred_y_masked)
+            reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
+            from_logits=True)(gt_y_masked, pred_y_masked)
       # Compute gradients w.r.t. weights of the model. NOTE: at this point, the
       # weights have not been updated with the new task, therefore the gradients
       # are computed at the operating point of the previous task.
