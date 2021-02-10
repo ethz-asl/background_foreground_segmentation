@@ -95,8 +95,8 @@ def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
       np.multiply(
           original,
           np.stack([
-              assign == class_background, assign == class_background, assign
-              == class_background
+              assign == class_background, assign == class_background,
+              assign == class_background
           ],
                    axis=-1)))
   plt.title("background")
@@ -105,8 +105,8 @@ def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
       np.multiply(
           original,
           np.stack([
-              assign == class_foreground, assign == class_foreground, assign
-              == class_foreground
+              assign == class_foreground, assign == class_foreground,
+              assign == class_foreground
           ],
                    axis=-1)))
   plt.title("foreground")
@@ -115,8 +115,8 @@ def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
       np.multiply(
           original,
           np.stack([
-              assign == class_unknown, assign == class_unknown, assign
-              == class_unknown
+              assign == class_unknown, assign == class_unknown,
+              assign == class_unknown
           ],
                    axis=-1)))
   plt.title("unknown")
@@ -180,10 +180,13 @@ def aggregate_sparse_labels(np_labels,
       [[c[0], c[1]] for c in np.asarray(np.where(np_labels_foreground > 0)).T])
 
   # Create a list containing all points that were assigned background
-  seeds_bg = [(c[0], c[1])
-              for c in np.asarray(np.where(np_labels_background > 0)).T
-              if not (foregroundTrustRegion and closest_point_distance(
-                  np.asarray([c[0], c[1]]), seeds_fg_arr) < 20)]
+  seeds_bg = [
+      (c[0], c[1])
+      for c in np.asarray(np.where(np_labels_background > 0)).T
+      if not (
+          foregroundTrustRegion and seeds_fg_arr.shape[0] > 0 and
+          closest_point_distance(np.asarray([c[0], c[1]]), seeds_fg_arr) < 20)
+  ]
 
   # Create a list containing all points that were assigned foreground
   seeds_fg = [
@@ -192,11 +195,12 @@ def aggregate_sparse_labels(np_labels,
 
   if useSuperpixel:
     # If no superpixel image is provided, use slic
-    superpixels = skimage.segmentation.slic(np_orig,
-                                            n_segments=superpixelCount,
-                                            compactness=4,
-                                            sigma=1,
-                                            start_label=1)
+    superpixels = skimage.segmentation.slic(
+        np_orig,
+        n_segments=superpixelCount,
+        compactness=4,
+        sigma=1,
+    )
 
     mask = reduce_superpixel(seeds_bg, seeds_fg, superpixels, np_distance)
 

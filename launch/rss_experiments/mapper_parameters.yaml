@@ -8,4 +8,4 @@ mappingTrigger: false # create map
 updateICPRefTrigger: false # update ICP map with new point clouds
 normalICPPrimerTrigger: false # use a fullICP Primer for selectiveICP
 output: false # error metrics are incredible slow
-publishDistance: false # publish pc containing distance to mesh as 'intensity' value
+publishDistance: true # publish pc containing distance to mesh as 'intensity' value

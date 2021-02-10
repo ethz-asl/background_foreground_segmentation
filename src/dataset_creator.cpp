@@ -5,6 +5,7 @@
 #include <iostream>
 #include <message_filters/subscriber.h>
 #include <message_filters/sync_policies/approximate_time.h>
+#include <ros/ros.h>
 #include <message_filters/synchronizer.h>
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/conversions.h>
@@ -173,7 +174,12 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
   std::shared_ptr<tf::StampedTransform> map_transform(new tf::StampedTransform);
   tf_listener->waitForTransform("/map", camera_frame, h.stamp,
                                 ros::Duration(0.5));
-  tf_listener->lookupTransform("/map", camera_frame, h.stamp, *map_transform);
+  try {
+    tf_listener->lookupTransform("/map", camera_frame, h.stamp, *map_transform);
+  } catch (const std::exception &e) {
+    ROS_WARN("TF Failed %s", e.what());
+    return;
+  }
 
   // Get image from camera
   image_geometry::PinholeCameraModel model;

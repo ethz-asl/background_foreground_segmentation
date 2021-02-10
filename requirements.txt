@@ -1,7 +1,6 @@
 yapf
 pylint
 pytest
-tensorflow>=2.3.0
 tensorflow-datasets
 segmentation-models
 Pillow
@@ -12,3 +11,5 @@ gdown
 pymongo
 pyyaml
 pandas
+opencv-python
+sklearn

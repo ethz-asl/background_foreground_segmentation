@@ -3,13 +3,7 @@ ignorePointcloud: false
 # Topic where point cloud with distance information is published
 cloudTopic: /distance_pc
 # In which frame is the cloud published?
-cloudFrame: /rslidar
-cameraImageTopic: /camera_stick/cam0/image
-cameraInfoTopic: /camera_stick/cam0/camera_info
-cameraFrame: /cam0
-outputTopic: /meshdist/original
-# Output folder of the dataset. Must end with a '/'
-outputFolder: /home/rene/cla_datasets/
+cloudFrame: /map
 # Max distance from a point to the groundtruth mesh. If a point has i bigger distance, it will be replaced with this value
 maxDistance: 0.5 #[m]
 # Max distance of a lidar point from the camera. If a point has i bigger distance, it will be replaced with this value
@@ -18,8 +12,6 @@ lidarMaxDistance: 10 #[m]
 overrideOutput: true
 # Filetype of the original image. Either png or jpg
 fileType: "png"
-storeImages: false
+storeImages: true
 exportPose: false
-createPreview: false
-labelsTopic: /meshdist/projected_pc
-distanceTopic: /meshdist/projected_pc_distance
+createPreview: true

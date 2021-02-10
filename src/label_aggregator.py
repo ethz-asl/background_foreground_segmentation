@@ -2,8 +2,6 @@
 """
   ROS node that takes the sparse label of the projected pointcloud and aggregates them
 """
-NAME = 'label_aggregator'
-
 import sys
 import message_filters
 import rospy
@@ -15,19 +13,7 @@ import time
 from bfseg.utils.image_enhancement import aggregate_sparse_labels
 import numpy as np
 import os
-
-# Load config.
-with open(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                 "../config/label_aggregator_cla.yaml"), 'r') as f:
-  config = yaml.safe_load(f)
-
-publishers = [
-    rospy.Publisher(topic, Image, queue_size=10)
-    for topic in config['outTopics']
-]
-labelOptions = config['labelOptions']
-
+import cv2
 
 def callback(original, labels, distance):
   """ Returns the pseudo labeled image """
@@ -42,18 +28,19 @@ def callback(original, labels, distance):
                                                       distance.width)
   t1 = time.time()
 
+  options = rospy.get_param('~label_options')
   aggregate_labels = aggregate_sparse_labels(
       np_labels,
       np_distance,
       np_original,
-      outSize=(np_labels.shape[1] // labelOptions['downsamplingFactor'],
-               np_labels.shape[0] // labelOptions['downsamplingFactor']),
-      useSuperpixel=labelOptions['useSuperixel'],
-      foregroundTrustRegion=labelOptions['foregroundTrustRegion'],
-      fg_bg_threshold=labelOptions['fgBgThreshold'],
-      superpixelCount=labelOptions['numberOfSuperPixel'])
+      outSize=(np_labels.shape[1] // options['downsamplingFactor'],
+               np_labels.shape[0] // options['downsamplingFactor']),
+      useSuperpixel=options['useSuperpixel'],
+      foregroundTrustRegion=options['foregroundTrustRegion'],
+      fg_bg_threshold=options['fgBgThreshold'],
+      superpixelCount=options['numberOfSuperPixel'])
 
-  print(f"labeling took {(time.time() - t1):.4f}s")
+  print("labeling took {:.4f}s".format(time.time() - t1))
 
   img_msg = Image()
   img_msg.header.seq = original.header.seq
@@ -65,27 +52,55 @@ def callback(original, labels, distance):
   img_msg.data = aggregate_labels.ravel().tolist()
   img_msg.encoding = "mono8"
 
-  return img_msg
+  return img_msg, aggregate_labels, np_original
 
 
-def getCallbackForTopic(topicNumber):
+def getCallbackForTopic(topicNumber, publisher, counters):
   """ Callback wrapper.
     Returns a callback function that segements the image and publishs it
 
     Args:
       topicNumber: Number that speciefies to which topic the image should be published
-
+      publisher: the publisher used
   """
 
   def m_callback(*args):
-    msg = callback(*args)
-    publishers[topicNumber].publish(msg)
+    # has to access nonlocal object, integers don't work in py2
+    counters[topicNumber] += 1
+    if not counters[topicNumber] % rospy.get_param('~label_frequency', 1) == 0:
+      return
+    msg, labels, img = callback(*args)
+    if rospy.get_param('~publish_labels', False):
+      publisher.publish(msg)
+    if rospy.get_param('~store_labels', False):
+      cv2.imwrite(
+          os.path.join(
+              rospy.get_param('~label_path'),
+              '{}_cam{}_labels.png'.format(msg.header.stamp, topicNumber)),
+          labels.astype('uint8'))
+      cv2.imwrite(
+          os.path.join(rospy.get_param('~label_path'),
+                       '{}_cam{}_rgb.png'.format(msg.header.stamp,
+                                                 topicNumber)), img[..., ::-1])
 
   return m_callback
 
 
 def main():
-  for idx, topics in enumerate(config['imageTopics']):
+  rospy.init_node('label_aggregator')
+  # prepare directory
+  if rospy.get_param('~store_labels', False) and not os.path.exists(
+      rospy.get_param('~label_path')):
+    os.mkdir(rospy.get_param('~label_path'))
+
+  # prepare publishers
+  publishers = [
+      rospy.Publisher(topic, Image, queue_size=10)
+      for topic in rospy.get_param('~out_topics')
+  ]
+  counters = [0 for topic in rospy.get_param('~out_topics')]
+
+  for idx, topics in enumerate(rospy.get_param('~image_topics')):
     originalTopic, labelsTopic, distanceTopic = (topics[0], topics[1],
                                                  topics[2])
     originalSub = message_filters.Subscriber(originalTopic, Image)
@@ -94,10 +109,9 @@ def main():
 
     ts = message_filters.ApproximateTimeSynchronizer(
         [originalSub, labelsSub, distanceSub], 10, 0.1, allow_headerless=True)
-    ts.registerCallback(getCallbackForTopic(idx))
+    ts.registerCallback(getCallbackForTopic(idx, publishers[idx], counters))
     print("Subscribed to", originalTopic)
 
-  rospy.init_node(NAME, anonymous=True)
   rospy.spin()
 
 
