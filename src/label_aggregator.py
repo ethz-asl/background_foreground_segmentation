@@ -15,6 +15,7 @@ import numpy as np
 import os
 import cv2
 
+
 def callback(original, labels, distance):
   """ Returns the pseudo labeled image """
 
@@ -42,6 +43,11 @@ def callback(original, labels, distance):
 
   print("labeling took {:.4f}s".format(time.time() - t1))
 
+  # downsampling of original image
+  resized_original = cv2.resize(
+      np_original, (np_original.shape[1] // options['downsamplingFactor'],
+                    np_original.shape[0] // options['downsamplingFactor']))
+
   img_msg = Image()
   img_msg.header.seq = original.header.seq
   img_msg.header.frame_id = original.header.frame_id
@@ -52,7 +58,7 @@ def callback(original, labels, distance):
   img_msg.data = aggregate_labels.ravel().tolist()
   img_msg.encoding = "mono8"
 
-  return img_msg, aggregate_labels, np_original
+  return img_msg, aggregate_labels, resized_original
 
 
 def getCallbackForTopic(topicNumber, publisher, counters):
