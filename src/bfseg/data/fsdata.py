@@ -35,12 +35,13 @@ def load_fsdata(base_path, dataset_info=None, modalities=None):
     all_files.remove('dataset_info.json')
   # now group filenames by their prefixes
   grouped_by_idx = {}
-  for filename in all_files:
+  for filename in sorted(all_files):
     prefix = '_'.join(filename.split('_')[:-1])
     grouped_by_idx.setdefault(prefix,
                               []).append(path.join(base_path, filename))
 
   data_shape_description = dataset_info['output_shapes']
+  data_shape_description['filename'] = []
   name_to_tf_type = {
       'int32': tf.int32,
       'float32': tf.float32,
@@ -50,13 +51,13 @@ def load_fsdata(base_path, dataset_info=None, modalities=None):
       m: name_to_tf_type[name]
       for m, name in dataset_info['output_types'].items()
   }
+  data_type_description['filename'] = tf.string
 
   def _get_data():
     nonlocal grouped_by_idx
     for prefix, item in grouped_by_idx.items():
-      blob = {}
+      blob = {'filename': prefix}
       for filepath in item:
-        print(filepath)
         components = filepath.split('_')
         modality, filetype = components[-1].split('.')
         if modalities is not None and modality not in modalities:
@@ -79,7 +80,6 @@ def load_fsdata(base_path, dataset_info=None, modalities=None):
           data = cv2.imread(filepath, cv2.IMREAD_ANYDEPTH)
           if modality in ['labels', 'mask']:
             # opencv translation as it ignores negative values
-            print(data_type_description, modality)
             data = data.astype(dataset_info['output_types'][modality])
             data[data == 255] = -1
             blob[modality] = data
