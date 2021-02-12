@@ -1,0 +1,6 @@
+epochs: 100
+batchsize: 10
+remove_cam2: True
+stopping_patience: 10
+data_augmentation: True
+balanced_loss: True
