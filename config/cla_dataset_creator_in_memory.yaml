@@ -12,6 +12,6 @@ lidarMaxDistance: 10 #[m]
 overrideOutput: true
 # Filetype of the original image. Either png or jpg
 fileType: "png"
-storeImages: true
+storeImages: false
 exportPose: false
-createPreview: true
+createPreview: false
