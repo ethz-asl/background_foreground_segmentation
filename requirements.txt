@@ -1,6 +1,8 @@
 yapf
 pylint
 pytest
+tensorflow==2.3.0
+tensorflow-addons
 tensorflow-datasets
 segmentation-models
 Pillow

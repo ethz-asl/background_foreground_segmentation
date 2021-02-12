@@ -1,0 +1,28 @@
+# Train on CLA with EWC using with Fast-SCNN architecture pretrained on NYU.
+network_params:
+  architecture: fast_scnn
+  freeze_encoder: false
+  model_params:
+    image_h: 480
+    image_w: 640
+  normalization_type: batch
+training_params:
+  batch_size: 10
+  learning_rate: 0.00001
+  num_training_epochs: 40
+  stopping_patience: 100
+dataset_params:
+  test_dataset: NyuDepthV2Labeled
+  test_scene: null
+  train_dataset: BfsegCLAMeshdistLabels
+  train_scene: null
+  validation_percentage: 10
+logging_params:
+  model_save_freq: 1
+  exp_name: fast_scnn_from_nyu_to_cla_output_distillation
+cl_params:
+  cl_framework: distillation
+  distillation_type: output
+  lambda_distillation: 0.1
+  # Note: this needs to be specified.
+  pretrained_dir: null
