@@ -40,6 +40,9 @@ def callback(original, labels, distance):
       foregroundTrustRegion=options['foregroundTrustRegion'],
       fg_bg_threshold=options['fgBgThreshold'],
       superpixelCount=options['numberOfSuperPixel'])
+  # swap classes 1 and 2
+  labelmap = np.array([0, 2, 1])
+  aggregate_labels = labelmap[aggregate_labels]
 
   print("labeling took {:.4f}s".format(time.time() - t1))
 
