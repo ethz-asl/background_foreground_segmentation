@@ -24,7 +24,7 @@ def create_model(model_name,
     freeze_encoder (bool): If True, the encoder is set as non-trainable. NOTE:
       it cannot be False while `freeze_whole_model` is True.
     freeze_whole_model (bool): If True, the whole model is set as non-trainable.
-      NOTE: it cannot be True while `freeze_encoder` is False.  
+      NOTE: it cannot be True while `freeze_encoder` is False.
     normalization_type (str): Type of normalization to use in the model, if
       normalization layers are present. Valid values are: "batch" (batch
       normalization) and group (group normalization).

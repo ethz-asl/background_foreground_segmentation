@@ -33,3 +33,15 @@ def resize_with_crop(image, shape, method='bilinear'):
         target_width=image_shape[1])
 
   return tf.image.resize(image, (target_h, target_w), method=method)
+
+
+def augmentation(image, label):
+  # random flip
+  if tf.random.uniform((1,)) < .5:
+    image = tf.image.flip_left_right(image)
+    label = tf.image.flip_left_right(label)
+  # brightness
+  image = tf.image.random_brightness(image, max_delta=20)
+  # hue
+  image = tf.image.random_hue(image, max_delta=.1)
+  return image, label

@@ -8,13 +8,14 @@ from zipfile import ZipFile
 
 import bfseg.data.nyu.Nyu_depth_v2_labeled
 from bfseg.data.fsdata import load_fsdata
-from bfseg.utils.metrics import IgnorantMeanIoU
+from bfseg.utils.metrics import IgnorantMeanIoU, IgnorantAccuracyMetric
 from bfseg.utils.losses import IgnorantCrossEntropyLoss, BalancedIgnorantCrossEntropyLoss
 from bfseg.models.fast_scnn import fast_scnn
 from bfseg.utils.utils import crop_map, load_gdrive_file
-from bfseg.utils.images import resize_with_crop
+from bfseg.utils.images import resize_with_crop, augmentation
 from bfseg.settings import TMPDIR
 from bfseg.sacred_utils import get_observer
+from bfseg.utils.models import create_model
 
 ex = Experiment()
 ex.observers.append(get_observer())
@@ -30,6 +31,7 @@ def finetuning(_run,
                stopping_patience=50,
                data_augmentation=True,
                balanced_loss=True,
+               normalization_type='group',
                test=False):
   dataset_info = {
       'output_shapes': {
@@ -63,18 +65,6 @@ def finetuning(_run,
 
   train_data = train_data.map(preprocessing).cache()
   val_data = train_data.take(50).batch(batchsize)
-
-  def augmentation(image, label):
-    # random flip
-    if tf.random.uniform((1,)) < .5:
-      image = tf.image.flip_left_right(image)
-      label = tf.image.flip_left_right(label)
-    # brightness
-    image = tf.image.random_brightness(image, max_delta=20)
-    # hue
-    image = tf.image.random_hue(image, max_delta=.1)
-    return image, label
-
   train_data = train_data.skip(50).shuffle(1000)
   if data_augmentation:
     train_data = train_data.map(augmentation)
@@ -104,21 +94,33 @@ def finetuning(_run,
       custom_objects={"IgnorantMeanIoU": IgnorantMeanIoU},
       compile=False)
 
-  x = tf.keras.Input(shape=train_data.element_spec[0].shape[1:])
-  out = tf.image.convert_image_dtype(x, tf.float32)
-  out = fast_scnn(out, num_downsampling_layers=2, num_classes=2)
-  model = tf.keras.Model(inputs=x, outputs=out)
-  model.set_weights(pretrained.get_weights())
+  _, model = create_model(model_name='fast_scnn',
+                       image_h=train_data.element_spec[0].shape[1],
+                       image_w=train_data.element_spec[0].shape[2],
+                       freeze_encoder=False,
+                       freeze_whole_model=False,
+                       normalization_type=normalization_type,
+                       num_downsampling_layers=2)
+
+  pretrained.save_weights(os.path.join(TMPDIR, 'pretrained_weights'))
+  model.load_weights(os.path.join(TMPDIR, 'pretrained_weights'))
   if balanced_loss:
-    loss = BalancedIgnorantCrossEntropyLoss(class_to_ignore=2, num_classes=3, from_logits=True)
+    loss = BalancedIgnorantCrossEntropyLoss(class_to_ignore=2,
+                                            num_classes=3,
+                                            from_logits=True)
   else:
-    loss = IgnorantCrossEntropyLoss(class_to_ignore=2, num_classes=3, from_logits=True)
+    loss = IgnorantCrossEntropyLoss(class_to_ignore=2,
+                                    num_classes=3,
+                                    from_logits=True)
   model.compile(
       loss=loss,
       optimizer=tf.keras.optimizers.Adam(learning_rate),
       # this does actually not ignore any of the 2 classes, but necessary because
       # standard MeanIoU does expect argmax output
-      metrics=[IgnorantMeanIoU(num_classes=3, class_to_ignore=2)])
+      metrics=[
+          IgnorantMeanIoU(num_classes=3, class_to_ignore=2),
+          IgnorantAccuracyMetric(num_classes=3, class_to_ignore=2)
+      ])
   for metric, val in model.evaluate(train_data, return_dict=True).items():
     _run.log_scalar(metric, val, 0)
   for metric, val in model.evaluate(val_data, return_dict=True).items():
