@@ -92,9 +92,9 @@ class BaseCLModel(keras.Model):
     r"""Adds loss criteria and metrics.
     """
     self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    self.loss_tracker = keras.metrics.Mean(f'loss', dtype=tf.float32)
-    self.accuracy_tracker = keras.metrics.Accuracy(f'accuracy',
-                                                   dtype=tf.float32)
+    self.loss_tracker = keras.metrics.Mean('loss', dtype=tf.float32)
+    self.accuracy_tracker = keras.metrics.Accuracy('accuracy', dtype=tf.float32)
+    self.miou_tracker = keras.metrics.MeanIoU(num_classes=2, name='mean_iou')
     # This stores optional logs about the test metrics, which is not
     # automatically handled by Keras.
     self.logs_test = {}
@@ -197,6 +197,7 @@ class BaseCLModel(keras.Model):
     # Update accuracy and loss.
     self.accuracy_tracker.update_state(train_y_masked, pred_y_masked)
     self.loss_tracker.update_state(total_loss)
+    self.miou_tracker.update_state(train_y_masked, pred_y_masked)
     if (auxiliary_losses is not None):
       for aux_loss_name, aux_loss in auxiliary_losses.items():
         getattr(self, f"{aux_loss_name}_tracker").update_state(aux_loss)
@@ -236,6 +237,7 @@ class BaseCLModel(keras.Model):
     # Update val/test metrics.
     self.loss_tracker.update_state(total_loss)
     self.accuracy_tracker.update_state(test_y_masked, pred_y_masked)
+    self.miou_tracker.update_state(test_y_masked, pred_y_masked)
     if (auxiliary_losses is not None):
       for aux_loss_name, aux_loss in auxiliary_losses.items():
         getattr(self, f"{aux_loss_name}_tracker").update_state(aux_loss)
@@ -284,6 +286,7 @@ class BaseCLModel(keras.Model):
                           step=step)
     self.loss_tracker.reset_states()
     self.accuracy_tracker.reset_states()
+    self.miou_tracker.reset_states()
     if (self._tracked_auxiliary_losses is not None):
       for aux_loss_name in self._tracked_auxiliary_losses:
         getattr(self, f"{aux_loss_name}_tracker").reset_states()
@@ -298,4 +301,5 @@ class BaseCLModel(keras.Model):
           getattr(self, f"{loss_name}_tracker")
           for loss_name in self._tracked_auxiliary_losses
       ]
-    return [self.loss_tracker, self.accuracy_tracker] + auxiliary_losses
+    return [self.loss_tracker, self.accuracy_tracker, self.miou_tracker
+           ] + auxiliary_losses
