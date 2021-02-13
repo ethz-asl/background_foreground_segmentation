@@ -24,6 +24,7 @@ ex.observers.append(get_observer())
 @ex.main
 def finetuning(_run,
                datapath,
+               pretrained_id,
                batchsize=10,
                epochs=100,
                learning_rate=1e-4,
@@ -86,21 +87,20 @@ def finetuning(_run,
       as_supervised=True).map(resizing).batch(batchsize).cache()
 
   # load the pretrained model
-  ZipFile(load_gdrive_file('1dTqqjjlFFKCHFDmX6DwOgCzT27zheoGD',
-                           ending='zip')).extractall(
-                               os.path.join(TMPDIR, 'pretrained_model'))
+  ZipFile(load_gdrive_file(pretrained_id, ending='zip')).extractall(
+      os.path.join(TMPDIR, 'pretrained_model'))
   pretrained = tf.keras.models.load_model(
       os.path.join(TMPDIR, 'pretrained_model'),
       custom_objects={"IgnorantMeanIoU": IgnorantMeanIoU},
       compile=False)
 
   _, model = create_model(model_name='fast_scnn',
-                       image_h=train_data.element_spec[0].shape[1],
-                       image_w=train_data.element_spec[0].shape[2],
-                       freeze_encoder=False,
-                       freeze_whole_model=False,
-                       normalization_type=normalization_type,
-                       num_downsampling_layers=2)
+                          image_h=train_data.element_spec[0].shape[1],
+                          image_w=train_data.element_spec[0].shape[2],
+                          freeze_encoder=False,
+                          freeze_whole_model=False,
+                          normalization_type=normalization_type,
+                          num_downsampling_layers=2)
 
   pretrained.save_weights(os.path.join(TMPDIR, 'pretrained_weights'))
   model.load_weights(os.path.join(TMPDIR, 'pretrained_weights'))

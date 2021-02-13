@@ -5,4 +5,5 @@ stopping_patience: 20
 data_augmentation: True
 balanced_loss: True
 normalization_type: group
-learning_rate: 0.00001
+learning_rate: 0.00002
+pretrained_id: 1XYyjpU3inydUmNgekhaflLw7IDQVCjx5
