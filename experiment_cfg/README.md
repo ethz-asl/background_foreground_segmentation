@@ -28,6 +28,7 @@ ____
 - `learning_rate` (`float`): Learning rate.
 
 - `num_training_epochs` (`int`): Number of training epochs.
+- `perform_data_augmentation` (`bool`): Whether or not to perform data augmentation.
 - `stopping_patience` (`int`): Patience parameter of the early-stopping callback.
 
 ### Optional parameters

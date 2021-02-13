@@ -10,6 +10,7 @@ training_params:
   batch_size: 10
   learning_rate: 0.00001
   num_training_epochs: 40
+  perform_data_augmentation: false
   stopping_patience: 100
 dataset_params:
   test_dataset: NyuDepthV2Labeled

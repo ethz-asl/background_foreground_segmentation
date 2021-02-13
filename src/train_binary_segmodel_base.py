@@ -36,8 +36,10 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   # Run the training.
   model.compile(
       optimizer=tf.keras.optimizers.Adam(training_params['learning_rate']))
-  # NOTE: online augmentation of the training dataset is used.
-  model.fit(train_ds.map(augmentation),
+  # Check if data augmentation should be used.
+  if (training_params['perform_data_augmentation']):
+    train_ds = train_ds.map(augmentation)
+  model.fit(train_ds,
             epochs=training_params['num_training_epochs'],
             validation_data=val_ds,
             verbose=2,
