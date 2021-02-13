@@ -8,6 +8,7 @@ from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
 from bfseg.utils.callbacks import SaveModelAndLogs, TestCallback
 from bfseg.utils.datasets import load_datasets
+from bfseg.utils.images import augmentation
 
 ex = Experiment()
 ex.observers.append(get_observer())
@@ -35,7 +36,8 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   # Run the training.
   model.compile(
       optimizer=tf.keras.optimizers.Adam(training_params['learning_rate']))
-  model.fit(train_ds,
+  # NOTE: online augmentation of the training dataset is used.
+  model.fit(train_ds.map(augmentation),
             epochs=training_params['num_training_epochs'],
             validation_data=val_ds,
             verbose=2,
