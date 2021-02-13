@@ -6,7 +6,7 @@ class IgnorantMetricsWrapper(tf.keras.metrics.Metric):
   Wraps any keras metric to ignore a specific class or balance the weights
   """
 
-  def __init__(self, metric, balanced=False, class_to_ignore=1, num_classes=3):
+  def __init__(self, metric, balanced=False, class_to_ignore=1, num_classes=3, **kwargs):
     super().__init__()
     self.metric = metric
     self.class_to_ignore = class_to_ignore
@@ -60,7 +60,7 @@ class IgnorantBalancedMeanIoU(IgnorantMetricsWrapper):
 
 class IgnorantMeanIoU(IgnorantMetricsWrapper):
 
-  def __init__(self, class_to_ignore=1, num_classes=3):
+  def __init__(self, class_to_ignore=1, num_classes=3, **kwargs):
     super().__init__(tf.keras.metrics.MeanIoU(num_classes=2),
                      balanced=False,
                      num_classes=num_classes,
@@ -96,7 +96,11 @@ class IgnorantAccuracyMetric(IgnorantMetricsWrapper):
                      class_to_ignore=class_to_ignore)
 
 
-def getBalancedWeight(labels, labels_one_hot, class_to_ignore, num_classes):
+def getBalancedWeight(labels,
+                      labels_one_hot,
+                      class_to_ignore,
+                      num_classes,
+                      normalize=True):
   weight_tensor = tf.cast(tf.zeros_like(labels), tf.float32)
   for i in range(num_classes):
     if i == class_to_ignore:
@@ -106,7 +110,14 @@ def getBalancedWeight(labels, labels_one_hot, class_to_ignore, num_classes):
         1 / tf.reduce_sum(tf.cast(labels == i, tf.float32)), labels_one_hot[...,
                                                                             i])
     # add to weight tensor
+    if not normalize:
+      frequency *= tf.reduce_sum(tf.cast(labels, tf.float32))
     weight_tensor = tf.math.add(weight_tensor, frequency)
+
+  # tf.print("freq:", tf.unique(tf.reshape(weight_tensor, [-1])))
+  # remove nan values if there are any
+  weight_tensor = tf.where(tf.math.is_nan(weight_tensor),
+                           tf.zeros_like(weight_tensor), weight_tensor)
 
   return weight_tensor
 

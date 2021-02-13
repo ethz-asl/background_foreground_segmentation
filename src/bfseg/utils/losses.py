@@ -1,6 +1,8 @@
 import tensorflow as tf
 from tensorflow.python.keras.losses import LossFunctionWrapper
 
+from bfseg.utils.metrics import getBalancedWeight
+
 
 def ignorant_cross_entropy_loss(y_true,
                                 y_pred,
@@ -57,3 +59,54 @@ class IgnorantCrossEntropyLoss(LossFunctionWrapper):
                      num_classes=num_classes,
                      from_logits=from_logits,
                      name='ignorant_cross_entropy_loss')
+
+
+def ignorant_balanced_cross_entropy_loss(y_true,
+                                         y_pred,
+                                         class_to_ignore=1,
+                                         num_classes=3,
+                                         from_logits=False):
+  """
+    Loss function that ignores all classes with label class_to_ignore.
+    Args:
+        y_true: Ground truth labels
+        y_pred: Predicted labels
+        class_to_ignore: Class number from ground truth which should be ignored
+        num_classes: how many classes there are
+    Returns: Cross entropy loss where ground truth labels that have class 'class_to_ignore' are ignored
+    """
+  # convert true labels to one hot encoded images
+  labels_one_hot = tf.keras.backend.one_hot(y_true, 3)
+  # Remove class that should be ignored from one hot encoding
+  y_true_one_hot_no_ignore = tf.stack([
+      labels_one_hot[..., _class]
+      for _class in range(num_classes)
+      if _class != class_to_ignore
+  ],
+                                      axis=-1)
+
+  # Transform one hot encoding back to categorical
+  y_true_back = tf.cast(tf.math.argmax(y_true_one_hot_no_ignore, axis=-1),
+                        tf.int64)
+
+  weights = getBalancedWeight(y_true,
+                              labels_one_hot,
+                              class_to_ignore,
+                              num_classes,
+                              normalize=False)
+
+  scce = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=from_logits)
+  return scce(y_true_back, y_pred, sample_weight=weights)
+
+
+class BalancedIgnorantCrossEntropyLoss(LossFunctionWrapper):
+  """
+  Wraps ignorant_cross_entropy_loss into an object to pass arguments at construction.
+  """
+
+  def __init__(self, class_to_ignore=1, num_classes=3, from_logits=False):
+    super().__init__(ignorant_balanced_cross_entropy_loss,
+                     class_to_ignore=class_to_ignore,
+                     num_classes=num_classes,
+                     from_logits=from_logits,
+                     name='ignorant_balanced_cross_entropy_loss')

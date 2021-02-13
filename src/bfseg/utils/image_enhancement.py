@@ -1,4 +1,3 @@
-# %load ../src/bfseg/utils/image_enhancement.py
 from PIL import Image
 from skimage.segmentation import mark_boundaries
 import numpy as np
@@ -96,8 +95,8 @@ def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
       np.multiply(
           original,
           np.stack([
-              assign == class_background, assign == class_background, assign
-              == class_background
+              assign == class_background, assign == class_background,
+              assign == class_background
           ],
                    axis=-1)))
   plt.title("background")
@@ -106,8 +105,8 @@ def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
       np.multiply(
           original,
           np.stack([
-              assign == class_foreground, assign == class_foreground, assign
-              == class_foreground
+              assign == class_foreground, assign == class_foreground,
+              assign == class_foreground
           ],
                    axis=-1)))
   plt.title("foreground")
@@ -116,8 +115,8 @@ def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
       np.multiply(
           original,
           np.stack([
-              assign == class_unknown, assign == class_unknown, assign
-              == class_unknown
+              assign == class_unknown, assign == class_unknown,
+              assign == class_unknown
           ],
                    axis=-1)))
   plt.title("unknown")
@@ -140,6 +139,93 @@ def get_preview_image(original, binary_mask):
   return new_img
 
 
+def aggregate_sparse_labels(np_labels,
+                            np_distance,
+                            np_orig,
+                            outSize=None,
+                            useSuperpixel=True,
+                            foregroundTrustRegion=True,
+                            fg_bg_threshold=100,
+                            superpixelCount=1000):
+  """
+    Converts the given sparse labels to dense pseudo labels
+
+    np_labels: Projected PC with distance to plan
+    np_distance: Projected PC with absolute distance
+    np_orig: Original image
+    outSize: Tuple
+    foregroundTrustRegion: Flag, if enabled, foreground points have a "circle around it called trust region" Background points inside this circle will be removed.
+    fg_bg_threshold: Threshold [cm] points thare are further away from the mesh than this threshold will be treated as foreground
+    superpixelCount: How many superpixel seeds to use
+   """
+
+  if outSize is not None:
+    np_labels = np.asarray(
+        Image.fromarray(np_labels).resize(outSize).convert("L"))
+    np_distance = np.asarray(
+        Image.fromarray(np_distance).resize(outSize).convert("L"))
+    np_orig = np.asarray(Image.fromarray(np_orig).resize(outSize))
+
+  np_distance = np.squeeze(np_distance)
+  np_labels = np.squeeze(np_labels)
+  # Foreground Labels
+  np_labels_foreground = np_labels > fg_bg_threshold
+  # Background Labels
+  np_labels_background = np.logical_and(np_labels < fg_bg_threshold,
+                                        np_labels > 0)
+  # No Labels
+  np_no_labels = np_labels == 0
+
+  seeds_fg_arr = np.asarray(
+      [[c[0], c[1]] for c in np.asarray(np.where(np_labels_foreground > 0)).T])
+
+  # Create a list containing all points that were assigned background
+  seeds_bg = [
+      (c[0], c[1])
+      for c in np.asarray(np.where(np_labels_background > 0)).T
+      if not (
+          foregroundTrustRegion and seeds_fg_arr.shape[0] > 0 and
+          closest_point_distance(np.asarray([c[0], c[1]]), seeds_fg_arr) < 20)
+  ]
+
+  # Create a list containing all points that were assigned foreground
+  seeds_fg = [
+      (c[0], c[1]) for c in np.asarray(np.where(np_labels_foreground > 0)).T
+  ]
+
+  if useSuperpixel:
+    # If no superpixel image is provided, use slic
+    superpixels = skimage.segmentation.slic(
+        np_orig,
+        n_segments=superpixelCount,
+        compactness=4,
+        sigma=1,
+    )
+
+    mask = reduce_superpixel(seeds_bg, seeds_fg, superpixels, np_distance)
+
+  else:
+    markers = np.zeros(np_labels_foreground.shape, dtype=np.uint)
+    # assign values to markers. +1 since zero will be ignored as marker assignement
+    markers[np_labels_foreground] = class_foreground + 1
+    markers[np_labels_background] = class_background + 1
+    height, width = np_labels_background.shape
+    step = 20
+    top_padding = 10
+    bot_padding = 10
+    for i in range(width // step):
+      markers[top_padding, step * i] = class_unknown + 1
+    markers[2 * top_padding, step * i] = class_unknown + 1
+    markers[height - bot_padding, step * i] = class_unknown + 1
+
+    # Run watershed on canny edge filtered image.
+    mask = watershed(
+        skimage.feature.canny(skimage.color.rgb2gray(np_orig), sigma=0.1),
+        markers) - 1
+
+  return mask
+
+
 def convert_file_path_to_gt(label,
                             original,
                             distance,
@@ -153,7 +239,7 @@ def convert_file_path_to_gt(label,
   """
     label: Path to label file as generated by ros node
     original: Path to original image
-    distance: Path to distance Imag as generated by rose node. TODO use this to refine superpixel aswell as to generate distance labels
+    distance: Path to distance Imag as generated by rose node.
     outfolder: Path to output folder
     resize: Wether to resize the images -> Better performance for SLIC
     userSuperpixel: Wether to user Superixel or watershed algorithm
