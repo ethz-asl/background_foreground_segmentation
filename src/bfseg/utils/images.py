@@ -35,13 +35,21 @@ def resize_with_crop(image, shape, method='bilinear'):
   return tf.image.resize(image, (target_h, target_w), method=method)
 
 
-def augmentation(image, label):
+def augmentation(image, label, mask=None):
   # random flip
   if tf.random.uniform((1,)) < .5:
     image = tf.image.flip_left_right(image)
     label = tf.image.flip_left_right(label)
+    if (mask is not None):
+      # Note: it is crucial that `expand_dims` is used, otherwise, since `mask`
+      # is in (B, H, W) format, rather than (B, H, W, 1). `flip_left_right`
+      # would wrongly flip the image upside down.
+      mask = tf.image.flip_left_right(tf.expand_dims(mask, axis=-1))
   # brightness
   image = tf.image.random_brightness(image, max_delta=0.2)
   # hue
   image = tf.image.random_hue(image, max_delta=.1)
-  return image, label
+  if (mask is not None):
+    return image, label, mask
+  else:
+    return image, label
