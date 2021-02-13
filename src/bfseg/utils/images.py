@@ -46,6 +46,8 @@ def augmentation(image, label, mask=None):
       # is in (B, H, W) format, rather than (B, H, W, 1). `flip_left_right`
       # would wrongly flip the image upside down.
       mask = tf.image.flip_left_right(tf.expand_dims(mask, axis=-1))
+      # Bring the mask back to its initial shape.
+      mask = tf.squeeze(mask, axis=-1)
   # brightness
   image = tf.image.random_brightness(image, max_delta=0.2)
   # hue
