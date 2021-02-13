@@ -9,6 +9,7 @@ from bfseg.settings import TMPDIR
 from bfseg.utils.callbacks import SaveModelAndLogs, TestCallback
 from bfseg.utils.datasets import load_datasets
 from bfseg.utils.images import augmentation
+from bfseg.utils.replay_buffer import ReplayBuffer
 
 ex = Experiment()
 ex.observers.append(get_observer())
@@ -43,9 +44,21 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   # Run the training.
   model.compile(
       optimizer=tf.keras.optimizers.Adam(training_params['learning_rate']))
-  # Check if data augmentation should be used.
-  if (training_params['perform_data_augmentation']):
-    train_ds = train_ds.map(augmentation)
+  # Check whether a replay buffer should be used.
+  if (cl_params['fraction_replay_ds_to_use'] is not None or
+      cl_params['ratio_main_ds_replay_ds'] is not None):
+    replay_buffer = ReplayBuffer(
+        main_ds=train_ds,
+        replay_ds=test_ds,
+        batch_size=training_params['batch_size'],
+        ratio_main_ds_replay_ds=cl_params['ratio_main_ds_replay_ds'],
+        fraction_replay_ds_to_use=cl_params['fraction_replay_ds_to_use'],
+        perform_data_augmentation=training_params['perform_data_augmentation'])
+    train_ds = replay_buffer.flow()
+  else:
+    # Check if data augmentation should be used.
+    if (training_params['perform_data_augmentation']):
+      train_ds = train_ds.map(augmentation)
   model.fit(train_ds,
             epochs=training_params['num_training_epochs'],
             validation_data=val_ds,

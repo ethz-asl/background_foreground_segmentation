@@ -88,7 +88,9 @@ ____
   - `"distillation"`: Distillation model. Requires both the `pretrained_dir` argument to be not `None`, and the `lambda_distillation` argument to be specified.
   - `"ewc"`: EWC. Requires both the `pretrained_dir` argument to be not `None`, and the `lambda_ewc` argument to be specified.
   - `"finetune"`: Fine-tuning, using the pre-trained model weights in `pretrained_dir`. If no `pretrained_dir` is specified, training is performed from scratch.
+- `fraction_replay_ds_to_use` (`float` or `None`): Cf. `src/bfseg/utils/replay_buffer.py`.
 - `pretrained_dir` (`str`): Directory containing the pre-trained model weights. If `None`, no weights are loaded.
+- `ratio_main_ds_replay_ds` (`list` of `int` or `None`): Cf. `src/bfseg/utils/replay_buffer.py`.
 
 ### Optional parameters
 

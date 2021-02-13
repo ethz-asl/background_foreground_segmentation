@@ -27,6 +27,8 @@ logging_params:
 cl_params:
   cl_framework: ewc
   ewc_fisher_params_use_gt: true
+  fraction_replay_ds_to_use: null
   lambda_ewc: 0.1
   # Note: this needs to be specified.
   pretrained_dir: null
+  ratio_main_ds_replay_ds: null

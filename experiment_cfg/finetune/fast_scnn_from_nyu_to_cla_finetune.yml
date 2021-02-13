@@ -23,5 +23,7 @@ logging_params:
   exp_name: fast_scnn_from_nyu_to_cla_finetune
 cl_params:
   cl_framework: finetune
+  fraction_replay_ds_to_use: null
   # Note: this needs to be specified.
   pretrained_dir: null
+  ratio_main_ds_replay_ds: null

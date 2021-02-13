@@ -24,6 +24,8 @@ logging_params:
 cl_params:
   cl_framework: distillation
   distillation_type: feature
+  fraction_replay_ds_to_use: null
   lambda_distillation: 0.1
   # Note: this needs to be specified.
   pretrained_dir: null
+  ratio_main_ds_replay_ds: null

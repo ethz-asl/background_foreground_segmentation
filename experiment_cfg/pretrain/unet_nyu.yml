@@ -24,4 +24,6 @@ logging_params:
   exp_name: exp_stage1
 cl_params:
   cl_framework: finetune
+  fraction_replay_ds_to_use: null
   pretrained_dir: null
+  ratio_main_ds_replay_ds: null
