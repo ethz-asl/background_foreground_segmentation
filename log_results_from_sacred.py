@@ -22,6 +22,7 @@ class LogExperiment:
             not in ["FAILED"]), f"Experiment {self._experiment_id} failed."
 
     # Set up folders.
+    save_folder = os.path.abspath(save_folder)
     self._save_folder_models = os.path.join(save_folder, 'models')
     self._save_folder_plots = os.path.join(save_folder,
                                            f'plots/{self._experiment_id}')
