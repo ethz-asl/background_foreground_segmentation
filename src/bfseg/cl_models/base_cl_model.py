@@ -126,7 +126,7 @@ class BaseCLModel(keras.Model):
 
   def _handle_multiple_losses(self, loss):
     r"""Since derived classes might implement auxiliary losses that one also
-    want to keep track of, this method is used to separate the main (total)
+    wants to keep track of, this method is used to separate the main (total)
     loss from the auxiliary ones. It also sets up loss trackers for the
     auxiliary losses.
     
@@ -284,6 +284,9 @@ class BaseCLModel(keras.Model):
                           step=step)
     self.loss_tracker.reset_states()
     self.accuracy_tracker.reset_states()
+    if (self._tracked_auxiliary_losses is not None):
+      for aux_loss_name in self._tracked_auxiliary_losses:
+        getattr(self, f"{aux_loss_name}_tracker").reset_states()
 
   @property
   def metrics(self):
