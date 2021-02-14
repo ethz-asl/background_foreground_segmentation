@@ -30,7 +30,7 @@ def pretrain_nyu(_run,
                  test=False):
   train_data = tfds.load(
       'NyuDepthV2Labeled', split='full[:90%]',
-      as_supervised=True).map(crop_map).shuffle(1000).batch(batchsize).cache()
+      as_supervised=True).map(crop_map).cache().shuffle(1000).batch(batchsize)
   if data_augmentation:
     train_data = train_data.map(augmentation)
   val_data = tfds.load(
