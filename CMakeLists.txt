@@ -62,5 +62,6 @@ catkin_install_python(PROGRAMS
     src/pose_logger.py
     src/point_logger.py
     src/label_aggregator.py
+    src/inference_node.py
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
