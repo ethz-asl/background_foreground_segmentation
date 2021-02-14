@@ -77,6 +77,35 @@ class LogExperiment:
               "w") as f:
       f.write(self._experiment.to_dict()['captured_out'])
 
+  def save_results(self):
+
+    def write_result(split, metric, epoch, out_file):
+
+      try:
+        if (epoch == "final"):
+          epoch_number = len(
+              self._experiment.metrics[f'{split}_{metric}'].values) - 1
+          epoch_text = f"final epoch ({epoch_number})"
+        else:
+          epoch_number = epoch
+          epoch_text = f"epoch {epoch_number}"
+
+        out_file.write(
+            f"- {split} {metric} @ {epoch_text}: "
+            "{:.4f}\n".format(self._experiment.metrics[f'{split}_{metric}'].
+                              values[epoch_number]))
+      except (IndexError, KeyError) as e:
+        return
+
+    # Save results at epoch 100 (if reached), and at the final epoch.
+    epochs_to_save = [100, "final"]
+
+    with open(os.path.join(self._save_folder_plots, "results.txt"), "w") as f:
+      for epoch in epochs_to_save:
+        for split in ["train", "test", "val"]:
+          for metric in ["accuracy", "loss", "mean_iou"]:
+            write_result(split=split, metric=metric, epoch=epoch, out_file=f)
+
   def save_plots(self):
     metrics_to_log = {'train': [], 'test': [], 'val': []}
     for full_metric_name in self._experiment.metrics.keys():
@@ -146,15 +175,19 @@ if (__name__ == "__main__"):
       "--save_output",
       action="store_true",
       help="Whether or not to save the output to screen of the experiment.")
+  parser.add_argument(
+      "--save_results",
+      action="store_true",
+      help="Whether or not to save a summary of the results of the experiment.")
   args = parser.parse_args()
   experiment_id = args.id
   save_folder = args.save_folder
   save_output = args.save_output
+  save_results = args.save_results
   model_to_save = args.model_to_save
 
   experiment_logger = LogExperiment(experiment_id=experiment_id,
-                                    save_folder=save_folder,
-                                    save_output=save_output)
+                                    save_folder=save_folder)
 
   # Optionally save a model to file.
   if (model_to_save is not None):
@@ -162,3 +195,6 @@ if (__name__ == "__main__"):
   # Optionally save the output to file.
   if (save_output):
     experiment_logger.save_output()
+  # Optionally save a summary of the results to file.
+  if (save_results):
+    experiment_logger.save_results()
