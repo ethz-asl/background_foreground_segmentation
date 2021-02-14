@@ -136,7 +136,8 @@ class ReplayBuffer:
 
     # Shuffle, batch and return the dataset.
     merged_ds = merged_ds.shuffle(total_num_samples)
-    merged_ds = merged_ds.batch(self._batch_size).prefetch(
-        tf.data.experimental.AUTOTUNE)
+    merged_ds = merged_ds.batch(
+        self._batch_size).cache().shuffle(total_num_samples).prefetch(
+            tf.data.experimental.AUTOTUNE)
 
     return merged_ds
