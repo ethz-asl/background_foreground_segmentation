@@ -90,7 +90,7 @@ class IgnorantAccuracyMetric(IgnorantMetricsWrapper):
   Accuracy function that ignores a class with a given label
   """
 
-  def __init__(self, class_to_ignore=1, num_classes=3):
+  def __init__(self, class_to_ignore=1, num_classes=3, **kwargs):
     super().__init__(tf.keras.metrics.Accuracy(),
                      num_classes=num_classes,
                      class_to_ignore=class_to_ignore)
