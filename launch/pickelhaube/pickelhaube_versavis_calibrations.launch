@@ -21,7 +21,7 @@
   <node pkg="tf2_ros"
         type="static_transform_publisher"
         name="imu_lidar_broadcaster"
-        args="0.016893 -0.045470 0.106389 -0.712754 -0.019267 0.010382 0.701072 rslidar IMUFRAME" />
+        args="0.035487 0.027148 0.102409 0.999722 0.021881 0.008602 -0.001760 rslidar IMUFRAME" />
   <!--node pkg="tf2_ros"
         type="static_transform_publisher"
         name="imu_lidar_broadcaster"
