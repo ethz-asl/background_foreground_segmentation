@@ -97,7 +97,7 @@ def main_loop():
   @tf.function
   def pred_func(batch):
     # predict batch of images
-    return tf.squeeze(tf.argmax(model(batch), axis=-1))
+    return tf.squeeze(tf.nn.softmax(model(batch), axis=-1)[..., 0] * 255)
 
   # only get those images that will be synchronized to the lidar
   synchronizer = message_filters.ApproximateTimeSynchronizer(

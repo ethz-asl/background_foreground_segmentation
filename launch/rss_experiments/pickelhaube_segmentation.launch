@@ -64,7 +64,7 @@ Launch file for Selective ICP with rviz
         <param name="cloud_topic" value="/rslidar_points" />
         <param name="cloud_frame" value="rslidar" />
         <param name="filtered_pc_topic" value="/points_filtered" />
-        <param name="density_threshold" value="0" />
+        <param name="density_threshold" value="127" />
         <rosparam param="image_topics">
             - /pickelhaube/cam0/segmented
             - /pickelhaube/cam1/segmented
