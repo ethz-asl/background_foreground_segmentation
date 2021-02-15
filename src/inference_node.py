@@ -57,7 +57,7 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
   for i, pred in enumerate(tf.unstack(final_prediction, axis=0)):
     # resize each prediction to the original image size
     prediction = tf.image.resize(pred[..., tf.newaxis], img_shapes[i],
-                                 tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+                                 tf.image.ResizeMethod.BILINEAR)
     # convert to numpy
     prediction = prediction.numpy().astype('uint8')
     # Create and publish image message
@@ -97,7 +97,7 @@ def main_loop():
   @tf.function
   def pred_func(batch):
     # predict batch of images
-    return tf.squeeze(tf.nn.softmax(model(batch), axis=-1)[..., 0] * 255)
+    return tf.squeeze(tf.nn.softmax(model(batch), axis=-1)[..., 1] * 255)
 
   # only get those images that will be synchronized to the lidar
   synchronizer = message_filters.ApproximateTimeSynchronizer(

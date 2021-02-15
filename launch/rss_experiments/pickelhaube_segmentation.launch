@@ -12,6 +12,7 @@ Launch file for Selective ICP with rviz
     <arg name="cad_file" default="$(find cpt_selective_icp)/resources/cla.json" />
     <arg name="rosbag" />
     <arg name="logprefix" />
+    <arg name="segmentation_model" />
 
 
     <!--node name="mesh_positioning"
@@ -39,8 +40,8 @@ Launch file for Selective ICP with rviz
           type="inference_node.py"
           name="inference_node"
           output="screen">
+        <param name="model_gdrive_id" value="$(arg segmentation_model)" />
         <rosparam>
-          model_gdrive_id: 1I8yapGNUqCHQVGQuRon2LDaSc3sZG6DO
           image_topics:
             - /pickelhaube/cam0/image
             - /pickelhaube/cam1/image
@@ -64,7 +65,7 @@ Launch file for Selective ICP with rviz
         <param name="cloud_topic" value="/rslidar_points" />
         <param name="cloud_frame" value="rslidar" />
         <param name="filtered_pc_topic" value="/points_filtered" />
-        <param name="density_threshold" value="127" />
+        <param name="density_threshold" value="150" />
         <rosparam param="image_topics">
             - /pickelhaube/cam0/segmented
             - /pickelhaube/cam1/segmented
@@ -80,7 +81,7 @@ Launch file for Selective ICP with rviz
     </node>
 
 
-    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find cpt_selective_icp)/launch/rviz.rviz" />
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find background_foreground_segmentation)/config/segmented_icp.rviz" />
 
     <!-- should be started last for handover to ICP-->
     <include file="$(find alphasense_tools)/launch/pickelhaube_from_bag.launch">
