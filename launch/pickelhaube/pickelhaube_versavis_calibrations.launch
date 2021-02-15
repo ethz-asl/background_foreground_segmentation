@@ -38,7 +38,7 @@
         type="nodelet"
         args="load image_undistort/ImageUndistortNodelet /$(arg nodelet_manager)"
         name="cam0_undistorter">
-    <rosparam file="$(find alphasense_tools)/config/pickelhaube/cam0_intr.yaml"/>
+    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam0_intr.yaml"/>
     <param name="input_camera_info_from_ros_params" value="true"/>
     <param name="input_camera_namespace" value="cam0"/>
     <param name="output_frame" value="cam0_rectified_frame"/>
@@ -50,7 +50,7 @@
         type="nodelet"
         args="load image_undistort/ImageUndistortNodelet /$(arg nodelet_manager)"
         name="cam1_undistorter">
-    <rosparam file="$(find alphasense_tools)/config/pickelhaube/cam0_intr.yaml"/>
+    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam1_intr.yaml"/>
     <param name="input_camera_info_from_ros_params" value="true"/>
     <param name="input_camera_namespace" value="cam0"/>
     <param name="output_frame" value="cam1_rectified_frame"/>
@@ -62,7 +62,7 @@
         type="nodelet"
         args="load image_undistort/ImageUndistortNodelet /$(arg nodelet_manager)"
         name="cam2_undistorter">
-    <rosparam file="$(find alphasense_tools)/config/pickelhaube/cam0_intr.yaml"/>
+    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam2_intr.yaml"/>
     <param name="input_camera_info_from_ros_params" value="true"/>
     <param name="input_camera_namespace" value="cam0"/>
     <param name="output_frame" value="cam2_rectified_frame"/>
@@ -74,29 +74,49 @@
   <!-- RESIZING -->
   <node pkg="nodelet"
         type="nodelet"
-        args="load image_proc/resize _scale_width:=0.5 _scale_height:=0.5 /$(arg nodelet_manager)"
+        args="load image_proc/crop_decimate /$(arg nodelet_manager)"
         name="cam0_resize" >
-    <remap from="image" to="/pickelhaube/cam0/image"/>
-    <remap from="camera_info" to="/pickelhaube/cam0/camera_info"/>
-    <remap from="cam0_resize/image" to="/pickelhaube_resized/cam0/image"/>
-    <remap from="cam0_resize/camera_info" to="/pickelhaube_resized/cam0/camera_info"/>
+    <rosparam>
+      decimation_x: 3
+      decimation_y: 3
+      height: 1400
+      interpolation: 1
+    </rosparam>
+    <remap from="camera/image_raw" to="/pickelhaube/cam0/image"/>
+    <remap from="camera/camera_info" to="/pickelhaube/cam0/camera_info"/>
+    <remap from="camera_out/image_raw" to="/pickelhaube_resized/cam0/image"/>
+    <remap from="camera_out/camera_info" to="/pickelhaube_resized/cam0/camera_info"/>
   </node>
   <node pkg="nodelet"
         type="nodelet"
-        args="load image_proc/resize _scale_width:=0.5 _scale_height:=0.5 /$(arg nodelet_manager)"
+        args="load image_proc/crop_decimate /$(arg nodelet_manager)"
         name="cam1_resize" >
-    <remap from="image" to="/pickelhaube/cam1/image"/>
-    <remap from="camera_info" to="/pickelhaube/cam1/camera_info"/>
-    <remap from="cam1_resize/image" to="/pickelhaube_resized/cam1/image"/>
-    <remap from="cam1_resize/camera_info" to="/pickelhaube_resized/cam1/camera_info"/>
+    <rosparam>
+      decimation_x: 3
+      decimation_y: 3
+      y_offset: 0
+      height: 1200
+      interpolation: 1
+    </rosparam>
+    <remap from="camera/image_raw" to="/pickelhaube/cam1/image"/>
+    <remap from="camera/camera_info" to="/pickelhaube/cam1/camera_info"/>
+    <remap from="camera_out/image_raw" to="/pickelhaube_resized/cam1/image"/>
+    <remap from="camera_out/camera_info" to="/pickelhaube_resized/cam1/camera_info"/>
   </node>
   <node pkg="nodelet"
         type="nodelet"
-        args="load image_proc/resize _scale_width:=0.5 _scale_height:=0.5 /$(arg nodelet_manager)"
+        args="load image_proc/crop_decimate /$(arg nodelet_manager)"
         name="cam2_resize" >
-    <remap from="image" to="/pickelhaube/cam2/image"/>
-    <remap from="camera_info" to="/pickelhaube/cam2/camera_info"/>
-    <remap from="cam2_resize/image" to="/pickelhaube_resized/cam2/image"/>
-    <remap from="cam2_resize/camera_info" to="/pickelhaube_resized/cam2/camera_info"/>
+    <rosparam>
+      decimation_x: 3
+      decimation_y: 3
+      y_offset: 0
+      height: 1200
+      interpolation: 1
+    </rosparam>
+    <remap from="camera/image_raw" to="/pickelhaube/cam2/image"/>
+    <remap from="camera/camera_info" to="/pickelhaube/cam2/camera_info"/>
+    <remap from="camera_out/image_raw" to="/pickelhaube_resized/cam2/image"/>
+    <remap from="camera_out/camera_info" to="/pickelhaube_resized/cam2/camera_info"/>
   </node>
 </launch>
