@@ -6,22 +6,17 @@
   <node pkg="tf2_ros"
         type="static_transform_publisher"
         name="imu_cam0_transformer"
-        args="-0.071998 -0.101917 0.016466 0.002983 -0.706968 0.001687 0.707237 IMUFRAME cam0_sensor_frame" />
+        args="0.038390 0.077595 0.004094 0.348953 0.613627 0.611567 0.357321 IMUFRAME cam0_sensor_frame" />
         <!-- x y z qx qy qz qw frame_id child_frame_id -->
   <node pkg="tf2_ros"
         type="static_transform_publisher"
         name="imu_cam1_transformer"
-        args="-0.020281 -0.121728 0.078013 -0.000111 -0.000927 -0.005481 0.999985 IMUFRAME cam1_sensor_frame" />
+        args="-0.156410 0.077964 0.005051 -0.356063 0.615575 0.612224 -0.345642 IMUFRAME cam1_sensor_frame" />
         <!-- x y z qx qy qz qw frame_id child_frame_id -->
   <node pkg="tf2_ros"
         type="static_transform_publisher"
         name="imu_cam2_transformer"
-        args="0.024679 -0.097825 0.032541 -0.001417 0.707570 0.000881 0.706641 IMUFRAME cam2_sensor_frame" />
-        <!-- x y z qx qy qz qw frame_id child_frame_id -->
-  <node pkg="tf2_ros"
-        type="static_transform_publisher"
-        name="imu_cam3_transformer"
-        args="-0.013916 -0.122345 -0.025650 -0.005502 0.999982 -0.002411 0.000218 IMUFRAME cam3_sensor_frame" />
+        args="-0.054722 -0.090945 0.005272 0.706215 -0.003002 0.002305 0.707987 IMUFRAME cam2_sensor_frame" />
         <!-- x y z qx qy qz qw frame_id child_frame_id -->
   <node pkg="tf2_ros"
         type="static_transform_publisher"
@@ -38,7 +33,7 @@
         type="nodelet"
         args="load image_undistort/ImageUndistortNodelet /$(arg nodelet_manager)"
         name="cam0_undistorter">
-    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam0_intr.yaml"/>
+    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam0_intr_2.yaml"/>
     <param name="input_camera_info_from_ros_params" value="true"/>
     <param name="input_camera_namespace" value="cam0"/>
     <param name="output_frame" value="cam0_rectified_frame"/>
@@ -50,7 +45,7 @@
         type="nodelet"
         args="load image_undistort/ImageUndistortNodelet /$(arg nodelet_manager)"
         name="cam1_undistorter">
-    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam1_intr.yaml"/>
+    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam1_intr_2.yaml"/>
     <param name="input_camera_info_from_ros_params" value="true"/>
     <param name="input_camera_namespace" value="cam0"/>
     <param name="output_frame" value="cam1_rectified_frame"/>
@@ -62,7 +57,7 @@
         type="nodelet"
         args="load image_undistort/ImageUndistortNodelet /$(arg nodelet_manager)"
         name="cam2_undistorter">
-    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam2_intr.yaml"/>
+    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam2_intr_2.yaml"/>
     <param name="input_camera_info_from_ros_params" value="true"/>
     <param name="input_camera_namespace" value="cam0"/>
     <param name="output_frame" value="cam2_rectified_frame"/>

@@ -1,0 +1,18 @@
+cam0:
+  cam_overlaps: []
+  camera_model: pinhole
+  distortion_coeffs:
+  - 0.011114192412125145
+  - -0.0033894210715021207
+  - 0.0019178633070916344
+  - 3.844504561025293e-05
+  distortion_model: equidistant
+  intrinsics:
+  - 629.0322910812746
+  - 629.0172679231665
+  - 752.2985569151721
+  - 514.9218397727697
+  resolution:
+  - 1440
+  - 1080
+  rostopic: /versavis/cam1/image_raw
