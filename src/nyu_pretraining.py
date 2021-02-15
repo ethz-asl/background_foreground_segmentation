@@ -47,7 +47,7 @@ def pretrain_nyu(_run,
                           image_w=image_w,
                           freeze_encoder=False,
                           freeze_whole_model=False,
-                          normalization_type="batch",
+                          normalization_type=normalization_type,
                           num_downsampling_layers=2)
   if balanced_loss:
     loss = BalancedIgnorantCrossEntropyLoss(class_to_ignore=2,
