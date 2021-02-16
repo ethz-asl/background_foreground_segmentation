@@ -61,7 +61,7 @@ def callback(original, labels, distance):
   img_msg.data = aggregate_labels.ravel().tolist()
   img_msg.encoding = "mono8"
 
-  return img_msg, aggregate_labels, resized_original
+  return img_msg, aggregate_labels, resized_original, original.encoding
 
 
 def getCallbackForTopic(topicNumber, publisher, counters):
@@ -78,7 +78,7 @@ def getCallbackForTopic(topicNumber, publisher, counters):
     counters[topicNumber] += 1
     if not counters[topicNumber] % rospy.get_param('~label_frequency', 1) == 0:
       return
-    msg, labels, img = callback(*args)
+    msg, labels, img, img_enc = callback(*args)
     if rospy.get_param('~publish_labels', False):
       publisher.publish(msg)
     if rospy.get_param('~store_labels', False):
@@ -87,10 +87,13 @@ def getCallbackForTopic(topicNumber, publisher, counters):
               rospy.get_param('~label_path'),
               '{}_cam{}_labels.png'.format(msg.header.stamp, topicNumber)),
           labels.astype('uint8'))
+      # convert to BGR for opencv
+      if 'rgb' in img_enc:
+        img = img[..., ::-1]
       cv2.imwrite(
           os.path.join(rospy.get_param('~label_path'),
                        '{}_cam{}_rgb.png'.format(msg.header.stamp,
-                                                 topicNumber)), img[..., ::-1])
+                                                 topicNumber)), img)
 
   return m_callback
 

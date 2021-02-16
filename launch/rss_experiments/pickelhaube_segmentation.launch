@@ -13,6 +13,9 @@ Launch file for Selective ICP with rviz
     <arg name="rosbag" />
     <arg name="logprefix" />
     <arg name="segmentation_model" />
+    <arg name="input_height" />
+    <arg name="input_width" />
+    <arg name="threshold" default="150" />
 
 
     <!--node name="mesh_positioning"
@@ -41,6 +44,8 @@ Launch file for Selective ICP with rviz
           name="inference_node"
           output="screen">
         <param name="model_gdrive_id" value="$(arg segmentation_model)" />
+        <param name="input_height" value="$(arg input_height)" />
+        <param name="input_width" value="$(arg input_width)" />
         <rosparam>
           image_topics:
             - /pickelhaube/cam0/image
@@ -53,8 +58,6 @@ Launch file for Selective ICP with rviz
             - /pickelhaube/cam2/segmented
             - /pickelhaube/cam3/segmented
           pointcloud_topic: /rslidar_points
-          input_height: 192
-          input_width: 352
         </rosparam>
     </node>
 
@@ -65,7 +68,7 @@ Launch file for Selective ICP with rviz
         <param name="cloud_topic" value="/rslidar_points" />
         <param name="cloud_frame" value="rslidar" />
         <param name="filtered_pc_topic" value="/points_filtered" />
-        <param name="density_threshold" value="150" />
+        <param name="density_threshold" value="$(arg threshold)" />
         <rosparam param="image_topics">
             - /pickelhaube/cam0/segmented
             - /pickelhaube/cam1/segmented

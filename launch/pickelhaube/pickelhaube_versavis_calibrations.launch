@@ -6,17 +6,17 @@
   <node pkg="tf2_ros"
         type="static_transform_publisher"
         name="imu_cam0_transformer"
-        args="0.038390 0.077595 0.004094 0.348953 0.613627 0.611567 0.357321 IMUFRAME cam0_sensor_frame" />
+        args="0.038390 0.077595 0.004094 0.348953 0.613627 0.611567 0.357321 IMUFRAME cam0" />
         <!-- x y z qx qy qz qw frame_id child_frame_id -->
   <node pkg="tf2_ros"
         type="static_transform_publisher"
         name="imu_cam1_transformer"
-        args="-0.156410 0.077964 0.005051 -0.356063 0.615575 0.612224 -0.345642 IMUFRAME cam1_sensor_frame" />
+        args="-0.156410 0.077964 0.005051 -0.356063 0.615575 0.612224 -0.345642 IMUFRAME cam1" />
         <!-- x y z qx qy qz qw frame_id child_frame_id -->
   <node pkg="tf2_ros"
         type="static_transform_publisher"
         name="imu_cam2_transformer"
-        args="-0.054722 -0.090945 0.005272 0.706215 -0.003002 0.002305 0.707987 IMUFRAME cam2_sensor_frame" />
+        args="-0.054722 -0.090945 0.005272 0.706215 -0.003002 0.002305 0.707987 IMUFRAME cam2" />
         <!-- x y z qx qy qz qw frame_id child_frame_id -->
   <node pkg="tf2_ros"
         type="static_transform_publisher"
