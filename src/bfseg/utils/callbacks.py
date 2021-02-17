@@ -86,7 +86,7 @@ class EarlyStoppingMinimumEpoch(EarlyStopping):
 
   def __init__(self, min_epoch, **kwargs):
     super(EarlyStoppingMinimumEpoch, self).__init__(**kwargs)
-    self._start_epoch = min(0, self.min_epoch - self.patience)
+    self._start_epoch = min(0, min_epoch - self.patience)
 
   def on_epoch_end(self, epoch, logs=None):
     if (epoch > self._start_epoch):
