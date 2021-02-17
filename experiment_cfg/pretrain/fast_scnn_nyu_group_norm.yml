@@ -9,9 +9,10 @@ network_params:
 training_params:
   batch_size: 10
   learning_rate: 0.0001
-  num_training_epochs: 40
+  num_training_epochs: 100
   perform_data_augmentation: false
-  stopping_patience: 100
+  stopping_min_epoch: 50
+  stopping_patience: 20
 dataset_params:
   test_dataset: BfsegCLAMeshdistLabels
   test_scene: null

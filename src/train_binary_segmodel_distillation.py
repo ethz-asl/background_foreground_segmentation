@@ -1,12 +1,13 @@
 import datetime
 from sacred import Experiment
 import tensorflow as tf
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.callbacks import ReduceLROnPlateau
 
 from bfseg.cl_models import DistillationModel
 from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
-from bfseg.utils.callbacks import SaveModelAndLogs, TestCallback
+from bfseg.utils.callbacks import (EarlyStoppingMinimumEpoch, SaveModelAndLogs,
+                                   TestCallback)
 from bfseg.utils.datasets import load_datasets
 from bfseg.utils.images import augmentation
 from bfseg.utils.replay_buffer import ReplayBuffer
@@ -65,7 +66,9 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
                 TestCallback(test_data=test_ds),
                 SaveModelAndLogs(),
                 ReduceLROnPlateau(),
-                EarlyStopping(patience=training_params['stopping_patience'])
+                EarlyStoppingMinimumEpoch(
+                    min_epoch=training_params['stopping_min_epoch'],
+                    patience=training_params['stopping_patience'])
             ])
   # Save final model.
   model.save_model(epoch="final")
