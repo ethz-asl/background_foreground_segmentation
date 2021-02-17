@@ -1,7 +1,7 @@
 """ Contains custom callbacks for Keras.
 """
 import warnings
-from tensorflow.keras.callbacks import Callback
+from tensorflow.keras.callbacks import Callback, EarlyStopping
 
 
 class TestCallback(Callback):
@@ -77,3 +77,17 @@ class SaveModelAndLogs(Callback):
         self.model.log_metrics(metric_type=test_dataset_name,
                                logs=test_dataset_logs,
                                step=epoch)
+
+
+class EarlyStoppingMinimumEpoch(EarlyStopping):
+  r"""Performs the usual early-stopping, but starts it at an epoch such that
+  when early stopping happens at least `min_epoch` epochs have been performed.
+  """
+
+  def __init__(self, min_epoch, **kwargs):
+    super(EarlyStoppingMinimumEpoch, self).__init__(**kwargs)
+    self._start_epoch = min(0, min_epoch - self.patience)
+
+  def on_epoch_end(self, epoch, logs=None):
+    if (epoch > self._start_epoch):
+      super().on_epoch_end(epoch, logs)

@@ -29,6 +29,7 @@ ____
 
 - `num_training_epochs` (`int`): Number of training epochs.
 - `perform_data_augmentation` (`bool`): Whether or not to perform data augmentation.
+- `stopping_min_epoch` (`int`): Minimum epoch after which early stopping can be performed.
 - `stopping_patience` (`int`): Patience parameter of the early-stopping callback.
 
 ### Optional parameters
