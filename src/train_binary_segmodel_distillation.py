@@ -26,7 +26,7 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
   # Get the datasets.
-  train_ds, val_ds, test_ds = load_datasets(
+  train_no_replay_ds, val_ds, test_ds = load_datasets(
       train_dataset=dataset_params['train_dataset'],
       train_scene=dataset_params['train_scene'],
       test_dataset=dataset_params['test_dataset'],
@@ -42,14 +42,18 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   if (cl_params['fraction_replay_ds_to_use'] is not None or
       cl_params['ratio_main_ds_replay_ds'] is not None):
     replay_buffer = ReplayBuffer(
-        main_ds=train_ds,
+        main_ds=train_no_replay_ds,
         replay_ds=test_ds,
         batch_size=training_params['batch_size'],
         ratio_main_ds_replay_ds=cl_params['ratio_main_ds_replay_ds'],
         fraction_replay_ds_to_use=cl_params['fraction_replay_ds_to_use'],
         perform_data_augmentation=training_params['perform_data_augmentation'])
     train_ds = replay_buffer.flow()
+    # When using replay, evaluate separate metrics only on training set without
+    # replay.
+    test_ds = {'test': test_ds, 'train_no_replay': train_no_replay_ds}
   else:
+    train_ds = train_no_replay_ds
     # Check if data augmentation should be used.
     if (training_params['perform_data_augmentation']):
       train_ds = train_ds.map(augmentation)
