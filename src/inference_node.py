@@ -42,8 +42,10 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
   img_headers = []
   for msg in image_msgs:
     img = np.frombuffer(msg.data, dtype=np.uint8)
+    img = img.reshape(msg.height, msg.width, 3)
     # Convert BGR to RGB
-    img = img.reshape(msg.height, msg.width, 3)[:, :, [2, 1, 0]]
+    if 'bgr' in msg.encoding.lower():
+      img = img[:, :, [2, 1, 0]]
     img_shapes.append((msg.height, msg.width))
     img_headers.append(msg.header)
     # resize to common input format
