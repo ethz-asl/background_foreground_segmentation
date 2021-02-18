@@ -16,8 +16,7 @@ class TestCallback(Callback):
 
   def __init__(self, test_data, verbose=0):
     if (isinstance(test_data, dict)):
-      # Add "test_" prefix.
-      self._test_data = {f'test_{k}': v for k, v in test_data.items()}
+      self._test_data = test_data
     else:
       # If single test dataset is given, still convert it to dict format, for
       # compatibility with the multiple-dataset case.

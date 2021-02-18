@@ -266,11 +266,11 @@ class BaseCLModel(keras.Model):
     self.run.add_artifact(path_to_archive_model)
 
   def log_metrics(self, metric_type, logs, step):
-    r"""Logs to sacred the metrics for the given dataset type ("train", "val",
-    or "test*") at the given step.
+    r"""Logs to sacred the metrics for the given dataset type ("train",
+    "train_no_replay", "val", or "test") at the given step.
 
     Args:
-      metric_type (str): Either "train", "val", or a string with prefix "test":
+      metric_type (str): Either "train", "train_no_replay", "val", or "test":
         type of the dataset the metrics refer to.
       logs (dict): Dictionary containing the metrics to log, indexed by the
         metric name, with their value at the given step.
@@ -279,7 +279,7 @@ class BaseCLModel(keras.Model):
     Returns:
       None.
     """
-    assert (metric_type in ["train", "val"] or metric_type[:4] == "test")
+    assert (metric_type in ["train", "train_no_replay", "val", "test"])
     for metric_name, metric_value in logs.items():
       self.run.log_scalar(f'{metric_type}_{metric_name}',
                           metric_value,
