@@ -21,7 +21,7 @@ def preprocess_nyu(image, label):
 @tf.function
 def preprocess_cla(image, label):
   r"""Preprocesses our auto-labeled CLA dataset. The dataset consists of three
-  labels (0,1,2) where all classes that belong to the background (e.g., floor,
+  labels (0, 1, 2) where all classes that belong to the background (e.g., floor,
   wall, roof) are assigned the '2' label. Foreground is assigned the '0' label
   and unknown the '1' label. To let CLA label format be consistent with NYU, for
   each input pixel the label outputted by this function is assigned as follows:
@@ -32,6 +32,20 @@ def preprocess_cla(image, label):
   """
   mask = tf.squeeze(tf.not_equal(label, 1))
   label = tf.cast(label == 2, tf.uint8)
+  image = tf.cast(image, tf.float32)
+  return image, label, mask
+
+
+@tf.function
+def preprocess_bagfile(image, label):
+  r"""Preprocesses bagfile dataset (e.g., Rumlang). The dataset consists of
+  three labels (0, 1, 2) with the following meaning:
+  - 0: foreground
+  - 1: background
+  - 2: unsure (ignored in training)
+  """
+  mask = tf.squeeze(tf.not_equal(label, 2))
+  label = tf.cast(label == 1, tf.uint8)
   image = tf.cast(image, tf.float32)
   return image, label, mask
 
