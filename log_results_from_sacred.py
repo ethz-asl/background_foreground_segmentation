@@ -101,15 +101,30 @@ class LogExperiment:
     epochs_to_save = [100, "final"]
 
     with open(os.path.join(self._save_folder_plots, "results.txt"), "w") as f:
-      for epoch in epochs_to_save:
-        for split in ["train", "test", "val"]:
-          for metric in ["accuracy", "loss", "mean_iou"]:
+      for metric in ["accuracy", "mean_iou"]:  #, "loss"]:
+        for split in ["train", "train_no_replay", "val", "test"]:
+          for epoch in epochs_to_save:
             write_result(split=split, metric=metric, epoch=epoch, out_file=f)
 
   def save_plots(self):
-    metrics_to_log = {'train': [], 'test': [], 'val': []}
+    metrics_to_log = {
+        'train': [],
+        'train_no_replay': [],
+        'test': [],
+        'val': []
+    }
     for full_metric_name in self._experiment.metrics.keys():
-      prefix, metric_name = full_metric_name.split("_", maxsplit=1)
+      # Try first with the special case `test_train_no_replay`.
+      split = full_metric_name.split("train_no_replay_", maxsplit=1)
+      if (len(split) == 1):
+        # Case `train`, `test`, or `val`,
+        prefix, metric_name = full_metric_name.split("_", maxsplit=1)
+        if (not prefix in metrics_to_log.keys()):
+          raise KeyError(f"Metric {full_metric_name} was not recognized.")
+      else:
+        prefix = "train_no_replay"
+        metric_name = split[-1]
+
       if (prefix in metrics_to_log.keys()):
         bisect.insort(metrics_to_log[prefix], metric_name)
     len_first_element = len(metrics_to_log[list(metrics_to_log.keys())[0]])
