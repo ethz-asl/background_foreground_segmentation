@@ -107,6 +107,13 @@ private:
   std::string camera_image_topic;
   std::string output_folder;
   std::string file_type;
+  std::string distance_topic;
+  std::string labels_topic;
+
+  bool create_preview;
+  // if images should be stored on disk
+  bool store_images;
+  bool export_pose;
 
   // Point cloud distance from mesh will be stored as image -> [0,255]
   // Distances to mesh will be mapped as follows distance -> min(max_distance,
@@ -128,6 +135,9 @@ private:
   boost::shared_ptr<SyncNoPC> no_pc_sync;
 
   image_transport::Publisher pub;
+
+  image_transport::Publisher labels_publisher;
+  image_transport::Publisher distance_publisher;
   // Used to publish images
   image_transport::ImageTransport it_;
 

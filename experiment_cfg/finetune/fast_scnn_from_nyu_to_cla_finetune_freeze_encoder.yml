@@ -9,8 +9,10 @@ network_params:
 training_params:
   batch_size: 10
   learning_rate: 0.00001
-  num_training_epochs: 40
-  stopping_patience: 100
+  num_training_epochs: 100
+  perform_data_augmentation: false
+  stopping_min_epoch: 50
+  stopping_patience: 20
 dataset_params:
   test_dataset: NyuDepthV2Labeled
   test_scene: null
@@ -22,5 +24,7 @@ logging_params:
   exp_name: fast_scnn_from_nyu_to_cla_finetune_freeze_encoder
 cl_params:
   cl_framework: finetune
+  fraction_replay_ds_to_use: null
   # Note: this needs to be specified.
   pretrained_dir: null
+  ratio_main_ds_replay_ds: null
