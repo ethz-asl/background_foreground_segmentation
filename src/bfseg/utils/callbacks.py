@@ -73,7 +73,7 @@ class SaveModelAndLogs(Callback):
           "sure to call the TestCallback before this callback.")
     else:
       for (test_dataset_name,
-           test_dataset_logs) in self.self.model.logs_test.items():
+           test_dataset_logs) in self.model.logs_test.items():
         self.model.log_metrics(metric_type=test_dataset_name,
                                logs=test_dataset_logs,
                                step=epoch)
