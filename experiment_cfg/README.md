@@ -63,6 +63,10 @@ ____
   - `None`
   - `"kitchen"`
   - `"bedroom"`
+- `MeshdistPseudolabels`. Valid dataset scenes:
+  - `None`
+  - `"rumlang2"`
+  - `"rumlang3"`
 - `NyuDepthV2Labeled`. Valid dataset scenes:
   - `None`
 
