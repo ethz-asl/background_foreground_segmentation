@@ -131,8 +131,8 @@ class ReplayBuffer:
                            num_replay_samples_to_keep)
 
     # Batch, cache, and shuffle the merged dataset.
-    merged_ds = merged_ds.batch(
-        self._batch_size).cache().shuffle(total_num_samples)
+    merged_ds = merged_ds.cache().shuffle(total_num_samples).batch(
+        self._batch_size)
 
     # Optionally perform data augmentation.
     if (self._perform_data_augmentation):
