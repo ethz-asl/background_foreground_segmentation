@@ -29,14 +29,14 @@ class TestCallback(Callback):
     # The metrics need to be manually reset, since no `evaluate` methods is
     # called.
     self.model.logs_test.clear()
-    for metric in self.model.metrics:
-      metric.reset_states()
-      for test_dataset_name, test_dataset in self._test_data.items():
-        for test_batch in test_dataset:
-          logs_test = self.model.test_step(test_batch)
-        self.model.logs_test[test_dataset_name] = {
-            k: v.numpy() for k, v in logs_test.items()
-        }
+    for test_dataset_name, test_dataset in self._test_data.items():
+      for metric in self.model.metrics:
+        metric.reset_states()
+      for test_batch in test_dataset:
+        logs_test = self.model.test_step(test_batch)
+      self.model.logs_test[test_dataset_name] = {
+          k: v.numpy() for k, v in logs_test.items()
+      }
     self.model.performed_test_evaluation = True
     self.model.evaluation_type = "val"
 
