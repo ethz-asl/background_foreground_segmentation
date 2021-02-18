@@ -55,7 +55,8 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
 
   Args:
     dataset_name (str): Name of the dataset. Valid entries are:
-      "NyuDepthV2Labeled" (NYU dataset), "BfsegCLAMeshdistLabels".
+      "NyuDepthV2Labeled" (NYU dataset), "BfsegCLAMeshdistLabels",
+      "MeshdistPseudolabels" (bagfile dataset, i.e., Rumlang).
     scene_type (str): Type of scene in the dataset to use type. Valid entries
       are:
       - If `dataset_name` is "NyuDepthV2Labeled":
@@ -65,6 +66,11 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       - If `dataset_name` is "BfsegCLAMeshdistLabels":
         - None: All the samples in the dataset are selected (no scene
             subdivision is available).
+      - If `dataset_name` is "MeshdistPseudolabels": 
+        - None: Both the scenes in the dataset are selected.
+        - One of the two following scenes:
+          - "rumlang2" 
+          - "rumlang3"
     fraction (str): Fraction of the selected scene to load. Must be a valid
       slice (cf. https://www.tensorflow.org/datasets/splits), e.g., "[:80%]"
       (first 80% of the samples in the scene), "[80%:]" (last 20% of the samples
@@ -94,12 +100,23 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = 'fused'
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
+  elif (dataset_name == 'MeshdistPseudolabels'):
+    if (scene_type is None):
+      name = 'rumlang2+rumlang3'
+    elif (scene_type in ["rumlang2", "rumlang3"]):
+      name = scene_type
+    else:
+      raise Exception("Invalid scene type: %s!" % scene_type)
   else:
     raise Exception("Dataset %s not found!" % dataset_name)
 
   # Select the fraction of samples from the scene.
   if (fraction is not None):
-    split = f"{name}{fraction}"
+    # Handle the special case of a mix of scenes.
+    if (name == "rumlang2+rumlang3"):
+      split = f"rumlang2{fraction}+rumlang3{fraction}"
+    else:
+      split = f"{name}{fraction}"
   else:
     split = name
 
@@ -114,6 +131,9 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name == 'BfsegCLAMeshdistLabels'):
     ds = ds.map(preprocess_cla,
+                num_parallel_calls=tf.data.experimental.AUTOTUNE)
+  elif (dataset_name == 'MeshdistPseudolabels'):
+    ds = ds.map(preprocess_bagfile,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   ds = ds.cache()
   # Further shuffle.
