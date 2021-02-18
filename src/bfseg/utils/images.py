@@ -37,6 +37,8 @@ def resize_with_crop(image, shape, method='bilinear'):
 
 @tf.function
 def augmentation(image, label, mask=None):
+  # make sure image is in float space
+  image = tf.image.convert_image_dtype(image, tf.float32)
   # random flip
   if tf.random.uniform((1,)) < .5:
     image = tf.image.flip_left_right(image)

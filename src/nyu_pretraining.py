@@ -30,7 +30,7 @@ def pretrain_nyu(_run,
                  test=False):
   train_data = tfds.load(
       'NyuDepthV2Labeled', split='full[:90%]',
-      as_supervised=True).map(crop_map).shuffle(1000).batch(batchsize).cache()
+      as_supervised=True).map(crop_map).cache().shuffle(1000).batch(batchsize)
   if data_augmentation:
     train_data = train_data.map(augmentation)
   val_data = tfds.load(
@@ -47,7 +47,7 @@ def pretrain_nyu(_run,
                           image_w=image_w,
                           freeze_encoder=False,
                           freeze_whole_model=False,
-                          normalization_type="batch",
+                          normalization_type=normalization_type,
                           num_downsampling_layers=2)
   if balanced_loss:
     loss = BalancedIgnorantCrossEntropyLoss(class_to_ignore=2,

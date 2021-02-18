@@ -6,10 +6,10 @@ Launch file for Selective ICP with rviz
 <launch>
 
 
-	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube_full.launch">
-		<arg name="rosbag" value="/media/blumh/ext_2tb/pickelhaube_2021-01-29-15-42-47.bag" />
-		<arg name="cad_file" value="$(find cpt_selective_icp)/resources/CLA_CAD_simplified_single_wall_no_ceiling.off" />
-		<arg name="logprefix" value="pickelhaube_full_garage3" />
+	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube2_full.launch">
+		<arg name="rosbag" value="/media/blumh/ext_2tb/pickelhaube_2021-02-08-13-30-31.bag" />
+		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/rss_experiments/210212_Rumlang_Meters_SE.off" />
+		<arg name="logprefix" value="pickelhaube_full_rumlang3" />
 	</include>
 
 	<!--node name="mesh_positioning"
@@ -22,12 +22,11 @@ Launch file for Selective ICP with rviz
     <node pkg="tf2_ros"
 	      type="static_transform_publisher"
 		  name="mesh_positioning"
-		  args="3.308 -2.087 0 0 0 -0.673 0.739 map marker" />
+		  args="-2.992 -11.989 -1.667 0.000 0.000 0.760 0.650 map marker" />
     <node pkg="rosservice"
 	      type="rosservice"
 		  name="start_icp"
 		  args="call --wait /mapper/load_published_map"
-		  launch-prefix="bash -c 'sleep 4; $0 $@'" />
-
+		  launch-prefix="bash -c 'sleep 2; $0 $@'" />
 
 </launch>

@@ -1,0 +1,104 @@
+sensors:
+  - id: 3da6d03bd42e41a93dc941bd5fd9351d
+    topic: /versavis/imu
+    description: "VersaVIS IMU"
+    sensor_type: IMU
+    sigmas:
+      gyro_noise_density: 0.005
+      gyro_bias_random_walk_noise_density: 1.0e-03 # 4.0e-06
+      acc_noise_density: 0.01
+      acc_bias_random_walk_noise_density: 0.0002
+    saturation_accel_max_mps2: 150.0
+    saturation_gyro_max_radps: 7.5
+    gravity_magnitude_mps2: 9.808083883386614
+
+  - id: 8af1bac2a7c5fad79f09e49e3b96d87c
+    sensor_type: NCAMERA
+    description: ""
+    topic: ""
+    cameras:
+      - camera:
+          topic: /versavis/cam0/image_raw
+          id: 9be7b5000f15adb3c0da8ac6b729ee05
+          sensor_type: CAMERA
+          description: ""
+          line-delay-nanoseconds: 0
+          image_height: 1080
+          image_width: 1440
+          type: pinhole
+          intrinsics:
+            cols: 1
+            rows: 4
+            data:
+              - 631.4357438817397
+              - 631.5606665037014
+              - 698.9047842216714
+              - 514.2917853515032
+          distortion:
+            type: equidistant
+            parameters:
+              cols: 1
+              rows: 4
+              data:
+                - 0.0063875012215884605
+                - -0.004348150410555876
+                - 0.005050271611024475
+                - -0.0017421692520891419
+        T_C_B:
+          cols: 4
+          rows: 4
+          data:
+            - - -0.5011061738503437
+              - 0.8653066144415286
+              - -0.01170749899890089
+              - -0.04785796127712338
+            - - -0.008797974314183832
+              - 0.008433900899060987
+              - 0.999925729723759
+              - -0.0044101324654168056
+            - - 0.8653410877665734
+              - 0.5011719588318614
+              - 0.003386665557588542
+              - -0.07212320702421002
+            - - 0.0
+              - 0.0
+              - 0.0
+              - 1.0
+  - id: aabb23479caf7592b35518478a2fe08f
+    sensor_type: ODOMETRY_6DOF
+    description: "ROVIOLI in Odometry mode"
+    topic: /rovioli/maplab_odom_T_M_I
+
+extrinsics:
+  - sensor_id: 3da6d03bd42e41a93dc941bd5fd9351d
+    base_sensor_id: 3da6d03bd42e41a93dc941bd5fd9351d
+    T_B_S:
+      rows: 4
+      cols: 4
+      data:
+        - [1,0,0,0]
+        - [0,1,0,0]
+        - [0,0,1,0]
+        - [0,0,0,1]
+
+  - sensor_id: 8af1bac2a7c5fad79f09e49e3b96d87c
+    base_sensor_id: 3da6d03bd42e41a93dc941bd5fd9351d
+    T_S_B:
+      rows: 4
+      cols: 4
+      data:
+        - [1,0,0,0]
+        - [0,1,0,0]
+        - [0,0,1,0]
+        - [0,0,0,1]
+
+  - sensor_id: aabb23479caf7592b35518478a2fe08f
+    base_sensor_id: 3da6d03bd42e41a93dc941bd5fd9351d
+    T_B_S:
+      rows: 4
+      cols: 4
+      data:
+        - [1,0,0,0]
+        - [0,1,0,0]
+        - [0,0,1,0]
+        - [0,0,0,1]

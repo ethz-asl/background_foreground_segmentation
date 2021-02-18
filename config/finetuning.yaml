@@ -1,8 +1,9 @@
-epochs: 100
+epochs: 50
 batchsize: 10
 remove_cam2: True
 stopping_patience: 20
 data_augmentation: True
 balanced_loss: True
 normalization_type: group
-learning_rate: 0.00001
+learning_rate: 0.0001
+pretrained_id: 1XYyjpU3inydUmNgekhaflLw7IDQVCjx5

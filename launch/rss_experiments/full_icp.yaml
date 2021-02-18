@@ -11,7 +11,8 @@ referenceDataPointsFilters:
 matcher:
   KDTreeMatcher:
     knn: 3
-    maxDist: 10.0
+    # maxDist: 10.0
+    maxDist: 2.0  # changed for rumlang
     epsilon: 1.0
 
 outlierFilters:

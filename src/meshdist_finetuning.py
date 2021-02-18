@@ -24,6 +24,7 @@ ex.observers.append(get_observer())
 @ex.main
 def finetuning(_run,
                datapath,
+               pretrained_id,
                batchsize=10,
                epochs=100,
                learning_rate=1e-4,
@@ -86,21 +87,23 @@ def finetuning(_run,
       as_supervised=True).map(resizing).batch(batchsize).cache()
 
   # load the pretrained model
-  ZipFile(load_gdrive_file('1dTqqjjlFFKCHFDmX6DwOgCzT27zheoGD',
-                           ending='zip')).extractall(
-                               os.path.join(TMPDIR, 'pretrained_model'))
+  ZipFile(load_gdrive_file(pretrained_id, ending='zip')).extractall(
+      os.path.join(TMPDIR, 'pretrained_model'))
   pretrained = tf.keras.models.load_model(
       os.path.join(TMPDIR, 'pretrained_model'),
-      custom_objects={"IgnorantMeanIoU": IgnorantMeanIoU},
+      custom_objects={
+          "IgnorantMeanIoU": IgnorantMeanIoU,
+          'IgnorantAccuracyMetric': IgnorantAccuracyMetric
+      },
       compile=False)
 
   _, model = create_model(model_name='fast_scnn',
-                       image_h=train_data.element_spec[0].shape[1],
-                       image_w=train_data.element_spec[0].shape[2],
-                       freeze_encoder=False,
-                       freeze_whole_model=False,
-                       normalization_type=normalization_type,
-                       num_downsampling_layers=2)
+                          image_h=train_data.element_spec[0].shape[1],
+                          image_w=train_data.element_spec[0].shape[2],
+                          freeze_encoder=False,
+                          freeze_whole_model=False,
+                          normalization_type=normalization_type,
+                          num_downsampling_layers=2)
 
   pretrained.save_weights(os.path.join(TMPDIR, 'pretrained_weights'))
   model.load_weights(os.path.join(TMPDIR, 'pretrained_weights'))
@@ -114,7 +117,7 @@ def finetuning(_run,
                                     from_logits=True)
   model.compile(
       loss=loss,
-      optimizer=tf.keras.optimizers.Adam(learning_rate),
+      optimizer=tf.keras.optimizers.Adam(1e-4),
       # this does actually not ignore any of the 2 classes, but necessary because
       # standard MeanIoU does expect argmax output
       metrics=[
@@ -122,16 +125,27 @@ def finetuning(_run,
           IgnorantAccuracyMetric(num_classes=3, class_to_ignore=2)
       ])
   for metric, val in model.evaluate(train_data, return_dict=True).items():
-    _run.log_scalar(metric, val, 0)
+    _run.log_scalar(metric[:-2], val, 0)
   for metric, val in model.evaluate(val_data, return_dict=True).items():
-    _run.log_scalar("val_{}".format(metric), val, 0)
+    _run.log_scalar("val_{}".format(metric[:-2]), val, 0)
+  # IMPORTANT for some reason we have to recompile because model.evaluate messes with
+  # the learning rate
+  model.compile(
+      loss=loss,
+      optimizer=tf.keras.optimizers.Adam(learning_rate),
+      # this does actually not ignore any of the 2 classes, but necessary because
+      # standard MeanIoU does expect argmax output
+      metrics=[
+          IgnorantMeanIoU(num_classes=3, class_to_ignore=2),
+          IgnorantAccuracyMetric(num_classes=3, class_to_ignore=2)
+      ])
   history = model.fit(
       train_data,
       epochs=epochs,
       validation_data=val_data,
       verbose=2,
       callbacks=[
-          tf.keras.callbacks.ReduceLROnPlateau(),
+          #tf.keras.callbacks.ReduceLROnPlateau(),
           tf.keras.callbacks.EarlyStopping(patience=stopping_patience)
       ])
   modelpath = os.path.join(TMPDIR, 'model')
@@ -142,14 +156,14 @@ def finetuning(_run,
   _run.info['nyu'] = model.evaluate(valnyu_data, return_dict=True)
   hist = pd.DataFrame(history.history)
   for metric in hist.columns:
-    _run.info[f'final_{metric}'] = hist[metric].iloc[-1]
+    _run.info[f'final_{metric[:-2]}'] = hist[metric].iloc[-1]
   hist['epoch'] = history.epoch
   for _, row in hist.iterrows():
     for metric in hist.columns:
       if metric == 'epoch':
         continue
-      _run.log_scalar(metric, row[metric], row['epoch'])
-  return float(hist['val_ignorant_mean_io_u_1'].iloc[-1])
+      _run.log_scalar(metric[:-2], row[metric], row['epoch'])
+  return float(hist['val_ignorant_mean_io_u_2'].iloc[-1])
 
 
 if __name__ == '__main__':
