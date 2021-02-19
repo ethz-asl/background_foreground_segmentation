@@ -41,14 +41,12 @@ ____
 ## Dataset parameters
 
 ### Required parameters
-
+- `replay_datasets` (`list` of `str`, or `None`): If not `None`, name of the replay dataset(s) to use.
+- `replay_datasets_scene` (`list` of `str`, or `None`): If not `None`, scene type of each of the replay dataset(s) to use.
 - `test_dataset` (`str`): Name of the test dataset.
-
 - `test_scene` (`str`): Scene type of the test dataset.
 - `train_dataset` (`str`): Name of the training dataset.
-
 - `train_scene` (`str`): Scene type of the training dataset.
-
 - `validation_percentage` (`int`): Percentage of the training scene to use for validation.
 
 ### Optional parameters
@@ -56,8 +54,6 @@ ____
 - `fisher_params_dataset` (`str`): Name of the dataset to be used to compute the Fisher information matrix in EWC. Required if the CL parameter `cl_framework` is `ewc`.
 - `fisher_params_scene` (`str`): Scene type of the dataset to be used to compute the Fisher information matrix in EWC. Required if the CL parameter `cl_framework` is `ewc`.
 - `fisher_params_sample_percentage` (`int`): Percentage of samples to be randomly selected from the dataset `fisher_params_dataset` and used to compute the Fisher information matrix in EWC. Required if the CL parameter `cl_framework` is `ewc`.
-- `replay_datasets` (`list` of `str`): Name of the replay dataset(s) to use. Required if one of the CL parameters `fraction_replay_ds_to_use` and `ratio_main_ds_replay_ds` is not `None`.
-- `replay_datasets_scene` (`list` of `str`): Scene type of each of the replay dataset(s) to use. Required if one of the CL parameters `fraction_replay_ds_to_use` and `ratio_main_ds_replay_ds` is not `None`.
 
 ### Valid dataset names
 

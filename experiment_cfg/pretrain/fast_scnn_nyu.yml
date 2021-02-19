@@ -14,6 +14,8 @@ training_params:
   stopping_min_epoch: 50
   stopping_patience: 20
 dataset_params:
+  replay_datasets: null
+  replay_datasets_scene: null
   test_dataset: BfsegCLAMeshdistLabels
   test_scene: null
   train_dataset: NyuDepthV2Labeled
