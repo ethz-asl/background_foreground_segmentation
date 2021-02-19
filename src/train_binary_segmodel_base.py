@@ -8,10 +8,9 @@ from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
 from bfseg.utils.callbacks import (EarlyStoppingMinimumEpoch, SaveModelAndLogs,
                                    TestCallback)
-from bfseg.utils.datasets import (load_datasets, load_replay_datasets,
+from bfseg.utils.datasets import (load_datasets,
                                   update_datasets_with_replay_and_augmentation)
 from bfseg.utils.images import augmentation
-from bfseg.utils.replay_buffer import ReplayBuffer
 
 ex = Experiment()
 ex.observers.append(get_observer())
