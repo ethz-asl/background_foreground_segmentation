@@ -1,4 +1,4 @@
-# Train on CLA with EWC using with Fast-SCNN architecture pretrained on NYU with replay buffer.
+# Train on CLA with finetuning using with Fast-SCNN architecture pretrained on NYU with replay buffer.
 network_params:
   architecture: fast_scnn
   freeze_encoder: false

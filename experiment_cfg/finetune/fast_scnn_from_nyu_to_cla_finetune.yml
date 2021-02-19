@@ -1,4 +1,4 @@
-# Train on CLA with EWC using with Fast-SCNN architecture pretrained on NYU.
+# Train on CLA with finetuning using with Fast-SCNN architecture pretrained on NYU.
 network_params:
   architecture: fast_scnn
   freeze_encoder: false
