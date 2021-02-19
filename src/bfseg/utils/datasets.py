@@ -171,11 +171,14 @@ def load_datasets(train_dataset,
                      fraction=f"[{training_percentage}%:]",
                      batch_size=batch_size,
                      shuffle_data=False)
-  test_ds = load_data(dataset_name=test_dataset,
-                      scene_type=test_scene,
-                      fraction=None,
-                      batch_size=batch_size,
-                      shuffle_data=False)
+  if (test_dataset is not None):
+    test_ds = load_data(dataset_name=test_dataset,
+                        scene_type=test_scene,
+                        fraction=None,
+                        batch_size=batch_size,
+                        shuffle_data=False)
+  else:
+    test_ds = None
   if (fisher_params_dataset is None):
     return train_ds, val_ds, test_ds
   else:
