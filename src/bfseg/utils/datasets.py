@@ -45,6 +45,12 @@ def preprocess_bagfile(image, label):
   - 2: unsure (ignored in training)
   """
   image = tf.image.convert_image_dtype(image, tf.float32)
+  # Resize image and label.
+  image = tf.image.resize(image, (480, 640),
+                          method=tf.image.ResizeMethod.BILINEAR)
+  label = tf.image.resize(label, (480, 640),
+                          method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+  # Mask out unknown pixels.
   mask = tf.squeeze(tf.not_equal(label, 2))
   label = tf.cast(label == 1, tf.uint8)
   image = tf.cast(image, tf.float32)
