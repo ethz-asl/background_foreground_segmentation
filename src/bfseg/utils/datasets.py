@@ -44,6 +44,7 @@ def preprocess_bagfile(image, label):
   - 1: background
   - 2: unsure (ignored in training)
   """
+  image = tf.image.convert_image_dtype(image, tf.float32)
   mask = tf.squeeze(tf.not_equal(label, 2))
   label = tf.cast(label == 1, tf.uint8)
   image = tf.cast(image, tf.float32)
