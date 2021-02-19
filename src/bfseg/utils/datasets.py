@@ -203,24 +203,24 @@ def load_datasets(train_dataset,
         shuffle_data=True)
     return train_ds, val_ds, test_ds, fisher_params_ds
 
-  def load_replay_datasets(replay_datasets, replay_datasets_scene, batch_size):
-    r"""Creates data loaders for one or more replay datasets.
-    """
-    assert (isinstance(replay_datasets, list) and
-            isinstance(replay_datasets_scene, list) and
-            len(replay_datasets) == len(replay_datasets_scene))
-    replay_ds = {}
-    for curr_replay_dataset, curr_replay_dataset_scene in zip(
-        replay_datasets, replay_datasets_scene):
-      replay_ds[
-          f"{curr_replay_dataset}_{curr_replay_dataset_scene}"] = load_data(
-              dataset_name=curr_replay_dataset,
-              scene_type=curr_replay_dataset_scene,
-              fraction=None,
-              batch_size=batch_size,
-              shuffle_data=False)
 
-    return replay_ds
+def load_replay_datasets(replay_datasets, replay_datasets_scene, batch_size):
+  r"""Creates data loaders for one or more replay datasets.
+  """
+  assert (isinstance(replay_datasets, list) and
+          isinstance(replay_datasets_scene, list) and
+          len(replay_datasets) == len(replay_datasets_scene))
+  replay_ds = {}
+  for curr_replay_dataset, curr_replay_dataset_scene in zip(
+      replay_datasets, replay_datasets_scene):
+    replay_ds[f"{curr_replay_dataset}_{curr_replay_dataset_scene}"] = load_data(
+        dataset_name=curr_replay_dataset,
+        scene_type=curr_replay_dataset_scene,
+        fraction=None,
+        batch_size=batch_size,
+        shuffle_data=False)
+
+  return replay_ds
 
 
 def update_datasets_with_replay_and_augmentation(
