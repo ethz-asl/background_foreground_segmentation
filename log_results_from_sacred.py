@@ -81,7 +81,7 @@ class LogExperiment:
       f.write(self._experiment.to_dict()['captured_out'])
 
   def _find_splits_to_log(self):
-    self._splits_to_log = set()
+    self._splits_to_log = []
     self._metrics_to_log = ["accuracy", "mean_iou"]  #, "loss"]:
 
     for split in ["train", "train_no_replay", "val", "test"]:
@@ -91,7 +91,7 @@ class LogExperiment:
           all_metrics_found_for_split = False
           break
       if (all_metrics_found_for_split):
-        self._splits_to_log.add(split)
+        self._splits_to_log.append(split)
 
   def save_results(self):
 
