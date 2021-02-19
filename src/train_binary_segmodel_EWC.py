@@ -8,7 +8,8 @@ from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
 from bfseg.utils.callbacks import (EarlyStoppingMinimumEpoch, SaveModelAndLogs,
                                    TestCallback)
-from bfseg.utils.datasets import load_datasets, load_replay_datasets
+from bfseg.utils.datasets import (load_datasets, load_replay_datasets,
+                                  update_datasets_with_replay_and_augmentation)
 from bfseg.utils.images import augmentation
 from bfseg.utils.replay_buffer import ReplayBuffer
 
@@ -45,35 +46,18 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   # Run the training.
   model.compile(
       optimizer=tf.keras.optimizers.Adam(training_params['learning_rate']))
-  # Check whether a replay buffer should be used.
-  if (cl_params['fraction_replay_ds_to_use'] is not None or
-      cl_params['ratio_main_ds_replay_ds'] is not None):
-    # Load replay datasets.
-    replay_ds = load_replay_datasets(
-        replay_datasets=dataset_params['replay_datasets'],
-        replay_datasets_scene=dataset_params['replay_datasets_scene'],
-        batch_size=training_params['batch_size'])
-    replay_buffer = ReplayBuffer(
-        main_ds=train_no_replay_ds,
-        replay_ds=replay_ds.values(),
-        batch_size=training_params['batch_size'],
-        ratio_main_ds_replay_ds=cl_params['ratio_main_ds_replay_ds'],
-        fraction_replay_ds_to_use=cl_params['fraction_replay_ds_to_use'],
-        perform_data_augmentation=training_params['perform_data_augmentation'])
-    train_ds = replay_buffer.flow()
-    # When using replay, evaluate separate metrics only on training set without
-    # replay.
-    test_ds = {'test': test_ds, 'train_no_replay': train_no_replay_ds}
-    # Add replay datasets to "test", i.e., test the performance of the trained
-    # model on them.
-    # - Ensure that there is no name collision.
-    assert (len(set(test_ds.keys()).intersection(replay_ds.keys())) == 0)
-    test_ds.update(replay_ds)
-  else:
-    train_ds = train_no_replay_ds
-    # Check if data augmentation should be used.
-    if (training_params['perform_data_augmentation']):
-      train_ds = train_ds.map(augmentation)
+  # Obtain actual training and test datasets after optionally creating a replay
+  # buffer and performing data augmentation.
+  train_ds, test_ds = update_datasets_with_replay_and_augmentation(
+      train_no_replay_ds=train_no_replay_ds,
+      test_ds=test_ds,
+      fraction_replay_ds_to_use=cl_params['fraction_replay_ds_to_use'],
+      ratio_main_ds_replay_ds=cl_params['ratio_main_ds_replay_ds'],
+      replay_datasets=dataset_params['replay_datasets'],
+      replay_datasets_scene=dataset_params['replay_datasets_scene'],
+      batch_size=training_params['batch_size'],
+      perform_data_augmentation=training_params['perform_data_augmentation'])
+
   model.fit(train_ds,
             epochs=training_params['num_training_epochs'],
             validation_data=val_ds,
