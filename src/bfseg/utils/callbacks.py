@@ -32,6 +32,8 @@ class TestCallback(Callback):
     # called.
     self.model.logs_test.clear()
     for test_dataset_name, test_dataset in self._test_data.items():
+      if (test_dataset is None):
+        continue
       for metric in self.model.metrics:
         metric.reset_states()
       for test_batch in test_dataset:

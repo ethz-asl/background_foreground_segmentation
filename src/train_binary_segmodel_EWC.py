@@ -8,7 +8,7 @@ from bfseg.sacred_utils import get_observer
 from bfseg.settings import TMPDIR
 from bfseg.utils.callbacks import (EarlyStoppingMinimumEpoch, SaveModelAndLogs,
                                    TestCallback)
-from bfseg.utils.datasets import load_datasets
+from bfseg.utils.datasets import load_datasets, load_replay_datasets
 from bfseg.utils.images import augmentation
 from bfseg.utils.replay_buffer import ReplayBuffer
 
@@ -48,9 +48,14 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   # Check whether a replay buffer should be used.
   if (cl_params['fraction_replay_ds_to_use'] is not None or
       cl_params['ratio_main_ds_replay_ds'] is not None):
+    # Load replay datasets.
+    replay_ds = load_replay_datasets(
+        replay_datasets=dataset_params['replay_datasets'],
+        replay_datasets_scene=dataset_params['replay_datasets_scene'],
+        batch_size=training_params['batch_size'])
     replay_buffer = ReplayBuffer(
         main_ds=train_no_replay_ds,
-        replay_ds=test_ds,
+        replay_ds=replay_ds.values(),
         batch_size=training_params['batch_size'],
         ratio_main_ds_replay_ds=cl_params['ratio_main_ds_replay_ds'],
         fraction_replay_ds_to_use=cl_params['fraction_replay_ds_to_use'],
@@ -59,6 +64,11 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
     # When using replay, evaluate separate metrics only on training set without
     # replay.
     test_ds = {'test': test_ds, 'train_no_replay': train_no_replay_ds}
+    # Add replay datasets to "test", i.e., test the performance of the trained
+    # model on them.
+    # - Ensure that there is no name collision.
+    assert (len(set(test_ds.keys()).intersection(replay_ds.keys())) == 0)
+    test_ds.update(replay_ds)
   else:
     train_ds = train_no_replay_ds
     # Check if data augmentation should be used.
