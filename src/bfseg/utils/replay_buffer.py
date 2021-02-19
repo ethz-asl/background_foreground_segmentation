@@ -20,16 +20,19 @@ class ReplayBuffer:
       samples are drawn and merged to the those from the main dataset (cf.
       docs).
     batch_size (int): Batch size to use for the merged dataset.
-    ratio_main_ds_replay_ds (list of int): If not None, the two datasets are
-      merged so that the resulting dataset has the same size as the main
-      dataset, and samples are randomly drawn from the two dataset so that the
-      ratio between the samples from the main dataset and those from the replay
-      dataset matches this ratio. The ratio is expressed by a list of two
-      integers: a ratio of '[3, 2]' means that 3 samples should be taken from
-      the main dataset every 2 samples from the other dataset. NOTE: An error
-      will be raised if the not enough samples from any of the two datasets can
-      be taken. Exactly one between `ratio_main_ds_replay_ds` and
-      `fraction_replay_ds_to_use` must be not None.
+    ratio_main_ds_replay_ds (list of int): If not None, the datasets are merged
+      so that the resulting dataset has (approximately) the same size as the
+      main dataset, and samples are randomly drawn from the both the main
+      dataset and the replay dataset(s) in such a way that the ratio between the
+      samples from the main dataset and those from the replay dataset(s) matches
+      this ratio. The ratio is expressed by a list of as `num_replay_datasets`+1
+      integers, where `num_replay_datasets` is the number of replay datasets:
+      for instance, a ratio of '[3, 2, 1]' means that 3 samples should be taken
+      from the main dataset every 2 samples from the first replay dataset and
+      every sample from the second replay dataset. NOTE: An error will be raised
+      if the not enough samples from any of the datasets can be taken. Exactly
+      one between `ratio_main_ds_replay_ds` and `fraction_replay_ds_to_use` must
+      be not None.
     fraction_replay_ds_to_use (float): If not None, the main dataset and the
       replay dataset(s) are merged so that the resulting dataset contains all
       samples from the main dataset, and a number of randomly selected samples
@@ -55,13 +58,14 @@ class ReplayBuffer:
                 "Exactly one between `ratio_main_ds_replay_ds` and "
                 "`fraction_replay_ds_to_use` must be not None.")
     if (ratio_main_ds_replay_ds is not None):
-      assert (not isinstance(replay_ds, list)), (
-          "Fixed-ratio replay strategy currently not supported with multiple "
-          "replay datasets.")
+      if (isinstance(replay_ds, list)):
+        total_num_datasets = len(replay_ds) + 1
+      else:
+        total_num_datasets = 2
       assert (isinstance(ratio_main_ds_replay_ds, list) and
-              len(ratio_main_ds_replay_ds) == 2 and
-              isinstance(ratio_main_ds_replay_ds[0], int) and
-              isinstance(ratio_main_ds_replay_ds[1], int))
+              len(ratio_main_ds_replay_ds) == total_num_datasets)
+      for ratio in ratio_main_ds_replay_ds:
+        assert (isinstance(ratio, int))
     if (fraction_replay_ds_to_use is not None):
       assert (isinstance(fraction_replay_ds_to_use, float) and
               0.0 <= fraction_replay_ds_to_use <= 1.0)
@@ -84,12 +88,12 @@ class ReplayBuffer:
         for replay_dataset in self._replay_datasets
     ]
 
-  def _concat_samples(self, sample_1, sample_2):
+  def _concat_samples(self, *samples):
     r"""Concatenates samples along the batch axis.
     """
-    return (tf.concat((sample_1[0], sample_2[0]),
-                      axis=0), tf.concat((sample_1[1], sample_2[1]), axis=0),
-            tf.concat((sample_1[2], sample_2[2]), axis=0))
+    return (tf.concat(tuple(sample[0] for sample in samples), axis=0),
+            tf.concat(tuple(sample[1] for sample in samples), axis=0),
+            tf.concat(tuple(sample[2] for sample in samples), axis=0))
 
   def flow(self):
     r"""Performs one merge of the datasets, drawing a new set of samples to
@@ -102,21 +106,24 @@ class ReplayBuffer:
         dataset with the desired batch size.          
     """
     if (self._ratio_main_ds_replay_ds is not None):
-      ratio_main, ratio_replay = self._ratio_main_ds_replay_ds
+      ratio_main = self._ratio_main_ds_replay_ds[0]
+      ratios_replay = [ratio for ratio in self._ratio_main_ds_replay_ds[1:]]
       # The main and the replay datasets are 'zipped' to form the merged
       # dataset. The number of 'batches' to take from the zipped dataset is
       # determined by the total number of samples to have (equal to original
       # number of samples in the main dataset) and by the ratio that should be
       # kept.
-      zipped_ds_batch_size = ratio_main + ratio_replay
+      zipped_ds_batch_size = ratio_main + sum(ratios_replay)
       zipped_ds_num_batches = int(
           np.ceil(self._tot_num_samples_main / zipped_ds_batch_size))
-      if (self._tot_num_samples_replay[0] <
-          zipped_ds_num_batches * ratio_replay):
-        raise ValueError(
-            f"Asked to replay {zipped_ds_num_batches * ratio_replay} samples "
-            "from the replay dataset, but this only has "
-            f"{self._tot_num_samples_replay[0]} samples.")
+      # Check on the number of samples.
+      for replay_ds_idx, ratio_replay in enumerate(ratios_replay):
+        num_samples_curr_replay_ds = self._tot_num_samples_replay[replay_ds_idx]
+        if (num_samples_curr_replay_ds < zipped_ds_num_batches * ratio_replay):
+          raise ValueError(
+              f"Asked to replay {zipped_ds_num_batches * ratio_replay} samples "
+              f"from the replay dataset with index {replay_ds_idx}, but this "
+              f"has only {num_samples_curr_replay_ds} samples.")
 
       total_num_samples = zipped_ds_batch_size * zipped_ds_num_batches
 
@@ -125,13 +132,16 @@ class ReplayBuffer:
       subset_main_ds = self._main_ds.unbatch().shuffle(
           self._tot_num_samples_main).batch(ratio_main).take(
               zipped_ds_num_batches)
-      subset_replay_ds = self._replay_datasets[0].unbatch().shuffle(
-          self._tot_num_samples_replay[0]).batch(ratio_replay).take(
-              zipped_ds_num_batches)
-      # Zip the two datasets to form the merged dataset.
+      subset_replay_ds = []
+      for replay_ds_idx, ratio_replay in enumerate(ratios_replay):
+        subset_replay_ds.append(
+            self._replay_datasets[replay_ds_idx].unbatch().shuffle(
+                self._tot_num_samples_replay[replay_ds_idx]).batch(
+                    ratio_replay).take(zipped_ds_num_batches))
+      # Zip the datasets to form the merged dataset.
       merged_ds = tf.data.Dataset.zip(
           (subset_main_ds,
-           subset_replay_ds)).map(self._concat_samples).unbatch()
+           *subset_replay_ds)).map(self._concat_samples).unbatch()
     else:
       # Keep the main dataset as it is.
       subset_main_ds = self._main_ds.unbatch()
