@@ -4,6 +4,8 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import warnings
 
+from bfseg.utils.replay_buffer import ReplayBuffer
+
 
 @tf.function
 def preprocess_nyu(image, label):
