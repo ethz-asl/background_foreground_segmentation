@@ -78,6 +78,8 @@ class SaveModelAndLogs(Callback):
         self.model.log_metrics(metric_type=test_dataset_name,
                                logs=test_dataset_logs,
                                step=epoch)
+    # Log learning rate.
+    self.model.log_lr(step=epoch)
 
 
 class EarlyStoppingMinimumEpoch(EarlyStopping):

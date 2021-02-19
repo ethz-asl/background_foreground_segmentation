@@ -147,6 +147,9 @@ class LogExperiment:
   def save_plots(self):
     split_with_metric = {split: [] for split in self._splits_to_log}
     for full_metric_name in self._experiment.metrics.keys():
+      if (full_metric_name == "lr"):
+        # Learning rate is handled separately.
+        continue
       # Try first with the special case `test_train_no_replay`.
       split_metric_name = full_metric_name.split("train_no_replay_", maxsplit=1)
       if (len(split_metric_name) == 1):
@@ -175,6 +178,11 @@ class LogExperiment:
 
     num_epochs = len(self._experiment.metrics[list(
         self._experiment.metrics.keys())[0]])
+
+    # If present, log learning rate.
+    if ("lr" in self._experiment.metrics.keys()):
+      # Learning rate is handled separately.
+      metrics_to_log.append(["lr"])
 
     for group_idx, metric_group in enumerate(metrics_to_log):
       fig = plt.figure(num=f'Run {self._experiment_id}, fig {group_idx}',

@@ -291,6 +291,17 @@ class BaseCLModel(keras.Model):
       for aux_loss_name in self._tracked_auxiliary_losses:
         getattr(self, f"{aux_loss_name}_tracker").reset_states()
 
+  def log_lr(self, step):
+    r"""Logs the learning rate at the given input step.
+
+    Args:
+      step (int): Training epoch at which the learning rate is logged.
+
+    Returns:
+      None.
+    """
+    self.run.log_scalar("lr", self.optimizer.lr.numpy(), step=step)
+
   @property
   def metrics(self):
     r"""Overrides `tf.keras.Model.metrics.
