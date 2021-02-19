@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
+import pvectorc
+import pyrsistent
+import yaml as yml
 
 MONGO_URI = INSERT YOUR MONGO URI HERE
 
@@ -46,6 +49,28 @@ class LogExperiment:
     # Save the plots containing the metrics.
     self.save_plots()
 
+  @staticmethod
+  def _recursive_transform_pmap(pmap):
+    pmap = dict(pmap)
+    for key, value in pmap.items():
+      if (isinstance(value, pvectorc.PVector)):
+        pmap[key] = LogExperiment._recursive_transform_pvector(value)
+      elif (isinstance(value, pyrsistent._pmap.PMap)):
+        pmap[key] = LogExperiment._recursive_transform_pmap(value)
+
+    return pmap
+
+  @staticmethod
+  def _recursive_transform_pvector(pvector):
+    pvector = list(pvector)
+    for idx, value in enumerate(pvector):
+      if (isinstance(value, pvectorc.PVector)):
+        pvector[idx] = LogExperiment._recursive_transform_pvector(value)
+      elif (isinstance(value, pyrsistent._pmap.PMap)):
+        pvector[idx] = LogExperiment._recursive_transform_pmap(value)
+
+    return pvector
+
   def save_config_file(self):
     with open(os.path.join(self._save_folder_plots, "config.txt"), "w") as f:
       f.write("Experiment config:\n")
@@ -59,6 +84,20 @@ class LogExperiment:
           if (hasattr(value, "items")):
             value = dict(sorted(value.items()))
           f.write(f"  - {subkey}: {value}\n")
+    # Save the config file also as yaml file.
+    with open(os.path.join(self._save_folder_plots, "config.yml"), "w") as f:
+      valid_keys = [
+          key for key in self._experiment.config.keys() if key[-7:] == "_params"
+      ]
+      valid_params = {}
+      for key in valid_keys:
+        value = self._experiment.config[key]
+        if (isinstance(value, pvectorc.PVector)):
+          value = LogExperiment._recursive_transform_pvector(value)
+        elif (isinstance(value, pyrsistent._pmap.PMap)):
+          value = LogExperiment._recursive_transform_pmap(value)
+        valid_params[key] = value
+      yml.dump(valid_params, f)
 
   def save_model(self, epoch_to_save):
     assert (isinstance(epoch_to_save, int) or epoch_to_save.isnumeric() or
