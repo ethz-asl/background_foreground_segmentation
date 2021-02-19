@@ -1,0 +1,34 @@
+# Train on CLA with EWC using with Fast-SCNN architecture pretrained on NYU with replay buffer.
+network_params:
+  architecture: fast_scnn
+  freeze_encoder: false
+  model_params:
+    image_h: 480
+    image_w: 640
+  normalization_type: group
+training_params:
+  batch_size: 10
+  learning_rate: 0.00001
+  num_training_epochs: 100
+  perform_data_augmentation: true
+  stopping_min_epoch: 50
+  stopping_patience: 20
+dataset_params:
+  replay_datasets:
+    NyuDepthV2Labeled
+  replay_datasets_scene:
+    null
+  test_dataset: null
+  test_scene: null
+  train_dataset: BfsegCLAMeshdistLabels
+  train_scene: null
+  validation_percentage: 10
+logging_params:
+  model_save_freq: 1
+  exp_name: fast_scnn_from_nyu_to_cla_finetune_replay
+cl_params:
+  cl_framework: finetune
+  fraction_replay_ds_to_use: 0.05
+  # Note: this needs to be specified.
+  pretrained_dir: NEED_TO_SPECIFY_THIS
+  ratio_main_ds_replay_ds: null
