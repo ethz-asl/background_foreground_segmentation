@@ -261,7 +261,7 @@ def update_datasets_with_replay_and_augmentation(
         batch_size=batch_size)
     replay_buffer = ReplayBuffer(
         main_ds=train_no_replay_ds,
-        replay_ds=replay_ds.values(),
+        replay_ds=list(replay_ds.values()),
         batch_size=batch_size,
         ratio_main_ds_replay_ds=ratio_main_ds_replay_ds,
         fraction_replay_ds_to_use=fraction_replay_ds_to_use,
