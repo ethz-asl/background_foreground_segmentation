@@ -38,6 +38,8 @@ class LogExperiment:
       if (not os.path.isdir(folder)):
         os.makedirs(folder)
 
+    self._find_splits_to_log()
+
     # Save the experiment configuration to file.
     self.save_config_file()
 
@@ -78,6 +80,19 @@ class LogExperiment:
               "w") as f:
       f.write(self._experiment.to_dict()['captured_out'])
 
+  def _find_splits_to_log(self):
+    self._splits_to_log = set()
+    self._metrics_to_log = ["accuracy", "mean_iou"]  #, "loss"]:
+
+    for split in ["train", "train_no_replay", "val", "test"]:
+      all_metrics_found_for_split = True
+      for metric in self._metrics_to_log:
+        if (f'{split}_{metric}' not in self._experiment.metrics):
+          all_metrics_found_for_split = False
+          break
+      if (all_metrics_found_for_split):
+        self._splits_to_log.add(split)
+
   def save_results(self):
 
     def write_result(split, metric, epoch, out_file):
@@ -98,7 +113,7 @@ class LogExperiment:
                        "\n")
 
         return value_text
-      except (IndexError, KeyError) as e:
+      except IndexError:
         return None
 
     # Save results at epoch 100 (if reached), and at the final epoch.
@@ -107,8 +122,8 @@ class LogExperiment:
     with open(os.path.join(self._save_folder_plots, "results.txt"), "w") as f:
       full_text = [[]]
       column_headers = []
-      for metric in ["accuracy", "mean_iou"]:  #, "loss"]:
-        for split in ["train", "train_no_replay", "val", "test"]:
+      for metric in self._metrics_to_log:
+        for split in self._splits_to_log:
           cell_text = ""
           column_headers.append(f"{metric} {split}")
           for epoch in epochs_to_save:
@@ -130,31 +145,32 @@ class LogExperiment:
       df.to_excel(os.path.join(self._save_folder_plots, "excel_results.ods"))
 
   def save_plots(self):
-    metrics_to_log = {'train': [], 'train_no_replay': [], 'test': [], 'val': []}
+    split_with_metric = {split: [] for split in self._splits_to_log}
     for full_metric_name in self._experiment.metrics.keys():
       # Try first with the special case `test_train_no_replay`.
-      split = full_metric_name.split("train_no_replay_", maxsplit=1)
-      if (len(split) == 1):
+      split_metric_name = full_metric_name.split("train_no_replay_", maxsplit=1)
+      if (len(split_metric_name) == 1):
         # Case `train`, `test`, or `val`,
         prefix, metric_name = full_metric_name.split("_", maxsplit=1)
-        if (not prefix in metrics_to_log.keys()):
+        if (not prefix in split_with_metric.keys()):
           raise KeyError(f"Metric {full_metric_name} was not recognized.")
       else:
         prefix = "train_no_replay"
-        metric_name = split[-1]
+        metric_name = split_metric_name[-1]
 
-      if (prefix in metrics_to_log.keys()):
-        bisect.insort(metrics_to_log[prefix], metric_name)
-    len_first_element = len(metrics_to_log[list(metrics_to_log.keys())[0]])
-    # Check that all metric types (e.g., 'train') have the same metrics.
-    metric_types = list(metrics_to_log.keys())
-    metric_names_per_type = list(metrics_to_log.values())
+      if (prefix in split_with_metric.keys()):
+        bisect.insort(split_with_metric[prefix], metric_name)
+    len_first_element = len(split_with_metric[list(
+        split_with_metric.keys())[0]])
+    # Check that all split types (e.g., 'train') have the same metrics.
+    split_types = list(split_with_metric.keys())
+    metric_names_per_type = list(split_with_metric.values())
     assert (metric_names_per_type.count(
         metric_names_per_type[0]) == len(metric_names_per_type))
     metric_names = metric_names_per_type[0]
 
     metrics_to_log = [[
-        f"{metric_type}_{metric_name}" for metric_type in metric_types
+        f"{split_type}_{metric_name}" for split_type in split_types
     ] for metric_name in metric_names]
 
     num_epochs = len(self._experiment.metrics[list(
