@@ -67,7 +67,10 @@ class ReplayBuffer:
               0.0 <= fraction_replay_ds_to_use <= 1.0)
     assert (isinstance(perform_data_augmentation, bool))
     self._main_ds = main_ds
-    self._replay_datasets = replay_ds
+    if (isinstance(replay_ds, list)):
+      self._replay_datasets = replay_ds
+    else:
+      self._replay_datasets = [replay_ds]
     self._batch_size = batch_size
     self._ratio_main_ds_replay_ds = ratio_main_ds_replay_ds
     self._fraction_replay_ds_to_use = fraction_replay_ds_to_use
@@ -122,7 +125,7 @@ class ReplayBuffer:
       subset_main_ds = self._main_ds.unbatch().shuffle(
           self._tot_num_samples_main).batch(ratio_main).take(
               zipped_ds_num_batches)
-      subset_replay_ds = self._replay_datasets.unbatch().shuffle(
+      subset_replay_ds = self._replay_datasets[0].unbatch().shuffle(
           self._tot_num_samples_replay[0]).batch(ratio_replay).take(
               zipped_ds_num_batches)
       # Zip the two datasets to form the merged dataset.
