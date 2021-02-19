@@ -45,6 +45,9 @@ class ReplayBuffer:
                ratio_main_ds_replay_ds=None,
                fraction_replay_ds_to_use=None,
                perform_data_augmentation=True):
+    assert (
+        replay_ds is not None
+    ), "Replay dataset must be specified in order to build the replay buffer."
     assert ((ratio_main_ds_replay_ds is None) !=
             (fraction_replay_ds_to_use is None)), (
                 "Exactly one between `ratio_main_ds_replay_ds` and "

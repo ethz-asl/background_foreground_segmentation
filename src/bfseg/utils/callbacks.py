@@ -10,13 +10,15 @@ class TestCallback(Callback):
   Args:
     test_data (tensorflow.python.data.ops.dataset_ops.PrefetchDataset/dict):
       Either single test dataset to use, or dictionary of the multiple test
-      datasets to use, indexed by their name.
+      datasets to use, indexed by their name. If None, no test dataset is used.
     verbose (int): Verbose level.
   """
 
   def __init__(self, test_data, verbose=0):
     if (isinstance(test_data, dict)):
       self._test_data = test_data
+    elif (test_data is None):
+      self._test_data = {}
     else:
       # If single test dataset is given, still convert it to dict format, for
       # compatibility with the multiple-dataset case.
