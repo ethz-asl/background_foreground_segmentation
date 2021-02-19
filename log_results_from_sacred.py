@@ -5,6 +5,7 @@ from incense import ExperimentLoader
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pandas as pd
 
 MONGO_URI = INSERT YOUR MONGO URI HERE
 
@@ -85,34 +86,51 @@ class LogExperiment:
         if (epoch == "final"):
           epoch_number = len(
               self._experiment.metrics[f'{split}_{metric}'].values) - 1
-          epoch_text = f"final epoch ({epoch_number})"
+          epoch_text = [f"final epoch", f" (ep. {epoch_number})"]
         else:
           epoch_number = epoch
-          epoch_text = f"epoch {epoch_number}"
+          epoch_text = [f"epoch {epoch_number}", ""]
 
-        out_file.write(
-            f"- {split} {metric} @ {epoch_text}: "
-            "{:.4f}\n".format(self._experiment.metrics[f'{split}_{metric}'].
-                              values[epoch_number]))
+        value_text = "{:.4f}".format(
+            self._experiment.metrics[f'{split}_{metric}'].values[epoch_number]
+        ) + f"{epoch_text[1]}"
+        out_file.write(f"- {split} {metric} @ {epoch_text[0]}: " + value_text +
+                       "\n")
+
+        return value_text
       except (IndexError, KeyError) as e:
-        return
+        return None
 
     # Save results at epoch 100 (if reached), and at the final epoch.
     epochs_to_save = [100, "final"]
 
     with open(os.path.join(self._save_folder_plots, "results.txt"), "w") as f:
+      full_text = [[]]
+      column_headers = []
       for metric in ["accuracy", "mean_iou"]:  #, "loss"]:
         for split in ["train", "train_no_replay", "val", "test"]:
+          cell_text = ""
+          column_headers.append(f"{metric} {split}")
           for epoch in epochs_to_save:
-            write_result(split=split, metric=metric, epoch=epoch, out_file=f)
+            value_text = write_result(split=split,
+                                      metric=metric,
+                                      epoch=epoch,
+                                      out_file=f)
+            if (value_text is not None):
+              if (len(cell_text) == 0):
+                cell_text = value_text
+              else:
+                cell_text += f"\n{value_text}"
+          full_text[0].append(cell_text)
+      # Also write the results as an excel file, for easier logging to
+      # Spreadsheet.
+      df = pd.DataFrame(full_text,
+                        index=[f"{self._experiment_id}"],
+                        columns=column_headers)
+      df.to_excel(os.path.join(self._save_folder_plots, "excel_results.ods"))
 
   def save_plots(self):
-    metrics_to_log = {
-        'train': [],
-        'train_no_replay': [],
-        'test': [],
-        'val': []
-    }
+    metrics_to_log = {'train': [], 'train_no_replay': [], 'test': [], 'val': []}
     for full_metric_name in self._experiment.metrics.keys():
       # Try first with the special case `test_train_no_replay`.
       split = full_metric_name.split("train_no_replay_", maxsplit=1)
