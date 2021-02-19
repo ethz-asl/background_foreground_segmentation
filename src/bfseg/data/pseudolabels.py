@@ -15,7 +15,7 @@ Labels:
 
 
 class MeshdistPseudolabels(tfds.core.GeneratorBasedBuilder):
-  """DatasetBuilder for BfsegCLAMeshdistLabels dataset."""
+  """DatasetBuilder for bagfile datasets (e.g., Rumlang)."""
 
   VERSION = tfds.core.Version('0.1.0')
   RELEASE_NOTES = {'0.1.0': 'Initial testing.'}
