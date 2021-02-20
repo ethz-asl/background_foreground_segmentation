@@ -17,8 +17,13 @@ Labels:
 class MeshdistPseudolabels(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for bagfile datasets (e.g., Rumlang)."""
 
-  VERSION = tfds.core.Version('0.1.0')
-  RELEASE_NOTES = {'0.1.0': 'Initial testing.'}
+  VERSION = tfds.core.Version('0.1.3')
+  RELEASE_NOTES = {
+      '0.1.3': 'completed alphasense garage data',
+      '0.1.2': 'removed cam2 from garage1',
+      '0.1.1': 'more data',
+      '0.1.0': 'Initial testing.'
+  }
 
   def _info(self) -> tfds.core.DatasetInfo:
     """Returns the dataset metadata."""
@@ -39,6 +44,12 @@ class MeshdistPseudolabels(tfds.core.GeneratorBasedBuilder):
             'https://drive.google.com/uc?export=download&id=1f-AI4eFwJPh_ZK4-4HrbAdVts6cZ-hWI',
         'rumlang2':
             'https://drive.google.com/uc?export=download&id=1GvXpFIbnsh2VbGjqMoL9tq8Skl3KI_6G',
+        'garage1':
+            'https://drive.google.com/uc?export=download&id=1G83Mcjp6SNdUcg7HIG74fh3xqjW8Fhbe',
+        'garage2':
+            'https://drive.google.com/uc?export=download&id=1KFbc7IP1hp9KNZCcV_JkLY3snyU88dTZ',
+        'garage3':
+            'https://drive.google.com/uc?export=download&id=1wWGBxsGo8tK98JKKBsUA9JB18OlKM_QE',
     })
     return [
         tfds.core.SplitGenerator(
@@ -77,7 +88,7 @@ class MeshdistPseudolabels(tfds.core.GeneratorBasedBuilder):
             rgb = img[:, :, :3][..., ::-1]
             alpha = img[:, :, 3]
             blob['image'] = np.concatenate((rgb, np.expand_dims(alpha, -1)),
-                                         axis=-1)
+                                           axis=-1)
           else:
             blob['image'] = img[..., ::-1]
         else:

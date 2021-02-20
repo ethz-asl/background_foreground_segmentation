@@ -1,6 +1,6 @@
 epochs: 100
 batchsize: 10
-stopping_patience: 20
+stopping_patience: 50
 data_augmentation: True
 balanced_loss: True
 normalization_type: group

@@ -1,9 +1,11 @@
-from os import path, environ, listdir
+from os import path, environ, listdir, mkdir
 from zipfile import ZipFile
 import json
 import tensorflow as tf
 import numpy as np
 import cv2
+from bfseg.settings import TMPDIR
+from shutil import rmtree
 
 
 def load_fsdata(base_path, dataset_info=None, modalities=None):
@@ -12,11 +14,14 @@ def load_fsdata(base_path, dataset_info=None, modalities=None):
     print(message)
     raise IOError(1, message, base_path)
 
-  if 'TMPDIR' in environ and base_path.endswith('.zip'):
+  if base_path.endswith('.zip'):
     print('INFO Loading into machine ... ')
+    tmppath = path.join(TMPDIR, 'fsdata_tmp')
+    rmtree(tmppath)
+    mkdir(tmppath)
     with ZipFile(base_path, 'r') as arch:
-      arch.extractall(path=environ['TMPDIR'])
-    base_path = environ['TMPDIR']
+      arch.extractall(path=tmppath)
+    base_path = tmppath
     print('DONE')
 
   all_files = listdir(base_path)

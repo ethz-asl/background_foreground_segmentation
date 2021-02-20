@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Launch file for Selective ICP with rviz
+-->
+
+<launch>
+
+
+	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube2_full.launch">
+		<arg name="rosbag" value="/media/blumh/ext_2tb/pickelhaube_2021-02-18-11-19-59.bag" />
+		<arg name="cad_file" value="/home/blumh/Downloads/191130_286_lee_j_vf_20160101_SE.off" />
+		<arg name="logprefix" value="pickelhaube_full_office4" />
+		k
+	</include>
+
+	<!--node name="mesh_positioning"
+          pkg="cpt_selective_icp"
+          type="position_cad_with_marker.py"
+          output="screen">
+    	<param name="marker_parent_frame" value="map" />
+		<param name="marker_frame_name" value="marker" />
+  	</node-->
+    <node pkg="tf2_ros"
+	      type="static_transform_publisher"
+		  name="mesh_positioning"
+		  args="-0.890 14.230 -0.912 0 0 0.732 0.681 map marker" />
+    <node pkg="rosservice"
+	      type="rosservice"
+		  name="start_icp"
+		  args="call wait /mapper/load_published_map"
+		  launch-prefix="bash -c 'sleep 4; $0 $@'" />
+
+</launch>

@@ -98,7 +98,7 @@ Launch file for Selective ICP with rviz
           downsamplingFactor: 1
           useSuperpixel: true
           foregroundTrustRegion: false
-          fgBgThreshold: 100
+          fgBgThreshold: 50
           numberOfSuperPixel: 400
         </rosparam>
         <param name="label_path" value="/home/blumh/asl/rss_2021_data/$(arg logprefix)/" />
