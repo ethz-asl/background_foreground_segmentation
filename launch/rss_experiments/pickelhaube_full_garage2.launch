@@ -9,7 +9,7 @@ Launch file for Selective ICP with rviz
 	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube_full.launch">
 		<arg name="rosbag" value="/media/blumh/ext_2tb/pickelhaube_2021-01-29-15-36-26.bag" />
 		<arg name="cad_file" value="$(find cpt_selective_icp)/resources/CLA_CAD_simplified_single_wall_no_ceiling.off" />
-		<arg name="logprefix" value="pickelhaube_full_garage1" />
+		<arg name="logprefix" value="pickelhaube_full_garage2" />
 	</include>
 
 	<!--node name="mesh_positioning"
