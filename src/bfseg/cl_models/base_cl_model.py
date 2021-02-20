@@ -270,8 +270,9 @@ class BaseCLModel(keras.Model):
     "train_no_replay", "val", or "test") at the given step.
 
     Args:
-      metric_type (str): Either "train", "train_no_replay", "val", or "test":
-        type of the dataset the metrics refer to.
+      metric_type (str): Either "train", "train_no_replay", "val", "test", or
+        the name of a dataset on which the model was evaluated: type of the
+        dataset the metrics refer to.
       logs (dict): Dictionary containing the metrics to log, indexed by the
         metric name, with their value at the given step.
       step (int): Training epoch to which the metrics are referred.
@@ -279,7 +280,6 @@ class BaseCLModel(keras.Model):
     Returns:
       None.
     """
-    assert (metric_type in ["train", "train_no_replay", "val", "test"])
     for metric_name, metric_value in logs.items():
       self.run.log_scalar(f'{metric_type}_{metric_name}',
                           metric_value,
