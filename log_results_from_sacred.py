@@ -123,7 +123,10 @@ class LogExperiment:
     self._splits_to_log = []
     self._metrics_to_log = ["accuracy", "mean_iou"]  #, "loss"]:
 
-    for split in ["train", "train_no_replay", "val", "test"]:
+    for split in [
+        "train", "train_no_replay", "val", "test", "NyuDepthV2Labeled_None",
+        "BfsegCLAMeshdistLabels_None"
+    ]:
       all_metrics_found_for_split = True
       for metric in self._metrics_to_log:
         if (f'{split}_{metric}' not in self._experiment.metrics):
@@ -189,16 +192,24 @@ class LogExperiment:
       if (full_metric_name == "lr"):
         # Learning rate is handled separately.
         continue
-      # Try first with the special case `test_train_no_replay`.
-      split_metric_name = full_metric_name.split("train_no_replay_", maxsplit=1)
-      if (len(split_metric_name) == 1):
+      # Try first with the special cases.
+      prefix = None
+      for special_split_name in [
+          "train_no_replay_", "NyuDepthV2Labeled_None_",
+          "BfsegCLAMeshdistLabels_None_"
+      ]:
+        split_metric_name = full_metric_name.split(special_split_name,
+                                                   maxsplit=1)
+        if (len(split_metric_name) != 1):
+          prefix = special_split_name[:-1]
+          metric_name = split_metric_name[-1]
+          break
+
+      if (prefix is None):
         # Case `train`, `test`, or `val`,
         prefix, metric_name = full_metric_name.split("_", maxsplit=1)
         if (not prefix in split_with_metric.keys()):
           raise KeyError(f"Metric {full_metric_name} was not recognized.")
-      else:
-        prefix = "train_no_replay"
-        metric_name = split_metric_name[-1]
 
       if (prefix in split_with_metric.keys()):
         bisect.insort(split_with_metric[prefix], metric_name)
