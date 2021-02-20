@@ -37,7 +37,7 @@ Launch file for Selective ICP with rviz
 
     <!-- Start Dataset Creator node for each camera -->
     <node pkg="background_foreground_segmentation" type="background_foreground_segmentation_node"
-          name="dataset_creator_cam0" output="screen">
+          name="dataset_creator_cam0" output="screen" respawn="True">
         <rosparam command="load" file="$(find background_foreground_segmentation)/config/cla_dataset_creator_in_memory.yaml"/>
         <param name="outputFolder" value="/tmp/"/>
         <param name="cameraImageTopic" value="/pickelhaube/cam0/image"/>
@@ -49,7 +49,7 @@ Launch file for Selective ICP with rviz
     </node>
 
     <node pkg="background_foreground_segmentation" type="background_foreground_segmentation_node"
-          name="dataset_creator_cam1" output="screen">
+          name="dataset_creator_cam1" output="screen" respawn="True">
         <rosparam command="load" file="$(find background_foreground_segmentation)/config/cla_dataset_creator_in_memory.yaml"/>
         <param name="outputFolder" value="/tmp/"/>
         <param name="cameraImageTopic" value="/pickelhaube/cam1/image"/>
@@ -61,7 +61,7 @@ Launch file for Selective ICP with rviz
     </node>
 
     <node pkg="background_foreground_segmentation" type="background_foreground_segmentation_node"
-          name="dataset_creator_cam2" output="screen">
+          name="dataset_creator_cam2" output="screen" respawn="True">
         <rosparam command="load" file="$(find background_foreground_segmentation)/config/cla_dataset_creator_in_memory.yaml"/>
         <param name="outputFolder" value="/tmp/"/>
         <param name="cameraImageTopic" value="/pickelhaube/cam2/image"/>
@@ -73,7 +73,7 @@ Launch file for Selective ICP with rviz
     </node>
 
     <node pkg="background_foreground_segmentation" type="background_foreground_segmentation_node"
-          name="dataset_creator_cam3" output="screen">
+          name="dataset_creator_cam3" output="screen" respawn="True">
         <rosparam command="load" file="$(find background_foreground_segmentation)/config/cla_dataset_creator_in_memory.yaml"/>
         <param name="outputFolder" value="/tmp/"/>
         <param name="cameraImageTopic" value="/pickelhaube/cam3/image"/>
@@ -114,7 +114,7 @@ Launch file for Selective ICP with rviz
           downsamplingFactor: 3
           useSuperpixel: true
           foregroundTrustRegion: false
-          fgBgThreshold: 100
+          fgBgThreshold: 80
           numberOfSuperPixel: 400
         </rosparam>
         <param name="label_path" value="/home/blumh/asl/rss_2021_data/$(arg logprefix)/" />
