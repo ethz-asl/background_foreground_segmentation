@@ -65,7 +65,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
   Args:
     dataset_name (str): Name of the dataset. Valid entries are:
       "NyuDepthV2Labeled" (NYU dataset), "BfsegCLAMeshdistLabels",
-      "MeshdistPseudolabels" (bagfile dataset, i.e., Rumlang).
+      "MeshdistPseudolabels" (bagfile dataset, i.e., Rumlang/garage).
     scene_type (str): Type of scene in the dataset to use type. Valid entries
       are:
       - If `dataset_name` is "NyuDepthV2Labeled":
@@ -76,8 +76,13 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
         - None: All the samples in the dataset are selected (no scene
             subdivision is available).
       - If `dataset_name` is "MeshdistPseudolabels": 
-        - None: Both the scenes in the dataset are selected.
+        - None: All the scenes in the dataset are selected.
+        - "garage_full": All the three scenes from the garage.
+        - "rumlang_full": Both the scenes from Rumlang.
         - One of the two following scenes:
+          - "garage1"
+          - "garage2"
+          - "garage3"
           - "rumlang2" 
           - "rumlang3"
     fraction (str): Fraction of the selected scene to load. Must be a valid
@@ -111,8 +116,13 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       raise Exception("Invalid scene type: %s!" % scene_type)
   elif (dataset_name == 'MeshdistPseudolabels'):
     if (scene_type is None):
-      name = 'rumlang2+rumlang3'
-    elif (scene_type in ["rumlang2", "rumlang3"]):
+      name = 'garage1+garage2+garage3+rumlang2+rumlang3'
+    elif (scene_type == "garage_full"):
+      name = "garage1+garage2+garage3"
+    elif (scene_type == "rumlang_full"):
+      name = "rumlang2+rumlang3"
+    elif (scene_type
+          in ["garage1", "garage2", "garage3", "rumlang2", "rumlang3"]):
       name = scene_type
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
@@ -122,8 +132,11 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
   # Select the fraction of samples from the scene.
   if (fraction is not None):
     # Handle the special case of a mix of scenes.
-    if (name == "rumlang2+rumlang3"):
-      split = f"rumlang2{fraction}+rumlang3{fraction}"
+    scenes_unmixed = name.split('+')
+    if (len(scenes_unmixed) > 1):
+      split = f"{scenes_unmixed[0]}{fraction}"
+      for scene_unmixed in scenes_unmixed[1:]:
+        split += f"+{scene_unmixed}{fraction}"
     else:
       split = f"{name}{fraction}"
   else:
