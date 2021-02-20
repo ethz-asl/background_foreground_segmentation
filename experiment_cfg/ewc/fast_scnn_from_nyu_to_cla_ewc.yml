@@ -17,6 +17,8 @@ dataset_params:
   fisher_params_dataset: NyuDepthV2Labeled
   fisher_params_scene: null
   fisher_params_sample_percentage: 50
+  replay_datasets: null
+  replay_datasets_scene: null
   test_dataset: NyuDepthV2Labeled
   test_scene: null
   train_dataset: BfsegCLAMeshdistLabels

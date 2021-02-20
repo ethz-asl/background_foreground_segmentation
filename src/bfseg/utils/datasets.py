@@ -4,6 +4,8 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import warnings
 
+from bfseg.utils.replay_buffer import ReplayBuffer
+
 
 @tf.function
 def preprocess_nyu(image, label):
@@ -161,8 +163,9 @@ def load_datasets(train_dataset,
                   fisher_params_dataset=None,
                   fisher_params_scene=None,
                   fisher_params_sample_percentage=None):
-  r"""Creates 3 data loaders, for training, validation and testing.
-    """
+  r"""Creates data loaders, for training, validation and testing, and optionally
+  for the dataset required to compute Fisher parameters.
+  """
   assert (isinstance(validation_percentage, int) and
           0 <= validation_percentage <= 100)
   assert ((fisher_params_dataset is None) == (fisher_params_sample_percentage is
@@ -201,3 +204,81 @@ def load_datasets(train_dataset,
         batch_size=1,
         shuffle_data=True)
     return train_ds, val_ds, test_ds, fisher_params_ds
+
+
+def load_replay_datasets(replay_datasets, replay_datasets_scene, batch_size):
+  r"""Creates data loaders for one or more replay datasets.
+  """
+  assert (isinstance(replay_datasets, list) and
+          isinstance(replay_datasets_scene, list) and
+          len(replay_datasets) == len(replay_datasets_scene))
+  replay_ds = {}
+  for curr_replay_dataset, curr_replay_dataset_scene in zip(
+      replay_datasets, replay_datasets_scene):
+    replay_ds[f"{curr_replay_dataset}_{curr_replay_dataset_scene}"] = load_data(
+        dataset_name=curr_replay_dataset,
+        scene_type=curr_replay_dataset_scene,
+        fraction=None,
+        batch_size=batch_size,
+        shuffle_data=False)
+
+  return replay_ds
+
+
+def update_datasets_with_replay_and_augmentation(
+    train_no_replay_ds, test_ds, fraction_replay_ds_to_use,
+    ratio_main_ds_replay_ds, replay_datasets, replay_datasets_scene, batch_size,
+    perform_data_augmentation):
+  r"""Returns training and test datasets after creating a replay buffer and
+  performing data augmentation, if necessary.
+
+  Args:
+    train_no_replay_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset):
+      Training dataset before replay and augmentation.
+    test_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Test
+      dataset before replay and augmentation.
+    fraction_replay_ds_to_use (float): Cf. `src/bfseg/utils/replay_buffer.py`.
+    ratio_main_ds_replay_ds (list of int): Cf.
+      `src/bfseg/utils/replay_buffer.py`.
+    replay_datasets (list of str). Cf. `load_replay_datasets`.
+    replay_datasets_scene (list of str). Cf. `load_replay_datasets`.
+    batch_size (int): Batch size to use in the optional replay buffer.
+    perform_data_augmentation (bool): Whether or not to perform data
+      augmentation.
+
+  Returns:
+    train_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Training
+      dataset after optional replay and augmentation.
+    test (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Test dataset
+      after optional replay and augmentation.
+  """
+  if (fraction_replay_ds_to_use is not None or
+      ratio_main_ds_replay_ds is not None):
+    # Load replay datasets.
+    replay_ds = load_replay_datasets(
+        replay_datasets=replay_datasets,
+        replay_datasets_scene=replay_datasets_scene,
+        batch_size=batch_size)
+    replay_buffer = ReplayBuffer(
+        main_ds=train_no_replay_ds,
+        replay_ds=list(replay_ds.values()),
+        batch_size=batch_size,
+        ratio_main_ds_replay_ds=ratio_main_ds_replay_ds,
+        fraction_replay_ds_to_use=fraction_replay_ds_to_use,
+        perform_data_augmentation=perform_data_augmentation)
+    train_ds = replay_buffer.flow()
+    # When using replay, evaluate separate metrics only on training set without
+    # replay.
+    test_ds = {'test': test_ds, 'train_no_replay': train_no_replay_ds}
+    # Add replay datasets to "test", i.e., test the performance of the trained
+    # model on them.
+    # - Ensure that there is no name collision.
+    assert (len(set(test_ds.keys()).intersection(replay_ds.keys())) == 0)
+    test_ds.update(replay_ds)
+  else:
+    train_ds = train_no_replay_ds
+    # Check if data augmentation should be used.
+    if (perform_data_augmentation):
+      train_ds = train_ds.map(augmentation)
+
+  return train_ds, test_ds

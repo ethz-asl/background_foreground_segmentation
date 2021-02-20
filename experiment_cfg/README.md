@@ -41,14 +41,12 @@ ____
 ## Dataset parameters
 
 ### Required parameters
-
+- `replay_datasets` (`list` of `str`, or `None`): If not `None`, name of the replay dataset(s) to use.
+- `replay_datasets_scene` (`list` of `str`, or `None`): If not `None`, scene type of each of the replay dataset(s) to use.
 - `test_dataset` (`str`): Name of the test dataset.
-
 - `test_scene` (`str`): Scene type of the test dataset.
 - `train_dataset` (`str`): Name of the training dataset.
-
 - `train_scene` (`str`): Scene type of the training dataset.
-
 - `validation_percentage` (`int`): Percentage of the training scene to use for validation.
 
 ### Optional parameters
