@@ -23,7 +23,7 @@ dataset_params:
   test_dataset: null
   test_scene: null
   train_dataset: MeshdistPseudolabels
-  train_scene: null
+  train_scene: rumlang_full
   validation_percentage: 10
 logging_params:
   model_save_freq: 1
