@@ -63,6 +63,11 @@ ____
   - `"bedroom"`
 - `MeshdistPseudolabels`. Valid dataset scenes:
   - `None`
+  - `"garage_full"`
+  - `"rumlang_full"`
+  - `"garage1"`
+  - `"garage2"`
+  - `"garage3"`
   - `"rumlang2"`
   - `"rumlang3"`
 - `NyuDepthV2Labeled`. Valid dataset scenes:
