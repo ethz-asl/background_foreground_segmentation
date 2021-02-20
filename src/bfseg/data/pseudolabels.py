@@ -39,6 +39,8 @@ class MeshdistPseudolabels(tfds.core.GeneratorBasedBuilder):
             'https://drive.google.com/uc?export=download&id=1f-AI4eFwJPh_ZK4-4HrbAdVts6cZ-hWI',
         'rumlang2':
             'https://drive.google.com/uc?export=download&id=1GvXpFIbnsh2VbGjqMoL9tq8Skl3KI_6G',
+        'garage1':
+            'https://drive.google.com/uc?export=download&id=1WEV4Cz2SCps-IEgPMOeg6v1OCo122hiw',
     })
     return [
         tfds.core.SplitGenerator(
