@@ -242,6 +242,11 @@ class LogExperiment:
         # Retrieve the required model.
         model_path, artifact_name = self.save_model(epoch_to_save=epoch)
         if (model_path is None):
+          if (epoch == "final"):
+              # If final model not available, take last available one.
+              model_path, artifact_name = self.save_model(
+                      epoch_to_save=self._num_epochs - 1)
+        if (model_path is None):
           print(f"Cannot evaluate current experiment at epoch {epoch}, because "
                 "the corresponding model does not exist.")
           continue
@@ -355,31 +360,33 @@ class LogExperiment:
             for split in val_accuracies.keys():
               cell_text = ""
               column_headers.append(f"{metric} {split}")
-              assert (set(self._epochs_to_save) == set(
-                  val_accuracies[split].keys()))
               for epoch in self._epochs_to_save:
-                value = val_accuracies[split][epoch]
-                cell_text = get_updated_cell_text(cell_text=cell_text,
-                                                  split=split,
-                                                  metric=metric,
-                                                  epoch=epoch,
-                                                  f=f,
-                                                  value=value)
+                try:
+                  value = val_accuracies[split][epoch]
+                  cell_text = get_updated_cell_text(cell_text=cell_text,
+                                                    split=split,
+                                                    metric=metric,
+                                                    epoch=epoch,
+                                                    f=f,
+                                                    value=value)
+                except KeyError:
+                  continue
               full_text[0].append(cell_text)
           else:
             for split in val_mean_ious.keys():
               cell_text = ""
               column_headers.append(f"{metric} {split}")
-              assert (set(self._epochs_to_save) == set(
-                  val_mean_ious[split].keys()))
               for epoch in self._epochs_to_save:
-                value = val_mean_ious[split][epoch]
-                cell_text = get_updated_cell_text(cell_text=cell_text,
-                                                  split=split,
-                                                  metric=metric,
-                                                  epoch=epoch,
-                                                  f=f,
-                                                  value=value)
+                try:
+                  value = val_mean_ious[split][epoch]
+                  cell_text = get_updated_cell_text(cell_text=cell_text,
+                                                    split=split,
+                                                    metric=metric,
+                                                    epoch=epoch,
+                                                    f=f,
+                                                    value=value)
+                except KeyError:
+                  continue
               full_text[0].append(cell_text)
 
       # Also write the results as an excel file, for easier logging to
