@@ -7,19 +7,26 @@ Launch file for Selective ICP with rviz
 
 
 	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube2_segmentation.launch">
-		<arg name="rosbag" value="/media/blumh/ext_2tb/pickelhaube_2021-02-08-12-32-19.bag" />
+		<arg name="rosbag" value="/media/blumh/ext_2tb/pickelhaube_2021-02-08-13-30-31.bag" />
 		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/rss_experiments/210212_Rumlang_Meters_SE.off" />
-		<arg name="logprefix" value="pickelhaube_nyusegmentation_rumlang1" />
+		<arg name="logprefix" value="pickelhaube_nyusegmentation_rumlang3" />
 		<arg name="segmentation_model" value="1ZF2nYMD9PE0kr435TrDVLpaHuDUBSOC5" />
 		<arg name="input_height" value="480" />
 		<arg name="input_width" value="640" />
 		<arg name="threshold" value="50" />
 	</include>
 
+	<!--node name="mesh_positioning"
+          pkg="cpt_selective_icp"
+          type="position_cad_with_marker.py"
+          output="screen">
+    	<param name="marker_parent_frame" value="map" />
+		<param name="marker_frame_name" value="marker" />
+  	</node-->
     <node pkg="tf2_ros"
 	      type="static_transform_publisher"
 		  name="mesh_positioning"
-		  args="14.505 -3.089 -1.667 0.000 0.000 0.999 -0.041 map marker" />
+		  args="-2.992 -11.989 -1.667 0.000 0.000 0.760 0.650 map marker" />
     <node pkg="rosservice"
 	      type="rosservice"
 		  name="start_icp"

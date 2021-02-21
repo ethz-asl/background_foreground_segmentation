@@ -10,10 +10,10 @@ Launch file for Selective ICP with rviz
 		<arg name="rosbag" value="/media/blumh/ext_2tb/pickelhaube_2021-02-08-12-41-26.bag" />
 		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/rss_experiments/210212_Rumlang_Meters_SE.off" />
 		<arg name="logprefix" value="pickelhaube_nyusegmentation_rumlang2" />
-		<arg name="segmentation_model" value="1yze-v7YVuV8pDtTICBAXNq0KkJn9j3MO" />
+		<arg name="segmentation_model" value="1ZF2nYMD9PE0kr435TrDVLpaHuDUBSOC5" />
 		<arg name="input_height" value="480" />
 		<arg name="input_width" value="640" />
-		<arg name="threshold" value="80" />
+		<arg name="threshold" value="50" />
 	</include>
 
     <node pkg="tf2_ros"
