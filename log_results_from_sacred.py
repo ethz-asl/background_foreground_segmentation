@@ -48,6 +48,16 @@ class LogExperiment:
       if (not os.path.isdir(folder)):
         os.makedirs(folder)
 
+    # Set the epochs for which to log the results (if reached)
+    self._epochs_to_save = [100, "final"]
+
+    # Set the test datasets on which to optionally evaluated the pretrained
+    # models.
+    self._datasets_names_to_evaluate = [
+        "BfsegValidationLabeled", "OfficeRumlangValidationLabeled"
+    ]
+    self._datasets_scenes_to_evaluate = ["CLA", "RUMLANG"]
+
     self._find_splits_to_log()
 
     # Save the experiment configuration to file.
@@ -241,7 +251,7 @@ class LogExperiment:
       if (all_metrics_found_for_split):
         self._splits_to_log.append(split)
 
-  def save_results(self):
+  def save_results(self, evaluate_on_validation):
 
     def write_result(split, metric, epoch, out_file):
 
@@ -264,8 +274,11 @@ class LogExperiment:
       except IndexError:
         return None
 
-    # Save results at epoch 100 (if reached), and at the final epoch.
-    epochs_to_save = [100, "final"]
+    if (evaluate_on_validation):
+      self.evaluate(
+          epochs_to_evaluate=self._epochs_to_save,
+          datasets_names_to_evaluate=self._datasets_names_to_evaluate,
+          datasets_scenes_to_evaluate=self._datasets_scenes_to_evaluate)
 
     with open(os.path.join(self._save_folder_plots, "results.txt"), "w") as f:
       full_text = [[]]
@@ -274,7 +287,7 @@ class LogExperiment:
         for split in self._splits_to_log:
           cell_text = ""
           column_headers.append(f"{metric} {split}")
-          for epoch in epochs_to_save:
+          for epoch in self._epochs_to_save:
             value_text = write_result(split=split,
                                       metric=metric,
                                       epoch=epoch,
@@ -392,11 +405,17 @@ if (__name__ == "__main__"):
       "--save_results",
       action="store_true",
       help="Whether or not to save a summary of the results of the experiment.")
+  parser.add_argument(
+      "--evaluate",
+      action="store_true",
+      help="Whether or not to evaluate selected pretrained models on selected "
+      "validation sets.")
   args = parser.parse_args()
   experiment_id = args.id
   save_folder = args.save_folder
   save_output = args.save_output
   save_results = args.save_results
+  evaluate = args.evaluate
   model_to_save = args.model_to_save
 
   experiment_logger = LogExperiment(experiment_id=experiment_id,
@@ -410,4 +429,4 @@ if (__name__ == "__main__"):
     experiment_logger.save_output()
   # Optionally save a summary of the results to file.
   if (save_results):
-    experiment_logger.save_results()
+    experiment_logger.save_results(evaluate_on_validation=evaluate)
