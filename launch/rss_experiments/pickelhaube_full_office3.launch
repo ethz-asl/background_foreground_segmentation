@@ -8,7 +8,7 @@ Launch file for Selective ICP with rviz
 
 	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube_full.launch">
 		<arg name="rosbag" value="/media/blumh/ext_2tb/pickelhaube_2021-01-29-14-51-11.bag" />
-		<arg name="cad_file" value="/home/blumh/Downloads/191130_286_lee_j_vf_20160101_SE.off" />
+		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/rss_experiments/191130_286_lee_j_vf_20160101_SE.off" />
 		<arg name="logprefix" value="pickelhaube_full_office3" />
 	</include>
 

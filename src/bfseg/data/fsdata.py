@@ -106,7 +106,7 @@ def dump_dataset(dataset,
     print(message)
     raise IOError(1, message, directory)
 
-  for idx, blob in enumerate(dataset.batch(1)):
+  for idx, blob in enumerate(dataset.as_numpy_iterator()):
     for m in blob:
       if only_modalities is not None and m not in only_modalities:
         continue
@@ -117,7 +117,7 @@ def dump_dataset(dataset,
       else:
         filename = '{:04d}_{}'.format(idx, m)
 
-      if m in ['rgb', 'visual'] and not rgb_as_np:
+      if m in ['rgb', 'visual'] and not all_as_np:
         if blob[m].shape[2] == 4:
           # convert to BGRA
           bgr = blob[m].astype('uint8')[..., :3][..., ::-1]
@@ -142,13 +142,13 @@ def dump_dataset(dataset,
   # write a description of the data
   info = {
       'output_shapes': {
-          m: [shape_item.value for shape_item in shape]
-          for m, shape in dataset.output_shapes.items()
+          m: list(spec.shape)
+          for m, spec in dataset.element_spec.items()
           if not (only_modalities is not None and m not in only_modalities)
       },
       'output_types': {
-          m: dtype.name
-          for m, dtype in dataset.output_types.items()
+          m: spec.dtype.name
+          for m, spec in dataset.element_spec.items()
           if not (only_modalities is not None and m not in only_modalities)
       }
   }
