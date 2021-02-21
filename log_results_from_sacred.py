@@ -355,7 +355,10 @@ class LogExperiment:
             for split in val_accuracies.keys():
               cell_text = ""
               column_headers.append(f"{metric} {split}")
-              for epoch, value in val_accuracies[split].items():
+              assert (set(self._epochs_to_save) == set(
+                  val_accuracies[split].keys()))
+              for epoch in self._epochs_to_save:
+                value = val_accuracies[split][epoch]
                 cell_text = get_updated_cell_text(cell_text=cell_text,
                                                   split=split,
                                                   metric=metric,
@@ -367,7 +370,10 @@ class LogExperiment:
             for split in val_mean_ious.keys():
               cell_text = ""
               column_headers.append(f"{metric} {split}")
-              for epoch, value in val_mean_ious[split].items():
+              assert (set(self._epochs_to_save) == set(
+                  val_mean_ious[split].keys()))
+              for epoch in self._epochs_to_save:
+                value = val_mean_ious[split][epoch]
                 cell_text = get_updated_cell_text(cell_text=cell_text,
                                                   split=split,
                                                   metric=metric,
