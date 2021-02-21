@@ -217,7 +217,7 @@ class LogExperiment:
             f.close()
         output_evaluation_filename = os.path.join(
             self._save_folder_evaluate,
-            f"{test_dataset_name}_{test_dataset_scene}.yml")
+            f"{test_dataset_name}_{test_dataset_scene}_epoch_{epoch}.yml")
         if (not os.path.exists(output_evaluation_filename)):
           # If necessary, evaluate the pretrained model on the given dataset.
           accuracy, mean_iou = evaluate_model(
