@@ -205,7 +205,7 @@ def evaluate_model(model, test_dataset, pretrained_dir=None):
     accuracy_tracker.update_state(y_masked, pred_y_masked)
     miou_tracker.update_state(y_masked, pred_y_masked)
 
-  accuracy = accuracy_tracker.result().numpy()
-  mean_iou = miou_tracker.result().numpy()
+  accuracy = accuracy_tracker.result().numpy().item()
+  mean_iou = miou_tracker.result().numpy().item()
 
   return accuracy, mean_iou
