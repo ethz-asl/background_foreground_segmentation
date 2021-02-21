@@ -17,8 +17,9 @@ Labels:
 class MeshdistPseudolabels(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for BfsegCLAMeshdistLabels dataset."""
 
-  VERSION = tfds.core.Version('0.1.3')
+  VERSION = tfds.core.Version('0.2.0')
   RELEASE_NOTES = {
+      '0.2.0': 'added office scenes',
       '0.1.3': 'completed alphasense garage data',
       '0.1.2': 'removed cam2 from garage1',
       '0.1.1': 'more data',
@@ -50,6 +51,10 @@ class MeshdistPseudolabels(tfds.core.GeneratorBasedBuilder):
             'https://drive.google.com/uc?export=download&id=1KFbc7IP1hp9KNZCcV_JkLY3snyU88dTZ',
         'garage3':
             'https://drive.google.com/uc?export=download&id=1wWGBxsGo8tK98JKKBsUA9JB18OlKM_QE',
+        'office4':
+            'https://drive.google.com/uc?export=download&id=1Qbu2maNJ6aUxG2dBtqHRrTj0CqWsk4ZF',
+        'office5':
+            'https://drive.google.com/uc?export=download&id=1eMd0m8COn_sKbxbr-cVvbsCdMeSd_FlN',
     })
     return [
         tfds.core.SplitGenerator(
