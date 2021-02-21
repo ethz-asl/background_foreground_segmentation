@@ -33,12 +33,14 @@ class ReplayBuffer:
       if the not enough samples from any of the datasets can be taken. Exactly
       one between `ratio_main_ds_replay_ds` and `fraction_replay_ds_to_use` must
       be not None.
-    fraction_replay_ds_to_use (float): If not None, the main dataset and the
-      replay dataset(s) are merged so that the resulting dataset contains all
-      samples from the main dataset, and a number of randomly selected samples
-      from each the replay dataset that matches this fraction. Exactly one
-      between `ratio_main_ds_replay_ds` and `fraction_replay_ds_to_use` must be
-      not None.
+    fraction_replay_ds_to_use (float or list of float): If not None, the main
+      dataset and the replay dataset(s) are merged so that the resulting dataset
+      contains all samples from the main dataset, and a number of randomly
+      selected samples from each the replay dataset that matches the fraction
+      associated to each replay dataset. If a single value is given, the same
+      fraction will be used for all the replay datasets. Exactly one between
+      `ratio_main_ds_replay_ds` and `fraction_replay_ds_to_use` must be not
+      None.
     perform_data_augmentation (bool): Whether or not online data augmentation
       should be performed on the samples from the output merged dataset.
   """
@@ -57,18 +59,29 @@ class ReplayBuffer:
             (fraction_replay_ds_to_use is None)), (
                 "Exactly one between `ratio_main_ds_replay_ds` and "
                 "`fraction_replay_ds_to_use` must be not None.")
+    if (isinstance(replay_ds, list)):
+      total_num_datasets = len(replay_ds) + 1
+    else:
+      total_num_datasets = 2
     if (ratio_main_ds_replay_ds is not None):
-      if (isinstance(replay_ds, list)):
-        total_num_datasets = len(replay_ds) + 1
-      else:
-        total_num_datasets = 2
       assert (isinstance(ratio_main_ds_replay_ds, list) and
               len(ratio_main_ds_replay_ds) == total_num_datasets)
       for ratio in ratio_main_ds_replay_ds:
         assert (isinstance(ratio, int))
     if (fraction_replay_ds_to_use is not None):
-      assert (isinstance(fraction_replay_ds_to_use, float) and
-              0.0 <= fraction_replay_ds_to_use <= 1.0)
+      if (isinstance(fraction_replay_ds_to_use, list)):
+        assert (len(fraction_replay_ds_to_use) == total_num_datasets - 1)
+      else:
+        fraction_replay_ds_to_use = [
+            fraction_replay_ds_to_use for _ in range(total_num_datasets - 1)
+        ]
+        if (total_num_datasets > 2):
+          print(
+              "Will use the same replay fraction for all the replay datasets.")
+
+      for replay_fraction in fraction_replay_ds_to_use:
+        assert (isinstance(replay_fraction, float) and
+                (0.0 <= fraction_replay_ds_to_use <= 1.0))
     assert (isinstance(perform_data_augmentation, bool))
     self._main_ds = main_ds
     if (isinstance(replay_ds, list)):
@@ -147,9 +160,10 @@ class ReplayBuffer:
       subset_main_ds = self._main_ds.unbatch()
       num_replay_samples_to_keep = [
           int(
-              np.ceil(self._fraction_replay_ds_to_use *
+              np.ceil(replay_fraction_curr_replay_ds *
                       tot_num_samples_curr_replay_ds))
-          for tot_num_samples_curr_replay_ds in self._tot_num_samples_replay
+          for (replay_fraction_curr_replay_ds, tot_num_samples_curr_replay_ds)
+          in zip(self._fraction_replay_ds_to_use, self._tot_num_samples_replay)
       ]
       merged_ds = subset_main_ds
       # Concatenate the required fraction of each replay dataset to the main
