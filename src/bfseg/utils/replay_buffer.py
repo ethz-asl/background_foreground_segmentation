@@ -81,7 +81,7 @@ class ReplayBuffer:
 
       for replay_fraction in fraction_replay_ds_to_use:
         assert (isinstance(replay_fraction, float) and
-                (0.0 <= fraction_replay_ds_to_use <= 1.0))
+                (0.0 <= replay_fraction <= 1.0))
     assert (isinstance(perform_data_augmentation, bool))
     self._main_ds = main_ds
     if (isinstance(replay_ds, list)):
