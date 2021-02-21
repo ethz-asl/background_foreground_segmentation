@@ -1,10 +1,14 @@
-from bfseg.utils.metrics import IgnorantBalancedMeanIoU, IgnorantMeanIoU, IgnorantBalancedAccuracyMetric, \
-  IgnorantAccuracyMetric
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import os
 from PIL import Image
 import numpy as np
+
+from bfseg.utils.datasets import load_data
+from bfseg.utils.metrics import (IgnorantBalancedMeanIoU, IgnorantMeanIoU,
+                                 IgnorantBalancedAccuracyMetric,
+                                 IgnorantAccuracyMetric)
+from bfseg.utils.models import create_model
 
 
 def oneMetricIteration(metric, label, pred):
@@ -162,3 +166,46 @@ def scoreAndPlotPredictions(imageCallback,
       f.write(
           f"{tag},{iam_valid_value:.4f},{ibm_valid_value:.4f},{MIOUM_valid_value:.4f},{MIOUM_B_valid_value:.4f}\n"
       )
+
+
+def evaluate_model(model, test_dataset, pretrained_dir=None):
+  r"""Evaluates a model on a given test dataset.
+
+  Args:
+    model (tensorflow.keras.Model): Model to evaluate.
+    test_dataset (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Test
+      dataset on which to evaluate the CL model.
+    pretrained_dir (str): If not None, path from which the weights of a
+      pretrained model will be loaded.
+
+  Returns:
+    accuracy (float): Accuracy of the given model over the given test dataset.
+    mean_iou (float): Mean IoU of the given model over the given test dataset.
+  """
+  # Optionally load weights.
+  if (pretrained_dir is not None):
+    model.load_weights(pretrained_dir)
+  accuracy_tracker = tf.keras.metrics.Accuracy(name='accuracy',
+                                               dtype=tf.float32)
+  miou_tracker = tf.keras.metrics.MeanIoU(name='mean_iou', num_classes=2)
+
+  accuracy_tracker.reset_states()
+  miou_tracker.reset_states()
+  for sample in test_dataset:
+    if (len(sample) == 3):
+      x, y, mask = sample
+    else:
+      assert (len(sample) == 2)
+      x, y = sample
+      mask = tf.ones(shape=x.shape[:-1])
+    [_, pred_y] = model(x, training=False)
+    y_masked = tf.boolean_mask(y, mask)
+    pred_y = tf.keras.backend.argmax(pred_y, axis=-1)
+    pred_y_masked = tf.boolean_mask(pred_y, mask)
+    accuracy_tracker.update_state(y_masked, pred_y_masked)
+    miou_tracker.update_state(y_masked, pred_y_masked)
+
+  accuracy = accuracy_tracker.result().numpy().item()
+  mean_iou = miou_tracker.result().numpy().item()
+
+  return accuracy, mean_iou
