@@ -4,6 +4,7 @@ from shutil import make_archive
 from tensorflow import keras
 import warnings
 
+from bfseg.utils.metrics import get_balanced_weights
 from bfseg.utils.models import create_model
 
 
@@ -100,6 +101,13 @@ class BaseCLModel(keras.Model):
     self.logs_test = {}
     # By default, no auxiliary losses are expected to be tracked.
     self._tracked_auxiliary_losses = None
+    # Check if balanced cross-entropy loss should be used.
+    if (self.run.config['training_params']['use_balanced_loss']):
+      assert (self.run.config['cl_params']['cl_framework'] == "finetune"
+             ), "Currently balanced loss is only supported with finetuning."
+      self._use_balanced_loss = True
+    else:
+      self._use_balanced_loss = False
 
   def forward_pass(self, training, x, y, mask):
     r"""Forward pass.
@@ -120,7 +128,12 @@ class BaseCLModel(keras.Model):
     [_, pred_y] = self.new_model(x, training=training)
     pred_y_masked = tf.boolean_mask(pred_y, mask)
     y_masked = tf.boolean_mask(y, mask)
-    loss = self.loss_ce(y_masked, pred_y_masked)
+    if (self._use_balanced_loss):
+      #TODO(fmilano): Make flexible to number of classes.
+      sample_weight = get_balanced_weights(labels=y_masked, num_classes=2)
+    else:
+      sample_weight = None
+    loss = self.loss_ce(y_masked, pred_y_masked, sample_weight=sample_weight)
 
     return pred_y, pred_y_masked, y_masked, loss
 

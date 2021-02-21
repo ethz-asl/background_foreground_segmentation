@@ -122,6 +122,37 @@ def getBalancedWeight(labels,
   return weight_tensor
 
 
+def get_balanced_weights(labels, num_classes):
+  r"""Reproduces the behavior of `getBalancedWeight` for labels that have
+  already been pre-filtered to remove the unknown class.
+
+  Args:
+    labels (tf.Tensor): Label tensor.
+    num_classes (int): Number of classes.
+
+  Returns:
+    weight_tensor (tf.Tensor): Weight tensor. Same shape as label, but with each
+      pixel `i` having weight `1 / num_pixels_same_class`, where
+      `num_pixels_same_class` is the total number of pixels that have the same
+      class as `i` over the input batch.
+  """
+  weight_tensor = tf.cast(tf.zeros_like(labels), tf.float32)
+
+  for curr_class in range(num_classes):
+    # Calculate how many pixels of this class occur.
+    mask_curr_class = tf.cast(labels == curr_class, tf.float32)
+    inverse_frequency = 1 / tf.reduce_sum(mask_curr_class)
+    frequency = tf.math.scalar_mul(inverse_frequency, mask_curr_class)
+    # Add to weight tensor.
+    weight_tensor = tf.math.add(weight_tensor, frequency)
+
+  # Remove nan values if there are any.
+  weight_tensor = tf.where(tf.math.is_nan(weight_tensor),
+                           tf.zeros_like(weight_tensor), weight_tensor)
+
+  return weight_tensor
+
+
 def getIgnoreWeight(labels_one_hot, class_to_ignore):
   # invert class to be used as weights
   # This has a 1 for every pixel that has a valid ground truth label and a 0 for everything else
