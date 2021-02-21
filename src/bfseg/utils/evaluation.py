@@ -4,11 +4,9 @@ import os
 from PIL import Image
 import numpy as np
 
-from bfseg.utils.datasets import load_data
 from bfseg.utils.metrics import (IgnorantBalancedMeanIoU, IgnorantMeanIoU,
                                  IgnorantBalancedAccuracyMetric,
                                  IgnorantAccuracyMetric)
-from bfseg.utils.models import create_model
 
 
 def oneMetricIteration(metric, label, pred):
