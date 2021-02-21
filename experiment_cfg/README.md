@@ -61,6 +61,10 @@ ____
   - `None`
   - `"kitchen"`
   - `"bedroom"`
+- `BfsegValidationLabeled`. Valid dataset scenes:
+  - `None`
+  - `"ARCHE"`
+  - `"CLA"`
 - `MeshdistPseudolabels`. Valid dataset scenes:
   - `None`
   - `"garage_full"`
@@ -70,6 +74,10 @@ ____
   - `"garage3"`
   - `"rumlang2"`
   - `"rumlang3"`
+- `OfficeRumlangValidationLabeled`. Valid dataset scenes:
+  - `None`
+  - `"OFFICE"`
+  - `"RUMLANG"`
 - `NyuDepthV2Labeled`. Valid dataset scenes:
   - `None`
 
