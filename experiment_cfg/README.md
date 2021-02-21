@@ -61,6 +61,10 @@ ____
   - `None`
   - `"kitchen"`
   - `"bedroom"`
+- `BfsegValidationLabeled`. Valid dataset scenes:
+  - `None`
+  - `"ARCHE"`
+  - `"CLA"`
 - `MeshdistPseudolabels`. Valid dataset scenes:
   - `None`
   - `"garage_full"`

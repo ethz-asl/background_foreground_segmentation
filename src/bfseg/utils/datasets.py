@@ -59,13 +59,25 @@ def preprocess_bagfile(image, label):
   return image, label, mask
 
 
+@tf.function
+def preprocess_hive(image, label):
+  r"""Preprocesses the manually annotated datasets, by just making sure that
+  the RGB values are between 0 and 1.
+  """
+  image = tf.image.convert_image_dtype(image, tf.float32)
+
+  return image, label
+
+
 def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
   r"""Creates a data loader given the dataset parameters as input.
 
   Args:
     dataset_name (str): Name of the dataset. Valid entries are:
       "NyuDepthV2Labeled" (NYU dataset), "BfsegCLAMeshdistLabels",
-      "MeshdistPseudolabels" (bagfile dataset, i.e., Rumlang/garage).
+      "MeshdistPseudolabels" (bagfile dataset, i.e., Rumlang/garage),
+      "BfsegValidationLabeled" (CLA validation dataset, with manually-annotated
+      labels).
     scene_type (str): Type of scene in the dataset to use type. Valid entries
       are:
       - If `dataset_name` is "NyuDepthV2Labeled":
@@ -85,6 +97,10 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
           - "garage3"
           - "rumlang2" 
           - "rumlang3"
+      - If `dataset_name` is "BfsegValidationLabeled":
+        - None: All the scenes in the dataset are selected.
+        - "CLA"
+        - "ARCHE"
     fraction (str): Fraction of the selected scene to load. Must be a valid
       slice (cf. https://www.tensorflow.org/datasets/splits), e.g., "[:80%]"
       (first 80% of the samples in the scene), "[80%:]" (last 20% of the samples
@@ -126,6 +142,13 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = scene_type
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
+  elif (dataset_name == 'BfsegValidationLabeled'):
+    if (scene_type is None):
+      name = 'CLA+ARCHE'
+    elif (scene_type in ["CLA", "ARCHE"]):
+      name = scene_type
+    else:
+      raise Exception("Invalid scene type: %s!" % scene_type)
   else:
     raise Exception("Dataset %s not found!" % dataset_name)
 
@@ -156,6 +179,9 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name == 'MeshdistPseudolabels'):
     ds = ds.map(preprocess_bagfile,
+                num_parallel_calls=tf.data.experimental.AUTOTUNE)
+  elif (dataset_name == 'BfsegValidationLabeled'):
+    ds = ds.map(preprocess_hive,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   ds = ds.cache()
   # Further shuffle.
