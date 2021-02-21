@@ -185,15 +185,16 @@ def evaluate_model(model, test_dataset, pretrained_dir=None):
   # Optionally load weights.
   if (pretrained_dir is not None):
     model.load_weights(pretrained_dir)
-  accuracy_tracker = keras.metrics.Accuracy(name='accuracy', dtype=tf.float32)
-  miou_tracker = keras.metrics.MeanIoU(name='mean_iou', num_classes=2)
+  accuracy_tracker = tf.keras.metrics.Accuracy(name='accuracy',
+                                               dtype=tf.float32)
+  miou_tracker = tf.keras.metrics.MeanIoU(name='mean_iou', num_classes=2)
 
   accuracy_tracker.reset_states()
   miou_tracker.reset_states()
   for (x, y, mask) in test_dataset:
     [_, pred_y] = model(x, training=False)
     y_masked = tf.boolean_mask(y, mask)
-    pred_y = keras.backend.argmax(pred_y, axis=-1)
+    pred_y = tf.keras.backend.argmax(pred_y, axis=-1)
     pred_y_masked = tf.boolean_mask(pred_y, mask)
     accuracy_tracker.update_state(y_masked, pred_y_masked)
     miou_tracker.update_state(y_masked, pred_y_masked)
