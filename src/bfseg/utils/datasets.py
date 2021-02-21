@@ -75,7 +75,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
   Args:
     dataset_name (str): Name of the dataset. Valid entries are:
       "NyuDepthV2Labeled" (NYU dataset), "BfsegCLAMeshdistLabels",
-      "MeshdistPseudolabels" (bagfile dataset, i.e., Rumlang/garage),
+      "MeshdistPseudolabels" (bagfile dataset, i.e., Rumlang/garage/office),
       "BfsegValidationLabeled" (CLA validation dataset, with manually-annotated
       labels), "OfficeRumlangValidationLabeled" (bagfile validation dataset,
       i.e., Rumlang/office, with manually-annotated labels).
@@ -91,11 +91,14 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       - If `dataset_name` is "MeshdistPseudolabels": 
         - None: All the scenes in the dataset are selected.
         - "garage_full": All the three scenes from the garage.
+        - "office_full": Both the scenes from the office.
         - "rumlang_full": Both the scenes from Rumlang.
         - One of the two following scenes:
           - "garage1"
           - "garage2"
           - "garage3"
+          - "office4"
+          - "office5"
           - "rumlang2" 
           - "rumlang3"
       - If `dataset_name` is "BfsegValidationLabeled":
@@ -140,10 +143,14 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = 'garage1+garage2+garage3+rumlang2+rumlang3'
     elif (scene_type == "garage_full"):
       name = "garage1+garage2+garage3"
+    elif (scene_type == "office_full"):
+      name = "office4+office5"
     elif (scene_type == "rumlang_full"):
       name = "rumlang2+rumlang3"
-    elif (scene_type
-          in ["garage1", "garage2", "garage3", "rumlang2", "rumlang3"]):
+    elif (scene_type in [
+        "garage1", "garage2", "garage3", "office4", "office5", "rumlang2",
+        "rumlang3"
+    ]):
       name = scene_type
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
