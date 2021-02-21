@@ -8,9 +8,14 @@ import os
 import pandas as pd
 import pvectorc
 import pyrsistent
+from tensorflow import keras
 import yaml as yml
+import zipfile
 
-MONGO_URI = INSERT YOUR MONGO URI HERE
+from bfseg.utils.datasets import load_data
+from bfseg.utils.evaluation import evaluate_model
+from bfseg.utils.models import create_model
+
 
 
 class LogExperiment:
@@ -32,10 +37,12 @@ class LogExperiment:
                                            f'plots/{self._experiment_id}')
     self._save_folder_logs = os.path.join(save_folder,
                                           f'logs/{self._experiment_id}')
+    self._save_folder_evaluate = os.path.join(
+        save_folder, f'evaluate/{self._experiment_id}')
 
     folders = [
         self._save_folder_models, self._save_folder_plots,
-        self._save_folder_logs
+        self._save_folder_logs, self._save_folder_evaluate
     ]
     for folder in folders:
       if (not os.path.isdir(folder)):
@@ -105,19 +112,118 @@ class LogExperiment:
     artifact_name = f'model_epoch_{epoch_to_save}.zip'
 
     try:
-      self._experiment.artifacts[artifact_name].save(
-          to_dir=self._save_folder_models)
       complete_model_path = os.path.join(
           self._save_folder_models, f"{self._experiment_id}_{artifact_name}")
-      print(f"Saved model '{complete_model_path}'.")
+      if (os.path.isfile(complete_model_path)):
+        print(
+            f"Skipping saving of model '{complete_model_path}' because already "
+            "existing.")
+      else:
+        self._experiment.artifacts[artifact_name].save(
+            to_dir=self._save_folder_models)
+        print(f"Saved model '{complete_model_path}'.")
     except KeyError:
       print(f"Experiment {self._experiment_id} does not have artifact "
             f"{artifact_name} (yet).")
+      complete_model_path = None
+
+    return complete_model_path, artifact_name
 
   def save_output(self):
     with open(os.path.join(self._save_folder_logs, "output_to_screen.txt"),
               "w") as f:
       f.write(self._experiment.to_dict()['captured_out'])
+
+  def evaluate(self, epochs_to_evaluate, datasets_names_to_evaluate,
+               datasets_scenes_to_evaluate):
+    r"""Evaluates the model with the checkpoint(s) from the given epoch(s) on
+    the given test dataset(s).
+
+    Args:
+      epochs_to_evaluate (int/str or list of int/str): Epoch(s) of which the
+        corresponding saved model should be used to perform evaluation.
+      datasets_names_to_evaluate (str or list of str): Names of the dataset(s)
+        on which the model(s) should be evaluated.
+      datasets_scenes_to_evaluate (str or list of str): Scenes of the dataset(s)
+        on which the model(s) should be evaluated.
+    
+    Returns:
+      None.
+    """
+    if (isinstance(epochs_to_evaluate, int)):
+      epochs_to_evaluate = [epochs_to_evaluate]
+    else:
+      assert (isinstance(epochs_to_evaluate, list))
+    if (isinstance(datasets_names_to_evaluate, str)):
+      datasets_names_to_evaluate = [datasets_names_to_evaluate]
+    else:
+      assert (isinstance(datasets_names_to_evaluate, list))
+    if (isinstance(datasets_scenes_to_evaluate, str)):
+      datasets_scenes_to_evaluate = [datasets_scenes_to_evaluate]
+    else:
+      assert (isinstance(datasets_scenes_to_evaluate, list))
+    assert (len(datasets_names_to_evaluate) == len(datasets_scenes_to_evaluate))
+
+    # Create the model.
+    encoder, full_model = create_model(model_name="fast_scnn",
+                                       freeze_encoder=False,
+                                       freeze_whole_model=False,
+                                       normalization_type="group",
+                                       image_h=480,
+                                       image_w=640)
+    model = keras.Model(inputs=full_model.input,
+                        outputs=[encoder.output, full_model.output])
+
+    for test_dataset_name, test_dataset_scene in zip(
+        datasets_names_to_evaluate, datasets_scenes_to_evaluate):
+      # Load test dataset.
+      test_dataset = load_data(dataset_name=test_dataset_name,
+                               scene_type=test_dataset_scene,
+                               fraction=None,
+                               batch_size=8,
+                               shuffle_data=False)
+
+      for epoch in epochs_to_evaluate:
+        # Retrieve the required model.
+        model_path, artifact_name = self.save_model(epoch_to_save=epoch)
+        if (model_path is None):
+          print(f"Cannot evaluate current experiment at epoch {epoch}, because "
+                "the corresponding model does not exist.")
+          continue
+        # Extract the pretrained model from the archive, if necessary.
+        weights_file_name = artifact_name.split('.zip')[0] + ".h5"
+        output_filename = f"{self._experiment_id}_{weights_file_name}"
+        extracted_model_path = os.path.join(self._save_folder_models,
+                                            output_filename)
+        if (not os.path.isfile(extracted_model_path)):
+          assert (model_path[-4:] == ".zip")
+          with zipfile.ZipFile(model_path, 'r') as zip_helper:
+            assert (zip_helper.namelist() == [weights_file_name])
+            # Rename the pretrained model so as to include the experiment ID.
+            f = zip_helper.open(weights_file_name)
+            file_content = f.read()
+            f = open(extracted_model_path, 'wb')
+            f.write(file_content)
+            f.close()
+        output_evaluation_filename = os.path.join(
+            self._save_folder_evaluate,
+            f"{test_dataset_name}_{test_dataset_scene}.yml")
+        if (not os.path.exists(output_evaluation_filename)):
+          # If necessary, evaluate the pretrained model on the given dataset.
+          accuracy, mean_iou = evaluate_model(
+              model=model,
+              test_dataset=test_dataset,
+              pretrained_dir=extracted_model_path)
+          # Write the result to file.
+          with open(output_evaluation_filename, 'w') as f:
+            yml.dump({'accuracy': accuracy, 'mean_iou': mean_iou}, f)
+          print(f"Saved evaluation of model from epoch {epoch} on dataset "
+                f"{test_dataset_name}, scene {test_dataset_scene} at "
+                f"'{output_evaluation_filename}'.")
+        else:
+          print(f"Skipping evaluation of model from epoch {epoch} on dataset "
+                f"{test_dataset_name}, scene {test_dataset_scene}, because "
+                f"already found at '{output_evaluation_filename}'.")
 
   def _find_splits_to_log(self):
     self._splits_to_log = []
