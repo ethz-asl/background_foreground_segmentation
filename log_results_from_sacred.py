@@ -297,7 +297,7 @@ class LogExperiment:
 
       try:
         if (epoch == "final"):
-          epoch_number = self._num_epochs
+          epoch_number = self._num_epochs - 1
           epoch_text = [f"final epoch", f" (ep. {epoch_number})"]
         else:
           epoch_number = epoch
