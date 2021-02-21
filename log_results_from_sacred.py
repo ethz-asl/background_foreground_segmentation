@@ -203,8 +203,8 @@ class LogExperiment:
           for epoch in epochs_to_evaluate
       ]
       epochs_to_evaluate_for_curr_ds = set()
-      for epoch, output_evaluation_filename in zip(epochs_to_evaluate,
-                                                   output_evaluation_filename):
+      for epoch, output_evaluation_filename in zip(
+              epochs_to_evaluate, all_output_evaluation_filenames):
         if (os.path.exists(output_evaluation_filename)):
           # Load the precomputed accuracies.
           with open(output_evaluation_filename, 'r') as f:
@@ -231,8 +231,8 @@ class LogExperiment:
                                batch_size=8,
                                shuffle_data=False)
 
-      for epoch, output_evaluation_filename in zip(epochs_to_evaluate,
-                                                   output_evaluation_filename):
+      for epoch, output_evaluation_filename in zip(
+              epochs_to_evaluate, all_output_evaluation_filenames):
         if (not epoch in epochs_to_evaluate_for_curr_ds):
           print(f"Skipping evaluation of model from epoch {epoch} on dataset "
                 f"{test_dataset_name}, scene {test_dataset_scene}, because "
