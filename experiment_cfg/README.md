@@ -74,6 +74,10 @@ ____
   - `"garage3"`
   - `"rumlang2"`
   - `"rumlang3"`
+- `OfficeRumlangValidationLabeled`. Valid dataset scenes:
+  - `None`
+  - `"OFFICE"`
+  - `"RUMLANG"`
 - `NyuDepthV2Labeled`. Valid dataset scenes:
   - `None`
 

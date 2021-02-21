@@ -77,7 +77,8 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       "NyuDepthV2Labeled" (NYU dataset), "BfsegCLAMeshdistLabels",
       "MeshdistPseudolabels" (bagfile dataset, i.e., Rumlang/garage),
       "BfsegValidationLabeled" (CLA validation dataset, with manually-annotated
-      labels).
+      labels), "OfficeRumlangValidationLabeled" (bagfile validation dataset,
+      i.e., Rumlang/office, with manually-annotated labels).
     scene_type (str): Type of scene in the dataset to use type. Valid entries
       are:
       - If `dataset_name` is "NyuDepthV2Labeled":
@@ -101,6 +102,10 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
         - None: All the scenes in the dataset are selected.
         - "CLA"
         - "ARCHE"
+      - If `dataset_name` is "OfficeRumlangValidationLabeled":
+        - None: All the scenes in the dataset are selected.
+        - "OFFICE"
+        - "RUMLANG"
     fraction (str): Fraction of the selected scene to load. Must be a valid
       slice (cf. https://www.tensorflow.org/datasets/splits), e.g., "[:80%]"
       (first 80% of the samples in the scene), "[80%:]" (last 20% of the samples
@@ -149,6 +154,13 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = scene_type
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
+  elif (dataset_name == 'OfficeRumlangValidationLabeled'):
+    if (scene_type is None):
+      name = 'OFFICE+RUMLANG'
+    elif (scene_type in ["OFFICE", "RUMLANG"]):
+      name = scene_type
+    else:
+      raise Exception("Invalid scene type: %s!" % scene_type)
   else:
     raise Exception("Dataset %s not found!" % dataset_name)
 
@@ -180,7 +192,8 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
   elif (dataset_name == 'MeshdistPseudolabels'):
     ds = ds.map(preprocess_bagfile,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
-  elif (dataset_name == 'BfsegValidationLabeled'):
+  elif (dataset_name
+        in ['BfsegValidationLabeled', 'OfficeRumlangValidationLabeled']):
     ds = ds.map(preprocess_hive,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   ds = ds.cache()
