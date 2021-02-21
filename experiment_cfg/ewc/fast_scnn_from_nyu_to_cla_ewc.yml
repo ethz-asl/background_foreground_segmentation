@@ -13,6 +13,7 @@ training_params:
   perform_data_augmentation: false
   stopping_min_epoch: 50
   stopping_patience: 20
+  use_balanced_loss: false
 dataset_params:
   fisher_params_dataset: NyuDepthV2Labeled
   fisher_params_scene: null

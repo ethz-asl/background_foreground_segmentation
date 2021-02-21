@@ -13,6 +13,7 @@ training_params:
   perform_data_augmentation: true
   stopping_min_epoch: 50
   stopping_patience: 20
+  use_balanced_loss: false
 dataset_params:
   replay_datasets: null
   replay_datasets_scene: null
