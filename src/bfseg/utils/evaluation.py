@@ -191,7 +191,13 @@ def evaluate_model(model, test_dataset, pretrained_dir=None):
 
   accuracy_tracker.reset_states()
   miou_tracker.reset_states()
-  for (x, y, mask) in test_dataset:
+  for sample in test_dataset:
+    if (len(sample) == 3):
+      x, y, mask = sample
+    else:
+      assert (len(sample) == 2)
+      x, y = sample
+      mask = tf.ones(shape=x.shape[:-1])
     [_, pred_y] = model(x, training=False)
     y_masked = tf.boolean_mask(y, mask)
     pred_y = tf.keras.backend.argmax(pred_y, axis=-1)
