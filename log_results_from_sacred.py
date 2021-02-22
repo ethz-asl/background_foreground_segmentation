@@ -204,7 +204,7 @@ class LogExperiment:
       ]
       epochs_to_evaluate_for_curr_ds = set()
       for epoch, output_evaluation_filename in zip(
-              epochs_to_evaluate, all_output_evaluation_filenames):
+          epochs_to_evaluate, all_output_evaluation_filenames):
         if (os.path.exists(output_evaluation_filename)):
           # Load the precomputed accuracies.
           with open(output_evaluation_filename, 'r') as f:
@@ -232,7 +232,7 @@ class LogExperiment:
                                shuffle_data=False)
 
       for epoch, output_evaluation_filename in zip(
-              epochs_to_evaluate, all_output_evaluation_filenames):
+          epochs_to_evaluate, all_output_evaluation_filenames):
         if (not epoch in epochs_to_evaluate_for_curr_ds):
           print(f"Skipping evaluation of model from epoch {epoch} on dataset "
                 f"{test_dataset_name}, scene {test_dataset_scene}, because "
@@ -243,9 +243,9 @@ class LogExperiment:
         model_path, artifact_name = self.save_model(epoch_to_save=epoch)
         if (model_path is None):
           if (epoch == "final"):
-              # If final model not available, take last available one.
-              model_path, artifact_name = self.save_model(
-                      epoch_to_save=self._num_epochs - 1)
+            # If final model not available, take last available one.
+            model_path, artifact_name = self.save_model(
+                epoch_to_save=self._num_epochs - 1)
         if (model_path is None):
           print(f"Cannot evaluate current experiment at epoch {epoch}, because "
                 "the corresponding model does not exist.")
@@ -284,10 +284,21 @@ class LogExperiment:
     self._splits_to_log = []
     self._metrics_to_log = ["accuracy", "mean_iou"]  #, "loss"]:
 
-    for split in [
-        "train", "train_no_replay", "val", "test", "NyuDepthV2Labeled_None",
-        "BfsegCLAMeshdistLabels_None"
-    ]:
+    self._special_split_names = [
+        "train_no_replay", "NyuDepthV2Labeled_None",
+        "BfsegCLAMeshdistLabels_None", "MeshdistPseudolabels_None",
+        "MeshdistPseudolabels_garage_full", "MeshdistPseudolabels_office_full",
+        "MeshdistPseudolabels_rumlang_full", "MeshdistPseudolabels_garage1",
+        "MeshdistPseudolabels_garage2", "MeshdistPseudolabels_garage3",
+        "MeshdistPseudolabels_office4", "MeshdistPseudolabels_office5",
+        "MeshdistPseudolabels_rumlang2", "MeshdistPseudolabels_rumlang3",
+        "BfsegValidationLabeled_None", "BfsegValidationLabeled_ARCHE",
+        "BfsegValidationLabeled_CLA", "OfficeRumlangValidationLabeled_None",
+        "OfficeRumlangValidationLabeled_OFFICE",
+        "OfficeRumlangValidationLabeled_RUMLANG"
+    ]
+
+    for split in ["train", "val", "test"] + self._special_split_names:
       all_metrics_found_for_split = True
       for metric in self._metrics_to_log:
         if (f'{split}_{metric}' not in self._experiment.metrics):
@@ -404,14 +415,11 @@ class LogExperiment:
         continue
       # Try first with the special cases.
       prefix = None
-      for special_split_name in [
-          "train_no_replay_", "NyuDepthV2Labeled_None_",
-          "BfsegCLAMeshdistLabels_None_"
-      ]:
-        split_metric_name = full_metric_name.split(special_split_name,
+      for special_split_name in self._special_split_names:
+        split_metric_name = full_metric_name.split(special_split_name + "_",
                                                    maxsplit=1)
         if (len(split_metric_name) != 1):
-          prefix = special_split_name[:-1]
+          prefix = special_split_name
           metric_name = split_metric_name[-1]
           break
 
