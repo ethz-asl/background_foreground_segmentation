@@ -1,0 +1,35 @@
+# Train on Garage 1 with finetuning using with Fast-SCNN architecture pretrained on NYU with replay buffer.
+network_params:
+  architecture: fast_scnn
+  freeze_encoder: false
+  model_params:
+    image_h: 480
+    image_w: 640
+  normalization_type: group
+training_params:
+  batch_size: 10
+  learning_rate: 0.00001
+  num_training_epochs: 250
+  perform_data_augmentation: true
+  stopping_min_epoch: 50
+  stopping_patience: 20
+  use_balanced_loss: false
+dataset_params:
+  replay_datasets:
+    - NyuDepthV2Labeled
+  replay_datasets_scene:
+    - null
+  # Test on other scene from garage.
+  test_dataset: MeshdistPseudolabels
+  test_scene: garage2
+  train_dataset: MeshdistPseudolabels
+  train_scene: garage1
+  validation_percentage: 10
+logging_params:
+  model_save_freq: 1
+  exp_name: fast_scnn_from_nyu_to_garage_finetune_fraction_replay
+cl_params:
+  cl_framework: finetune
+  fraction_replay_ds_to_use: 0.1
+  pretrained_dir: TO_BE_SPECIFIED
+  ratio_main_ds_replay_ds: null
