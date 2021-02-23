@@ -40,7 +40,9 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   # Change the training dataset with the one from the different data loader.
   train_no_replay_ds = load_fsdata(
       '/cluster/work/riner/users/blumh/pickelhaube_full_office4').map(
-              preprocess_bagfile_different_dataloader)
+              preprocess_bagfile_different_dataloader).batch(
+                      training_params['batch_size']).prefetch(
+                              tf.data.experimental.AUTOTUNE)
   # Run the training.
   model.compile(
       optimizer=tf.keras.optimizers.Adam(training_params['learning_rate']))
