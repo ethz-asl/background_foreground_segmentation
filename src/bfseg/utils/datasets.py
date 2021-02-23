@@ -58,6 +58,14 @@ def preprocess_bagfile(image, label):
   image = tf.cast(image, tf.float32)
   return image, label, mask
 
+@tf.function
+def preprocess_bagfile_different_dataloader(blob):
+  r"""Overload of `preprocess_bagfile` for different data loader
+  (`bfseg.data.fsdata.load_fsdata`).
+  """
+  return preprocess_bagfile(image=blob['rgb'],
+                            label=tf.expand_dims(blob['labels'], axis=-1))
+
 
 @tf.function
 def preprocess_hive(image, label):
