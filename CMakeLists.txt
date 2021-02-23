@@ -21,12 +21,17 @@ add_definitions(-std=c++14 -Wall -Wextra)
 cs_add_library(${PROJECT_NAME}
         src/dataset_creator.cpp)
 
+cs_add_library(${PROJECT_NAME}2
+        src/dataset_creator2.cpp)
 
 ############
 # BINARIES #
 ############
 cs_add_executable(${PROJECT_NAME}_node
         src/background_foreground_segmentation_node.cpp
+        )
+cs_add_executable(${PROJECT_NAME}_node2
+        src/background_foreground_segmentation_node2.cpp
         )
 
 cs_add_executable(pose_recorder_node
@@ -41,6 +46,7 @@ cs_add_executable(cloud_filtering_node
         )
 
 target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}_node2 ${PROJECT_NAME}2)
 
 ############
 #  TESTS   #
