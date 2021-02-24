@@ -15,8 +15,8 @@ It consists of two labels (0,1) where all classes that belong to the background 
 class OfficeRumlangValidationLabeled(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for OfficeRumlangValidationLabeled dataset."""
 
-  VERSION = tfds.core.Version('1.0.0')
-  RELEASE_NOTES = {'1.0.0': 'Initial release.'}
+  VERSION = tfds.core.Version('1.0.1')
+  RELEASE_NOTES = {'1.0.0': 'Initial release.', '1.0.1': 'Added file names'}
 
   def _info(self) -> tfds.core.DatasetInfo:
     """Returns the dataset metadata."""
@@ -31,6 +31,8 @@ class OfficeRumlangValidationLabeled(tfds.core.GeneratorBasedBuilder):
                                          tfds.features.Tensor(shape=(480, 640,
                                                                      1),
                                                               dtype=tf.uint8),
+                                     'name':
+                                         tf.string
                                  }),
                                  supervised_keys=("image", "label"))
 
@@ -63,8 +65,11 @@ class OfficeRumlangValidationLabeled(tfds.core.GeneratorBasedBuilder):
     with h5py.File(dataset_path, 'r') as f:
       images = f[scene_type]['images']
       labels = f[scene_type]['labels']
+      names = f[scene_type]['names']
+
       for i in range(images.shape[0]):
         yield str(i).zfill(4), {
             'image': images[i, ...],
-            'label': labels[i, ...]
+            'label': labels[i, ...],
+            'name': names[i],
         }
