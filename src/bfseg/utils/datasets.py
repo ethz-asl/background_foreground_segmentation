@@ -197,12 +197,16 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       if (split_fraction[0] == "["):
         assert (split_fraction[1][-2:] == "%]")
         fraction = split_fraction[1][:-2]
-        ds = ds.take(int(dataset_length * int(fraction) / 100.))
+        num_samples_to_take = int(dataset_length * int(fraction) / 100.)
+        ds = ds.take(num_samples_to_take)
+        dataset_length = num_samples_to_take
       else:
         assert (split_fraction[0][0] == "[" and split_fraction[0][-1] == "%")
         assert (split_fraction[1] == "]")
         fraction = split_fraction[0][1:-1]
-        ds = ds.skip(int(dataset_length * int(fraction) / 100.))
+        num_samples_to_skip = int(dataset_length * int(fraction) / 100.)
+        ds = ds.skip(num_samples_to_skip)
+        dataset_length -= num_samples_to_skip
     else:
       # Handle the special case of a mix of scenes.
       scenes_unmixed = name.split('+')
@@ -223,6 +227,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
                    split=split,
                    shuffle_files=shuffle_data,
                    as_supervised=True)
+    dataset_length = len(ds)
   # Apply pre-processing.
   if (dataset_name == 'NyuDepthV2Labeled'):
     ds = ds.map(preprocess_nyu,
@@ -244,7 +249,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
   ds = ds.cache()
   # Further shuffle.
   if (shuffle_data):
-    ds = ds.shuffle(len(ds))
+    ds = ds.shuffle(dataset_length)
 
   ds = ds.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
