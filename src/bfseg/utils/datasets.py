@@ -5,6 +5,7 @@ import tensorflow_datasets as tfds
 import warnings
 
 from bfseg.data.fsdata import load_fsdata
+from bfseg.utils.images import augmentation
 from bfseg.utils.replay_buffer import ReplayBuffer
 
 
