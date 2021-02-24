@@ -159,9 +159,11 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     elif (scene_type == "office4_2302"):
       ds = load_fsdata(
           '/cluster/work/riner/users/blumh/pickelhaube_full_office4')
+      name = scene_type
     elif (scene_type == "office4_2402"):
       ds = load_fsdata('/cluster/work/riner/users/blumh/'
                        'pickelhaube_full_office4_agreement_dump')
+      name = scene_type
     elif (scene_type in [
         "garage1", "garage2", "garage3", "office4", "office5", "rumlang2",
         "rumlang3"
@@ -188,14 +190,30 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
 
   # Select the fraction of samples from the scene.
   if (fraction is not None):
-    # Handle the special case of a mix of scenes.
-    scenes_unmixed = name.split('+')
-    if (len(scenes_unmixed) > 1):
-      split = f"{scenes_unmixed[0]}{fraction}"
-      for scene_unmixed in scenes_unmixed[1:]:
-        split += f"+{scene_unmixed}{fraction}"
+    if (scene_type in ["office4_2302", "office4_2402"]):
+      dataset_length = sum(1 for _ in ds)
+      split_fraction = fraction.split(":")
+      assert (len(split_fraction) == 2)
+      if (split_fraction[0] == "["):
+        assert (split_fraction[1][-2:] == "%]")
+        fraction = split_fraction[1][:-2]
+        ds = ds.take(int(dataset_length * int(fraction) / 100.))
+      else:
+        assert (split_fraction[0][0] == "[" and split_fraction[0][-1] == "%")
+        assert (split_fraction[1] == "]")
+        fraction = split_fraction[0][1:-1]
+        ds = ds.skip(int(dataset_length * int(fraction) / 100.))
     else:
-      split = f"{name}{fraction}"
+      # Handle the special case of a mix of scenes.
+      scenes_unmixed = name.split('+')
+      if (len(scenes_unmixed) > 1):
+        assert ("office4_2302" not in scenes_unmixed and
+                "office4_2402" not in scenes_unmixed)
+        split = f"{scenes_unmixed[0]}{fraction}"
+        for scene_unmixed in scenes_unmixed[1:]:
+          split += f"+{scene_unmixed}{fraction}"
+      else:
+        split = f"{name}{fraction}"
   else:
     split = name
 
