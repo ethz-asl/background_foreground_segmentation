@@ -69,7 +69,6 @@ ____
 - `MeshdistPseudolabels`. Valid dataset scenes:
   - `None`
   - `"garage_full"`
-  - `"office_full"`
   - `"rumlang_full"`
   - `"garage1"`
   - `"garage2"`
