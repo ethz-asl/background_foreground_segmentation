@@ -4,6 +4,7 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import warnings
 
+from bfseg.data.fsdata import load_fsdata
 from bfseg.utils.replay_buffer import ReplayBuffer
 
 
@@ -58,6 +59,7 @@ def preprocess_bagfile(image, label):
   image = tf.cast(image, tf.float32)
   return image, label, mask
 
+
 @tf.function
 def preprocess_bagfile_different_dataloader(blob):
   r"""Overload of `preprocess_bagfile` for different data loader
@@ -105,6 +107,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
           - "garage2"
           - "garage3"
           - "office4"
+          - "office4_2302"
           - "office5"
           - "rumlang2" 
           - "rumlang3"
@@ -152,6 +155,9 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = "garage1+garage2+garage3"
     elif (scene_type == "rumlang_full"):
       name = "rumlang2+rumlang3"
+    elif (scene_type == "office4_2302"):
+      ds = load_fsdata(
+          '/cluster/work/riner/users/blumh/pickelhaube_full_office4')
     elif (scene_type in [
         "garage1", "garage2", "garage3", "office4", "office5", "rumlang2",
         "rumlang3"
@@ -190,10 +196,11 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     split = name
 
   # Actually load the dataset.
-  ds = tfds.load(dataset_name,
-                 split=split,
-                 shuffle_files=shuffle_data,
-                 as_supervised=True)
+  if (scene_type not in ["office4_2302"]):
+    ds = tfds.load(dataset_name,
+                   split=split,
+                   shuffle_files=shuffle_data,
+                   as_supervised=True)
   # Apply pre-processing.
   if (dataset_name == 'NyuDepthV2Labeled'):
     ds = ds.map(preprocess_nyu,
@@ -202,8 +209,12 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     ds = ds.map(preprocess_cla,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name == 'MeshdistPseudolabels'):
-    ds = ds.map(preprocess_bagfile,
-                num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    if (scene_type in ["office4_2302"]):
+      ds = ds.map(preprocess_bagfile_different_dataloader,
+                  num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    else:
+      ds = ds.map(preprocess_bagfile,
+                  num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name
         in ['BfsegValidationLabeled', 'OfficeRumlangValidationLabeled']):
     ds = ds.map(preprocess_hive,
