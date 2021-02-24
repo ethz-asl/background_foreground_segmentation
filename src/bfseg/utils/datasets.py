@@ -4,6 +4,7 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import warnings
 
+from bfseg.data.fsdata import load_fsdata
 from bfseg.utils.replay_buffer import ReplayBuffer
 
 
@@ -60,6 +61,15 @@ def preprocess_bagfile(image, label):
 
 
 @tf.function
+def preprocess_bagfile_different_dataloader(blob):
+  r"""Overload of `preprocess_bagfile` for different data loader
+  (`bfseg.data.fsdata.load_fsdata`).
+  """
+  return preprocess_bagfile(image=blob['rgb'],
+                            label=tf.expand_dims(blob['labels'], axis=-1))
+
+
+@tf.function
 def preprocess_hive(image, label):
   r"""Preprocesses the manually annotated datasets, by just making sure that
   the RGB values are between 0 and 1.
@@ -91,13 +101,14 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       - If `dataset_name` is "MeshdistPseudolabels": 
         - None: All the scenes in the dataset are selected.
         - "garage_full": All the three scenes from the garage.
-        - "office_full": Both the scenes from the office.
         - "rumlang_full": Both the scenes from Rumlang.
         - One of the two following scenes:
           - "garage1"
           - "garage2"
           - "garage3"
           - "office4"
+          - "office4_2302"
+          - "office4_2402"
           - "office5"
           - "rumlang2" 
           - "rumlang3"
@@ -143,10 +154,16 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = 'garage1+garage2+garage3+rumlang2+rumlang3'
     elif (scene_type == "garage_full"):
       name = "garage1+garage2+garage3"
-    elif (scene_type == "office_full"):
-      name = "office4+office5"
     elif (scene_type == "rumlang_full"):
       name = "rumlang2+rumlang3"
+    elif (scene_type == "office4_2302"):
+      ds = load_fsdata(
+          '/cluster/work/riner/users/blumh/pickelhaube_full_office4')
+      name = scene_type
+    elif (scene_type == "office4_2402"):
+      ds = load_fsdata('/cluster/work/riner/users/blumh/'
+                       'pickelhaube_full_office4_agreement_dump')
+      name = scene_type
     elif (scene_type in [
         "garage1", "garage2", "garage3", "office4", "office5", "rumlang2",
         "rumlang3"
@@ -173,22 +190,44 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
 
   # Select the fraction of samples from the scene.
   if (fraction is not None):
-    # Handle the special case of a mix of scenes.
-    scenes_unmixed = name.split('+')
-    if (len(scenes_unmixed) > 1):
-      split = f"{scenes_unmixed[0]}{fraction}"
-      for scene_unmixed in scenes_unmixed[1:]:
-        split += f"+{scene_unmixed}{fraction}"
+    if (scene_type in ["office4_2302", "office4_2402"]):
+      dataset_length = sum(1 for _ in ds)
+      split_fraction = fraction.split(":")
+      assert (len(split_fraction) == 2)
+      if (split_fraction[0] == "["):
+        assert (split_fraction[1][-2:] == "%]")
+        fraction = split_fraction[1][:-2]
+        num_samples_to_take = int(dataset_length * int(fraction) / 100.)
+        ds = ds.take(num_samples_to_take)
+        dataset_length = num_samples_to_take
+      else:
+        assert (split_fraction[0][0] == "[" and split_fraction[0][-1] == "%")
+        assert (split_fraction[1] == "]")
+        fraction = split_fraction[0][1:-1]
+        num_samples_to_skip = int(dataset_length * int(fraction) / 100.)
+        ds = ds.skip(num_samples_to_skip)
+        dataset_length -= num_samples_to_skip
     else:
-      split = f"{name}{fraction}"
+      # Handle the special case of a mix of scenes.
+      scenes_unmixed = name.split('+')
+      if (len(scenes_unmixed) > 1):
+        assert ("office4_2302" not in scenes_unmixed and
+                "office4_2402" not in scenes_unmixed)
+        split = f"{scenes_unmixed[0]}{fraction}"
+        for scene_unmixed in scenes_unmixed[1:]:
+          split += f"+{scene_unmixed}{fraction}"
+      else:
+        split = f"{name}{fraction}"
   else:
     split = name
 
   # Actually load the dataset.
-  ds = tfds.load(dataset_name,
-                 split=split,
-                 shuffle_files=shuffle_data,
-                 as_supervised=True)
+  if (scene_type not in ["office4_2302", "office4_2402"]):
+    ds = tfds.load(dataset_name,
+                   split=split,
+                   shuffle_files=shuffle_data,
+                   as_supervised=True)
+    dataset_length = len(ds)
   # Apply pre-processing.
   if (dataset_name == 'NyuDepthV2Labeled'):
     ds = ds.map(preprocess_nyu,
@@ -197,8 +236,12 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     ds = ds.map(preprocess_cla,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name == 'MeshdistPseudolabels'):
-    ds = ds.map(preprocess_bagfile,
-                num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    if (scene_type in ["office4_2302", "office4_2402"]):
+      ds = ds.map(preprocess_bagfile_different_dataloader,
+                  num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    else:
+      ds = ds.map(preprocess_bagfile,
+                  num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name
         in ['BfsegValidationLabeled', 'OfficeRumlangValidationLabeled']):
     ds = ds.map(preprocess_hive,
@@ -206,7 +249,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
   ds = ds.cache()
   # Further shuffle.
   if (shuffle_data):
-    ds = ds.shuffle(len(ds))
+    ds = ds.shuffle(dataset_length)
 
   ds = ds.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
