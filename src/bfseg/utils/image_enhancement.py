@@ -1,10 +1,16 @@
 from PIL import Image
 from skimage.segmentation import mark_boundaries
 import numpy as np
+import matplotlib
+
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import skimage
 from skimage.segmentation import watershed
 from scipy.spatial import distance
+
+from skimage.feature import canny
+from skimage.color import rgb2gray
 """
 Helper functions to convert self supervised sparse annotations to images
 """
@@ -86,40 +92,50 @@ def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
   plt.imshow(mark_boundaries(original, assign))
 
   plt_cnt = 0
+  names = ["foreground", "unknown", "background"]
   for i in (class_background, class_foreground, class_unknown):
-    plt.subplot(3, 3, 3 + plt_cnt)
+    plt.subplot(3, 3, 4 + plt_cnt)
     plt.imshow(assign == i)
     plt_cnt = plt_cnt + 1
-  plt.subplot(3, 3, 6)
-  plt.imshow(
-      np.multiply(
-          original,
-          np.stack([
-              assign == class_background, assign == class_background,
-              assign == class_background
-          ],
-                   axis=-1)))
-  plt.title("background")
+    plt.title(names[i])
+
   plt.subplot(3, 3, 7)
   plt.imshow(
       np.multiply(
           original,
           np.stack([
-              assign == class_foreground, assign == class_foreground,
-              assign == class_foreground
+              assign == class_background, assign == class_background, assign
+              == class_background
           ],
                    axis=-1)))
-  plt.title("foreground")
+
+  plt.title("background")
   plt.subplot(3, 3, 8)
   plt.imshow(
       np.multiply(
           original,
           np.stack([
-              assign == class_unknown, assign == class_unknown,
-              assign == class_unknown
+              assign == class_foreground, assign == class_foreground, assign
+              == class_foreground
+          ],
+                   axis=-1)))
+
+  plt.title("foreground")
+  plt.subplot(3, 3, 9)
+  plt.imshow(
+      np.multiply(
+          original,
+          np.stack([
+              assign == class_unknown, assign == class_unknown, assign
+              == class_unknown
           ],
                    axis=-1)))
   plt.title("unknown")
+
+  import tempfile
+  import time
+  temp_name = next(tempfile._get_candidate_names())
+  plt.savefig("/tmp/rss/" + str(time.time()) + "_" + temp_name + ".png")
 
 
 def to_rgb_mask(mask):
@@ -168,6 +184,32 @@ def aggregate_sparse_labels(np_labels,
 
   np_distance = np.squeeze(np_distance)
   np_labels = np.squeeze(np_labels)
+
+  # with open("/home/rene/rss/dist.npy", "wb") as f:
+  #   np.save(f, np_distance)
+  # with open("/home/rene/rss/labels.npy", "wb") as f:
+  #   np.save(f, np_labels)
+  # with open("/home/rene/rss/orig.npy", "wb") as f:
+  #   np.save(f, np_orig)
+
+  plt.subplot(2, 2, 1)
+  plt.imshow(np_distance)
+  plt.title("distance measurement")
+  plt.subplot(2, 2, 2)
+  plt.imshow(np_labels > 80)
+  plt.title("foreground")
+  plt.subplot(2, 2, 3)
+  plt.imshow(np.logical_and(np_labels <= 80, np_labels != 0))
+  plt.title("background")
+  plt.subplot(2, 2, 4)
+  plt.imshow(np_orig)
+  plt.title("original")
+
+  import tempfile
+  import time
+  temp_name = next(tempfile._get_candidate_names())
+  plt.savefig("/tmp/rss/" + str(time.time()) + "_overview_" + temp_name +
+              ".png")
   # Foreground Labels
   np_labels_foreground = np_labels > fg_bg_threshold
   # Background Labels
@@ -203,6 +245,7 @@ def aggregate_sparse_labels(np_labels,
     )
 
     mask = reduce_superpixel(seeds_bg, seeds_fg, superpixels, np_distance)
+    plot_reduced_sp(seeds_bg, seeds_fg, superpixels, np_distance, np_orig)
 
   else:
     markers = np.zeros(np_labels_foreground.shape, dtype=np.uint)
@@ -219,9 +262,7 @@ def aggregate_sparse_labels(np_labels,
     markers[height - bot_padding, step * i] = class_unknown + 1
 
     # Run watershed on canny edge filtered image.
-    mask = watershed(
-        skimage.feature.canny(skimage.color.rgb2gray(np_orig), sigma=0.1),
-        markers) - 1
+    mask = watershed(canny(rgb2gray(np_orig), sigma=0.1), markers) - 1
 
   return mask
 
