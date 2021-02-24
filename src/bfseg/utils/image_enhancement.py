@@ -11,6 +11,9 @@ from scipy.spatial import distance
 
 from skimage.feature import canny
 from skimage.color import rgb2gray
+
+import tempfile
+import time
 """
 Helper functions to convert self supervised sparse annotations to images
 """
@@ -81,61 +84,31 @@ class_background = 2
 class_unknown = 1
 
 
-def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
-  """ Plots everything used to generate the labels """
-  plt.subplot(3, 3, 1)
-  plt.imshow(mark_boundaries(original, assignment))
-  assign = reduce_superpixel(seeds_bg, seeds_fg, assignment, distance)
-  plt.subplot(3, 3, 2)
-  plt.imshow(to_rgb_mask(assign))
-  plt.subplot(3, 3, 3)
-  plt.imshow(mark_boundaries(original, assign))
+def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original,
+                    label_img):
 
-  plt_cnt = 0
-  names = ["foreground", "unknown", "background"]
-  for i in (class_background, class_foreground, class_unknown):
-    plt.subplot(3, 3, 4 + plt_cnt)
-    plt.imshow(assign == i)
-    plt_cnt = plt_cnt + 1
-    plt.title(names[i])
-
-  plt.subplot(3, 3, 7)
-  plt.imshow(
-      np.multiply(
-          original,
-          np.stack([
-              assign == class_background, assign == class_background, assign
-              == class_background
-          ],
-                   axis=-1)))
-
-  plt.title("background")
-  plt.subplot(3, 3, 8)
-  plt.imshow(
-      np.multiply(
-          original,
-          np.stack([
-              assign == class_foreground, assign == class_foreground, assign
-              == class_foreground
-          ],
-                   axis=-1)))
-
-  plt.title("foreground")
-  plt.subplot(3, 3, 9)
-  plt.imshow(
-      np.multiply(
-          original,
-          np.stack([
-              assign == class_unknown, assign == class_unknown, assign
-              == class_unknown
-          ],
-                   axis=-1)))
-  plt.title("unknown")
-
-  import tempfile
-  import time
   temp_name = next(tempfile._get_candidate_names())
-  plt.savefig("/tmp/rss/" + str(time.time()) + "_" + temp_name + ".png")
+
+  spix_img = (mark_boundaries(original, assignment) * 255).astype("uint8")
+
+  assign = reduce_superpixel(seeds_bg, seeds_fg, assignment, distance)
+  assign_img = mark_boundaries(original, assign).astype("uint8") * 255
+
+  assign_overview = [
+      np.stack([
+          255 * (assign == i) * (i == 0), 255 * (assign == i) * (i == 2), 255 *
+          (assign == i) * (i == 1)
+      ],
+               axis=-1).astype("uint8")
+      for i in (class_background, class_foreground, class_unknown)
+  ]
+
+  all_imgs = [label_img, spix_img, assign_img]
+  all_imgs.extend(assign_overview)
+
+  Image.fromarray(np.vstack([
+      img for img in all_imgs
+  ]).astype("uint8")).save("/tmp/rss/" + str(time.time()) + "overview.png")
 
 
 def to_rgb_mask(mask):
@@ -185,31 +158,6 @@ def aggregate_sparse_labels(np_labels,
   np_distance = np.squeeze(np_distance)
   np_labels = np.squeeze(np_labels)
 
-  # with open("/home/rene/rss/dist.npy", "wb") as f:
-  #   np.save(f, np_distance)
-  # with open("/home/rene/rss/labels.npy", "wb") as f:
-  #   np.save(f, np_labels)
-  # with open("/home/rene/rss/orig.npy", "wb") as f:
-  #   np.save(f, np_orig)
-
-  plt.subplot(2, 2, 1)
-  plt.imshow(np_distance)
-  plt.title("distance measurement")
-  plt.subplot(2, 2, 2)
-  plt.imshow(np_labels > 80)
-  plt.title("foreground")
-  plt.subplot(2, 2, 3)
-  plt.imshow(np.logical_and(np_labels <= 80, np_labels != 0))
-  plt.title("background")
-  plt.subplot(2, 2, 4)
-  plt.imshow(np_orig)
-  plt.title("original")
-
-  import tempfile
-  import time
-  temp_name = next(tempfile._get_candidate_names())
-  plt.savefig("/tmp/rss/" + str(time.time()) + "_overview_" + temp_name +
-              ".png")
   # Foreground Labels
   np_labels_foreground = np_labels > fg_bg_threshold
   # Background Labels
@@ -235,17 +183,44 @@ def aggregate_sparse_labels(np_labels,
       (c[0], c[1]) for c in np.asarray(np.where(np_labels_foreground > 0)).T
   ]
 
+  label_img = np.copy(np_orig)
+  # draw foreground red
+  label_img = label_img * np.stack([
+      np.logical_not(np_labels_foreground),
+      np.logical_not(np_labels_foreground),
+      np.logical_not(np_labels_foreground)
+  ],
+                                   axis=-1) + np.stack([
+                                       np_labels_foreground * 255,
+                                       0 * np_labels_foreground,
+                                       0 * np_labels_foreground
+                                   ],
+                                                       axis=-1)
+  # draw background green
+
+  label_img = label_img * np.stack([
+      np.logical_not(np_labels_background),
+      np.logical_not(np_labels_background),
+      np.logical_not(np_labels_background)
+  ],
+                                   axis=-1) + np.stack([
+                                       0 * np_labels_background,
+                                       255 * np_labels_background,
+                                       0 * np_labels_foreground
+                                   ],
+                                                       axis=-1).astype("uint8")
+
   if useSuperpixel:
     # If no superpixel image is provided, use slic
     superpixels = skimage.segmentation.slic(
         np_orig,
         n_segments=superpixelCount,
-        compactness=4,
-        sigma=1,
+        compactness=20,
+        sigma=0.1,
     )
-
+    sp_cp = np.copy(superpixels)
     mask = reduce_superpixel(seeds_bg, seeds_fg, superpixels, np_distance)
-    plot_reduced_sp(seeds_bg, seeds_fg, superpixels, np_distance, np_orig)
+    plot_reduced_sp(seeds_bg, seeds_fg, sp_cp, np_distance, np_orig, label_img)
 
   else:
     markers = np.zeros(np_labels_foreground.shape, dtype=np.uint)
