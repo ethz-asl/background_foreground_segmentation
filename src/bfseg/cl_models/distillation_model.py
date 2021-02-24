@@ -27,7 +27,8 @@ class DistillationModel(BaseCLModel):
       if (not (isinstance(self._lambda_distillation, float) and
                0. <= self._lambda_distillation <= 1.)):
         raise ValueError(
-            "The parameter `lambda_ewc` must be a float between 0.0 and 1.0.")
+            "The parameter `lambda_distillation` must be a float between 0.0 "
+            "and 1.0.")
     except KeyError:
       raise KeyError(
           "Distillation model requires the CL parameter `lambda_distillation` "
