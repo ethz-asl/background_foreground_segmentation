@@ -108,6 +108,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
           - "garage3"
           - "office4"
           - "office4_2302"
+          - "office4_2402"
           - "office5"
           - "rumlang2" 
           - "rumlang3"
@@ -158,6 +159,9 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     elif (scene_type == "office4_2302"):
       ds = load_fsdata(
           '/cluster/work/riner/users/blumh/pickelhaube_full_office4')
+    elif (scene_type == "office4_2402"):
+      ds = load_fsdata('/cluster/work/riner/users/blumh/'
+                       'pickelhaube_full_office4_agreement_dump')
     elif (scene_type in [
         "garage1", "garage2", "garage3", "office4", "office5", "rumlang2",
         "rumlang3"
@@ -196,7 +200,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     split = name
 
   # Actually load the dataset.
-  if (scene_type not in ["office4_2302"]):
+  if (scene_type not in ["office4_2302", "office4_2402"]):
     ds = tfds.load(dataset_name,
                    split=split,
                    shuffle_files=shuffle_data,
@@ -209,7 +213,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     ds = ds.map(preprocess_cla,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name == 'MeshdistPseudolabels'):
-    if (scene_type in ["office4_2302"]):
+    if (scene_type in ["office4_2302", "office4_2402"]):
       ds = ds.map(preprocess_bagfile_different_dataloader,
                   num_parallel_calls=tf.data.experimental.AUTOTUNE)
     else:

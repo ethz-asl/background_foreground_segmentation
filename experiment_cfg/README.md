@@ -75,6 +75,7 @@ ____
   - `"garage3"`
   - `"office4"`
   - `"office4_2302"`
+  - `"office4_2402"`
   - `"office5"`
   - `"rumlang2"`
   - `"rumlang3"`
