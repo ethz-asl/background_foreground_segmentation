@@ -1,14 +1,13 @@
+import os
+
 from bfseg.utils.evaluation import evaluate_model_multiple_epochs_and_datasets
 
 USER = TO_DEFINE
 
 save_folder = f"/cluster/scratch/{USER}/evaluation"
+pretrained_models_folder = f'/cluster/scratch/{USER}/pretrained_models/'
 
-model_to_evaluate = {
-    f'/cluster/scratch/{USER}/pretrained_models/'
-    'model_epoch_42_group_norm.h5':
-        42
-}
+id_and_epoch = [(1064, 100), (1069, 100)]
 
 datasets_to_evaluate = [
     # NYU.
@@ -33,9 +32,24 @@ datasets_to_evaluate = [
     ("MeshdistPseudolabels", "office4_2402"),
 ]
 
-accuracies, mean_ious = evaluate_model_multiple_epochs_and_datasets(
-    pretrained_dirs=[*model_to_evaluate.keys()],
-    epochs_to_evaluate=[*model_to_evaluate.values()],
-    datasets_names_to_evaluate=[d[0] for d in datasets_to_evaluate],
-    datasets_scenes_to_evaluate=[d[1] for d in datasets_to_evaluate],
-    save_folder=save_folder)
+accuracies = {}
+mean_ious = {}
+
+for id_, epoch_ in id_and_epoch:
+  id_folder = os.path.join(save_folder, str(id_))
+  if (not os.path.isdir(id_folder)):
+    os.makedirs(id_folder)
+  if (not id_ in accuracies):
+    accuracies[id_] = {}
+    mean_ious[id_] = {}
+
+  model_to_evaluate = os.path.join(pretrained_models_folder,
+                                   f'{id_}_model_epoch_{epoch_}.h5')
+
+  accuracies[id_][epoch_], mean_ious[id_][
+      epoch_] = evaluate_model_multiple_epochs_and_datasets(
+          pretrained_dirs=model_to_evaluate,
+          epochs_to_evaluate=epoch_,
+          datasets_names_to_evaluate=[d[0] for d in datasets_to_evaluate],
+          datasets_scenes_to_evaluate=[d[1] for d in datasets_to_evaluate],
+          save_folder=id_folder)
