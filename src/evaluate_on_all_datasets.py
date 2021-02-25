@@ -30,6 +30,7 @@ datasets_to_evaluate = [
     ("MeshdistPseudolabels", "office5"),
     ("MeshdistPseudolabels", "office4_2302"),
     ("MeshdistPseudolabels", "office4_2402"),
+    ("MeshdistPseudolabels", "office6_2502")
 ]
 
 accuracies = {}
