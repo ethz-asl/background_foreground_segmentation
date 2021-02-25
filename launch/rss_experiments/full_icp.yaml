@@ -22,7 +22,8 @@ outlierFilters:
      maxAngle: 1.57
 
 errorMinimizer:
-  PointToPlaneErrorMinimizer
+  PointToPlaneErrorMinimizer:
+    force4DOF: 1
 
 transformationCheckers:
   - DifferentialTransformationChecker:

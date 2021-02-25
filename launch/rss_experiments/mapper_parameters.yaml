@@ -1,4 +1,4 @@
-minReadingPointCount: 1000
+minReadingPointCount: 500
 inputQueueSize: 1
 mapSamplingDensity: 100 # sampling density for mesh map
 tfMapFrame: /map
