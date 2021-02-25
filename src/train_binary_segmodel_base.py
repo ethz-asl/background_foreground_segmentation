@@ -50,18 +50,18 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
       batch_size=training_params['batch_size'],
       perform_data_augmentation=training_params['perform_data_augmentation'])
 
+  callbacks_to_use = [TestCallback(test_data=test_ds), SaveModelAndLogs()]
+  if (training_params['reduce_lr_on_plateau']):
+    callbacks_to_use.append(ReduceLROnPlateau())
+  callbacks_to_use.append(
+      EarlyStoppingMinimumEpoch(min_epoch=training_params['stopping_min_epoch'],
+                                patience=training_params['stopping_patience']))
+
   model.fit(train_ds,
             epochs=training_params['num_training_epochs'],
             validation_data=val_ds,
             verbose=2,
-            callbacks=[
-                TestCallback(test_data=test_ds),
-                SaveModelAndLogs(),
-                ReduceLROnPlateau(),
-                EarlyStoppingMinimumEpoch(
-                    min_epoch=training_params['stopping_min_epoch'],
-                    patience=training_params['stopping_patience'])
-            ])
+            callbacks=callbacks_to_use)
   # Save final model.
   model.save_model(epoch="final")
 

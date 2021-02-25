@@ -29,6 +29,7 @@ ____
 
 - `num_training_epochs` (`int`): Number of training epochs.
 - `perform_data_augmentation` (`bool`): Whether or not to perform data augmentation.
+- `reduce_lr_on_plateau` (`bool`): Whether or not to use learning-rate reduction on plateau.
 - `stopping_min_epoch` (`int`): Minimum epoch after which early stopping can be performed.
 - `stopping_patience` (`int`): Patience parameter of the early-stopping callback.
 - `use_balanced_loss` (`bool`): Whether or not balanced cross-entropy loss should be used (cf. `src/bfseg/utils/metrics.py`).
