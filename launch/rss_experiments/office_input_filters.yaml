@@ -1,8 +1,8 @@
 - RandomSamplingDataPointsFilter:
-    prob: 1
+    prob: 0.8
 - SurfaceNormalDataPointsFilter:
-    knn: 10
-    epsilon: 0
+    knn: 30
+    epsilon: 1
     keepNormals: 1
     keepDensities: 1
 - ObservationDirectionDataPointsFilter
