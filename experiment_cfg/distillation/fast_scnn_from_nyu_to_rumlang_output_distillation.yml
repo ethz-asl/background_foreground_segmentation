@@ -30,5 +30,6 @@ cl_params:
   distillation_type: output
   fraction_replay_ds_to_use: null
   lambda_distillation: 0.1
+  lambda_type: both_ce_and_regularization
   pretrained_dir: TO_BE_SPECIFIED
   ratio_main_ds_replay_ds: null
