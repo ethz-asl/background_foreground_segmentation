@@ -19,7 +19,7 @@ outlierFilters:
   - TrimmedDistOutlierFilter:
      ratio: 0.8
   - SurfaceNormalOutlierFilter:
-     maxAngle: 1.57
+     maxAngle: 0.8
 
 errorMinimizer:
   PointToPlaneErrorMinimizer:
