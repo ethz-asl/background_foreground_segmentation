@@ -111,6 +111,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
           - "office4_2302"
           - "office4_2402"
           - "office5"
+          - "office6_2502"
           - "rumlang2" 
           - "rumlang3"
       - If `dataset_name` is "BfsegValidationLabeled":
@@ -165,6 +166,10 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       ds = load_fsdata('/cluster/work/riner/users/blumh/'
                        'pickelhaube_full_office4_agreement_dump')
       name = scene_type
+    elif (scene_type == "office6_2502"):
+      ds = load_fsdata(
+          '/cluster/work/riner/users/blumh/pickelhaube_full_office6')
+      name = scene_type
     elif (scene_type in [
         "garage1", "garage2", "garage3", "office4", "office5", "rumlang2",
         "rumlang3"
@@ -191,7 +196,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
 
   # Select the fraction of samples from the scene.
   if (fraction is not None):
-    if (scene_type in ["office4_2302", "office4_2402"]):
+    if (scene_type in ["office4_2302", "office4_2402", "office6_2502"]):
       dataset_length = sum(1 for _ in ds)
       split_fraction = fraction.split(":")
       assert (len(split_fraction) == 2)
@@ -213,7 +218,8 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       scenes_unmixed = name.split('+')
       if (len(scenes_unmixed) > 1):
         assert ("office4_2302" not in scenes_unmixed and
-                "office4_2402" not in scenes_unmixed)
+                "office4_2402" not in scenes_unmixed and
+                "office6_2502" not in scenes_unmixed)
         split = f"{scenes_unmixed[0]}{fraction}"
         for scene_unmixed in scenes_unmixed[1:]:
           split += f"+{scene_unmixed}{fraction}"
@@ -223,7 +229,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     split = name
 
   # Actually load the dataset.
-  if (scene_type not in ["office4_2302", "office4_2402"]):
+  if (scene_type not in ["office4_2302", "office4_2402", "office6_2502"]):
     ds = tfds.load(dataset_name,
                    split=split,
                    shuffle_files=shuffle_data,
@@ -237,7 +243,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     ds = ds.map(preprocess_cla,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name == 'MeshdistPseudolabels'):
-    if (scene_type in ["office4_2302", "office4_2402"]):
+    if (scene_type in ["office4_2302", "office4_2402", "office6_2502"]):
       ds = ds.map(preprocess_bagfile_different_dataloader,
                   num_parallel_calls=tf.data.experimental.AUTOTUNE)
     else:

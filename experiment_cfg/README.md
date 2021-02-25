@@ -78,6 +78,7 @@ ____
   - `"office4_2302"`
   - `"office4_2402"`
   - `"office5"`
+  - `"office6_2502"`
   - `"rumlang2"`
   - `"rumlang3"`
 - `OfficeRumlangValidationLabeled`. Valid dataset scenes:
