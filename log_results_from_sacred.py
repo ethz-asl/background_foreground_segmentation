@@ -12,10 +12,7 @@ from tensorflow import keras
 import yaml as yml
 import zipfile
 
-from bfseg.utils.datasets import load_data
-from bfseg.utils.evaluation import evaluate_model
-from bfseg.utils.models import create_model
-
+from bfseg.utils.evaluation import evaluate_model_multiple_epochs_and_datasets
 
 
 class LogExperiment:
@@ -163,120 +160,46 @@ class LogExperiment:
       mean_ious (dict): Mean IoUs, indexed by the concatenation of the dataset
         name and scene and by the epoch number.
     """
-    if (isinstance(epochs_to_evaluate, int)):
-      epochs_to_evaluate = [epochs_to_evaluate]
-    else:
-      assert (isinstance(epochs_to_evaluate, list))
-    if (isinstance(datasets_names_to_evaluate, str)):
-      datasets_names_to_evaluate = [datasets_names_to_evaluate]
-    else:
-      assert (isinstance(datasets_names_to_evaluate, list))
-    if (isinstance(datasets_scenes_to_evaluate, str)):
-      datasets_scenes_to_evaluate = [datasets_scenes_to_evaluate]
-    else:
-      assert (isinstance(datasets_scenes_to_evaluate, list))
-    assert (len(datasets_names_to_evaluate) == len(datasets_scenes_to_evaluate))
-
-    # Create the model.
-    encoder, full_model = create_model(model_name="fast_scnn",
-                                       freeze_encoder=False,
-                                       freeze_whole_model=False,
-                                       normalization_type="group",
-                                       image_h=480,
-                                       image_w=640)
-    model = keras.Model(inputs=full_model.input,
-                        outputs=[encoder.output, full_model.output])
-
-    accuracies = {}
-    mean_ious = {}
-
-    for test_dataset_name, test_dataset_scene in zip(
-        datasets_names_to_evaluate, datasets_scenes_to_evaluate):
-      curr_dataset_and_scene = f"{test_dataset_name}_{test_dataset_scene}"
-      accuracies[curr_dataset_and_scene] = {}
-      mean_ious[curr_dataset_and_scene] = {}
-      # Skip re-evaluating if evaluation was already performed.
-      all_output_evaluation_filenames = [
-          os.path.join(
-              self._save_folder_evaluate,
-              f"{test_dataset_name}_{test_dataset_scene}_epoch_{epoch}.yml")
-          for epoch in epochs_to_evaluate
-      ]
-      epochs_to_evaluate_for_curr_ds = set()
-      for epoch, output_evaluation_filename in zip(
-          epochs_to_evaluate, all_output_evaluation_filenames):
-        if (os.path.exists(output_evaluation_filename)):
-          # Load the precomputed accuracies.
-          with open(output_evaluation_filename, 'r') as f:
-            evaluation_metrics = yml.load(f, Loader=yml.FullLoader)
-          accuracies[curr_dataset_and_scene][epoch] = evaluation_metrics[
-              'accuracy']
-          mean_ious[curr_dataset_and_scene][epoch] = evaluation_metrics[
-              'mean_iou']
-        else:
-          epochs_to_evaluate_for_curr_ds.add(epoch)
-
-      # No evaluation needs to be performed.
-      if (len(epochs_to_evaluate_for_curr_ds) == 0):
-        print(
-            f"Skipping evaluation of model from epochs {epochs_to_evaluate} on "
-            f"dataset {test_dataset_name}, scene {test_dataset_scene}, because "
-            f"already found at '{all_output_evaluation_filenames}'.")
+    actual_epochs_to_evaluate = []
+    model_paths_epochs_to_evaluate = []
+    # Prepare all the required models.
+    for epoch, output_evaluation_filename in zip(
+        epochs_to_evaluate, all_output_evaluation_filenames):
+      # Retrieve the required model.
+      model_path, artifact_name = self.save_model(epoch_to_save=epoch)
+      if (model_path is None):
+        if (epoch == "final"):
+          # If final model not available, take last available one.
+          model_path, artifact_name = self.save_model(
+              epoch_to_save=self._num_epochs - 1)
+      if (model_path is None):
+        print(f"Cannot evaluate current experiment at epoch {epoch}, because "
+              "the corresponding model does not exist.")
         continue
+      # Extract the pretrained model from the archive, if necessary.
+      weights_file_name = artifact_name.split('.zip')[0] + ".h5"
+      output_filename = f"{self._experiment_id}_{weights_file_name}"
+      extracted_model_path = os.path.join(self._save_folder_models,
+                                          output_filename)
+      if (not os.path.isfile(extracted_model_path)):
+        assert (model_path[-4:] == ".zip")
+        with zipfile.ZipFile(model_path, 'r') as zip_helper:
+          assert (zip_helper.namelist() == [weights_file_name])
+          # Rename the pretrained model so as to include the experiment ID.
+          f = zip_helper.open(weights_file_name)
+          file_content = f.read()
+          f = open(extracted_model_path, 'wb')
+          f.write(file_content)
+          f.close()
+      actual_epochs_to_evaluate.append(epoch)
+      model_paths_epochs_to_evaluate.append(extracted_model_path)
 
-      # Load test dataset.
-      test_dataset = load_data(dataset_name=test_dataset_name,
-                               scene_type=test_dataset_scene,
-                               fraction=None,
-                               batch_size=8,
-                               shuffle_data=False)
-
-      for epoch, output_evaluation_filename in zip(
-          epochs_to_evaluate, all_output_evaluation_filenames):
-        if (not epoch in epochs_to_evaluate_for_curr_ds):
-          print(f"Skipping evaluation of model from epoch {epoch} on dataset "
-                f"{test_dataset_name}, scene {test_dataset_scene}, because "
-                f"already found at '{output_evaluation_filename}'.")
-          continue
-
-        # Retrieve the required model.
-        model_path, artifact_name = self.save_model(epoch_to_save=epoch)
-        if (model_path is None):
-          if (epoch == "final"):
-            # If final model not available, take last available one.
-            model_path, artifact_name = self.save_model(
-                epoch_to_save=self._num_epochs - 1)
-        if (model_path is None):
-          print(f"Cannot evaluate current experiment at epoch {epoch}, because "
-                "the corresponding model does not exist.")
-          continue
-        # Extract the pretrained model from the archive, if necessary.
-        weights_file_name = artifact_name.split('.zip')[0] + ".h5"
-        output_filename = f"{self._experiment_id}_{weights_file_name}"
-        extracted_model_path = os.path.join(self._save_folder_models,
-                                            output_filename)
-        if (not os.path.isfile(extracted_model_path)):
-          assert (model_path[-4:] == ".zip")
-          with zipfile.ZipFile(model_path, 'r') as zip_helper:
-            assert (zip_helper.namelist() == [weights_file_name])
-            # Rename the pretrained model so as to include the experiment ID.
-            f = zip_helper.open(weights_file_name)
-            file_content = f.read()
-            f = open(extracted_model_path, 'wb')
-            f.write(file_content)
-            f.close()
-        # Evaluate the pretrained model on the given dataset.
-        accuracy, mean_iou = evaluate_model(model=model,
-                                            test_dataset=test_dataset,
-                                            pretrained_dir=extracted_model_path)
-        accuracies[curr_dataset_and_scene][epoch] = accuracy
-        mean_ious[curr_dataset_and_scene][epoch] = mean_iou
-        # Write the result to file.
-        with open(output_evaluation_filename, 'w') as f:
-          yml.dump({'accuracy': accuracy, 'mean_iou': mean_iou}, f)
-        print(f"Saved evaluation of model from epoch {epoch} on dataset "
-              f"{test_dataset_name}, scene {test_dataset_scene} at "
-              f"'{output_evaluation_filename}'.")
+    accuracies, mean_ious = evaluate_model_multiple_epochs_and_datasets(
+        pretrained_dirs=model_paths_epochs_to_evaluate,
+        epochs_to_evaluate=actual_epochs_to_evaluate,
+        datasets_names_to_evaluate=datasets_names_to_evaluate,
+        datasets_scenes_to_evaluate=datasets_scenes_to_evaluate,
+        save_folder=self._save_folder_evaluate)
 
     return accuracies, mean_ious
 
