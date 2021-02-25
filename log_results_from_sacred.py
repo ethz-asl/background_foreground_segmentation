@@ -163,36 +163,46 @@ class LogExperiment:
     actual_epochs_to_evaluate = []
     model_paths_epochs_to_evaluate = []
     # Prepare all the required models.
-    for epoch, output_evaluation_filename in zip(
-        epochs_to_evaluate, all_output_evaluation_filenames):
-      # Retrieve the required model.
-      model_path, artifact_name = self.save_model(epoch_to_save=epoch)
-      if (model_path is None):
-        if (epoch == "final"):
-          # If final model not available, take last available one.
-          model_path, artifact_name = self.save_model(
-              epoch_to_save=self._num_epochs - 1)
-      if (model_path is None):
-        print(f"Cannot evaluate current experiment at epoch {epoch}, because "
-              "the corresponding model does not exist.")
-        continue
-      # Extract the pretrained model from the archive, if necessary.
-      weights_file_name = artifact_name.split('.zip')[0] + ".h5"
-      output_filename = f"{self._experiment_id}_{weights_file_name}"
-      extracted_model_path = os.path.join(self._save_folder_models,
-                                          output_filename)
-      if (not os.path.isfile(extracted_model_path)):
-        assert (model_path[-4:] == ".zip")
-        with zipfile.ZipFile(model_path, 'r') as zip_helper:
-          assert (zip_helper.namelist() == [weights_file_name])
-          # Rename the pretrained model so as to include the experiment ID.
-          f = zip_helper.open(weights_file_name)
-          file_content = f.read()
-          f = open(extracted_model_path, 'wb')
-          f.write(file_content)
-          f.close()
-      actual_epochs_to_evaluate.append(epoch)
-      model_paths_epochs_to_evaluate.append(extracted_model_path)
+    for test_dataset_name, test_dataset_scene in zip(
+        datasets_names_to_evaluate, datasets_scenes_to_evaluate):
+      curr_dataset_and_scene = f"{test_dataset_name}_{test_dataset_scene}"
+      # Skip re-evaluating if evaluation was already performed.
+      all_output_evaluation_filenames = [
+          os.path.join(
+              self._save_folder_evaluate,
+              f"{test_dataset_name}_{test_dataset_scene}_epoch_{epoch}.yml")
+          for epoch in epochs_to_evaluate
+      ]
+      for epoch, output_evaluation_filename in zip(
+          epochs_to_evaluate, all_output_evaluation_filenames):
+        # Retrieve the required model.
+        model_path, artifact_name = self.save_model(epoch_to_save=epoch)
+        if (model_path is None):
+          if (epoch == "final"):
+            # If final model not available, take last available one.
+            model_path, artifact_name = self.save_model(
+                epoch_to_save=self._num_epochs - 1)
+        if (model_path is None):
+          print(f"Cannot evaluate current experiment at epoch {epoch}, because "
+                "the corresponding model does not exist.")
+          continue
+        # Extract the pretrained model from the archive, if necessary.
+        weights_file_name = artifact_name.split('.zip')[0] + ".h5"
+        output_filename = f"{self._experiment_id}_{weights_file_name}"
+        extracted_model_path = os.path.join(self._save_folder_models,
+                                            output_filename)
+        if (not os.path.isfile(extracted_model_path)):
+          assert (model_path[-4:] == ".zip")
+          with zipfile.ZipFile(model_path, 'r') as zip_helper:
+            assert (zip_helper.namelist() == [weights_file_name])
+            # Rename the pretrained model so as to include the experiment ID.
+            f = zip_helper.open(weights_file_name)
+            file_content = f.read()
+            f = open(extracted_model_path, 'wb')
+            f.write(file_content)
+            f.close()
+        actual_epochs_to_evaluate.append(epoch)
+        model_paths_epochs_to_evaluate.append(extracted_model_path)
 
     accuracies, mean_ious = evaluate_model_multiple_epochs_and_datasets(
         pretrained_dirs=model_paths_epochs_to_evaluate,
