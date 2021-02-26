@@ -17,7 +17,11 @@ Launch file for Selective ICP with rviz
     <arg name="input_width" />
     <arg name="threshold" default="150" />
 
-
+ <!--node pkg="rosbag"
+        type="record"
+        name="output_recorder"
+        args="-o /tmp/bfseg_output /rslidar_points /points_filtered /pickelhaube_resized/cam0/image /pickelhaube_resized/cam0/segmented /pickelhaube_resized/cam1/image /pickelhaube_resized/cam1/segmented /pickelhaube_resized/cam2/image /pickelhaube_resized/cam2/segmented /tf "
+        /-->
     <!--node name="mesh_positioning"
           pkg="cpt_selective_icp"
           type="position_cad_with_marker.py"
@@ -85,6 +89,7 @@ Launch file for Selective ICP with rviz
     <!-- should be started last for handover to ICP-->
     <include file="$(find background_foreground_segmentation)/launch/pickelhaube/pickelhaube_versavis_from_bag.launch">
         <arg name="rosbag" value="$(arg rosbag)" />
+        <arg name="rate" value="0.1" />
     </include>
 
     <node name="mapper"
