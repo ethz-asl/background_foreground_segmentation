@@ -224,9 +224,12 @@ class LogExperiment:
         "MeshdistPseudolabels_rumlang_full", "MeshdistPseudolabels_garage1",
         "MeshdistPseudolabels_garage2", "MeshdistPseudolabels_garage3",
         "MeshdistPseudolabels_office4", "MeshdistPseudolabels_office5",
-        "MeshdistPseudolabels_rumlang2", "MeshdistPseudolabels_rumlang3",
-        "BfsegValidationLabeled_None", "BfsegValidationLabeled_ARCHE",
-        "BfsegValidationLabeled_CLA", "OfficeRumlangValidationLabeled_None",
+        "MeshdistPseudolabels_office4_2302",
+        "MeshdistPseudolabels_office4_2402",
+        "MeshdistPseudolabels_office6_2502", "MeshdistPseudolabels_rumlang2",
+        "MeshdistPseudolabels_rumlang3", "BfsegValidationLabeled_None",
+        "BfsegValidationLabeled_ARCHE", "BfsegValidationLabeled_CLA",
+        "OfficeRumlangValidationLabeled_None",
         "OfficeRumlangValidationLabeled_OFFICE",
         "OfficeRumlangValidationLabeled_RUMLANG"
     ]
