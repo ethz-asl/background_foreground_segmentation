@@ -128,7 +128,11 @@ ____
   In both cases:
   - `loss_ce` is the cross-entropy loss computed on the current task;
   - `distillation_loss` is the distillation loss computed between the feature/output of the current network and of the teacher network.
-- `lambda_ewc` (`float`): Required if using `"ewc"` as `cl_framework`. Regularization hyperparameter used to weight the loss.  Valid values are between 0 and 1. In particular, the loss is computed as: `(1 - lambda_ewc) * loss_ce + lambda_ewc * consolidation_loss`, where
+- `lambda_ewc` (`float`): Required if using `"ewc"` as `cl_framework`. Regularization hyperparameter used to weight the loss.  Valid values are between 0 and 1. In particular, the loss is computed as:
+  - `(1 - lambda_ewc) * loss_ce + lambda_ewc * consolidation_loss`, if `lambda_type` is `"both_ce_and_regularization"`;
+  - `loss_ce + lambda_ewc * consolidation_loss`, if `lambda_type` is `"regularization_only"`;
+
+  In both cases:
   - `loss_ce` is the cross-entropy loss computed on the current task;
   - `consolidation_loss` is the regularization loss on the parameters from the previous task.
-- `lambda_type` (`str`): Required if using `"distillation"` as `cl_framework`. Valid values are: `"both_ce_and_regularization"`, `"regularization_only"`. Cf. `lambda_distillation`.
+- `lambda_type` (`str`): Required if using `"distillation"` or `"ewc"` as `cl_framework`. Valid values are: `"both_ce_and_regularization"`, `"regularization_only"`. Cf. `lambda_distillation` and `lambda_ewc`.

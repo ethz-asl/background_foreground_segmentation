@@ -27,13 +27,24 @@ class EWC(BaseCLModel):
       raise KeyError("Pre-trained weights must be specified when using EWC.")
     try:
       self._lambda_ewc = run.config['cl_params']['lambda_ewc']
-      if (not (isinstance(self._lambda_ewc, float) and
-               0. <= self._lambda_ewc <= 1.)):
-        raise ValueError(
-            "The parameter `lambda_ewc` must be a float between 0.0 and 1.0.")
+      self._lambda_type = run.config['cl_params']['lambda_type']
+      if (self._lambda_type == "both_ce_and_regularization"):
+        if (not (isinstance(self._lambda_ewc, float) and
+                 0. <= self._lambda_ewc <= 1.)):
+          raise ValueError(
+              "The parameter `lambda_ewc` must be a float between 0.0 and 1.0.")
+      elif (self._lambda_type == "regularization_only"):
+        if (not (isinstance(self._lambda_ewc, float) and
+                 self._lambda_ewc >= 0.)):
+          raise ValueError(
+              "The parameter `lambda_ewc` must be a non-negative float.")
+      else:
+        raise KeyError("The CL parameter `lambda_type` must be one of: "
+                       "'both_ce_and_regularization', 'regularization_only'.")
     except KeyError:
       raise KeyError(
-          "EWC requires the CL parameter `lambda_ewc` to be specified.")
+          "EWC model requires the CL parameters `lambda_ewc` and `lambda_type` "
+          "to be specified.")
 
     super(EWC, self).__init__(run=run, root_output_dir=root_output_dir)
 
@@ -152,8 +163,11 @@ class EWC(BaseCLModel):
     output_loss = self.loss_ce(y_masked, pred_y_masked)
     consolidation_loss = self._compute_consolidation_loss()
 
-    loss = (1 - self._lambda_ewc
-           ) * output_loss + self._lambda_ewc * consolidation_loss
+    if (self._lambda_type == "both_ce_and_regularization"):
+      loss = (1 - self._lambda_ewc
+             ) * output_loss + self._lambda_ewc * consolidation_loss
+    else:
+      loss = output_loss + self._lambda_ewc * consolidation_loss
 
     # Return also the consolidation loss for tracking.
     loss = {'loss': loss, 'consolidation_loss': consolidation_loss}
