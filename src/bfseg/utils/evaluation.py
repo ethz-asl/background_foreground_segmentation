@@ -222,15 +222,20 @@ def evaluate_model(model,
       assert (len(y.shape) == 4)
       assert (len(pred_y.shape) == 3)
       for prediction_image, gt_image, input_image in zip(pred_y, y, x):
-        prediction_image = tf.expand_dims(prediction_image, axis=-1)
+        prediction_image = tf.cast(tf.expand_dims(prediction_image, axis=-1),
+                                   dtype=tf.float32) * 255. * 0.7
+        gt_image = tf.cast(gt_image, dtype=tf.float32) * 255. * 0.7
         # - Save prediction.
-        tf.keras.preprocessing.image.save_img(
-            os.path.join(output_image_folder, f"{image_idx}_prediction.png"),
-            prediction_image)
+        tf.keras.preprocessing.image.save_img(os.path.join(
+            output_image_folder, f"{image_idx}_prediction.png"),
+                                              prediction_image,
+                                              scale=False)
         # - Also save corresponding ground-truth segmentation and the input
         #   image.
-        tf.keras.preprocessing.image.save_img(
-            os.path.join(output_image_folder, f"{image_idx}_gt.png"), gt_image)
+        tf.keras.preprocessing.image.save_img(os.path.join(
+            output_image_folder, f"{image_idx}_gt.png"),
+                                              gt_image,
+                                              scale=False)
         tf.keras.preprocessing.image.save_img(
             os.path.join(output_image_folder, f"{image_idx}_input.png"),
             input_image)
