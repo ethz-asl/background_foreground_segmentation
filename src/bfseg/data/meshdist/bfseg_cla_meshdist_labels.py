@@ -15,8 +15,8 @@ It consists of three labels (0,1,2) where all classes that belong to the backgro
 class BfsegCLAMeshdistLabels(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for BfsegCLAMeshdistLabels dataset."""
 
-  VERSION = tfds.core.Version('1.0.0')
-  RELEASE_NOTES = {'1.0.0': 'Initial release.'}
+  VERSION = tfds.core.Version('1.0.1')
+  RELEASE_NOTES = {'1.0.0': 'Initial release.', '1.0.1': 'Added names.'}
 
   def _info(self) -> tfds.core.DatasetInfo:
     """Returns the dataset metadata."""
@@ -31,6 +31,8 @@ class BfsegCLAMeshdistLabels(tfds.core.GeneratorBasedBuilder):
                                          tfds.features.Tensor(shape=(480, 640,
                                                                      1),
                                                               dtype=tf.uint8),
+                                     'names':
+                                         tf.string
                                  }),
                                  supervised_keys=("image", "label"))
 
@@ -56,8 +58,13 @@ class BfsegCLAMeshdistLabels(tfds.core.GeneratorBasedBuilder):
     with h5py.File(dataset_path, 'r') as f:
       images = f[scene_type]['images']
       labels = f[scene_type]['labels']
+      metadata = f['metadata'][scene_type]
+
       for i in range(images.shape[0]):
+        cam = [key for key in metadata[str(i)].keys()][0]
+        timestamp = metadata[str(i)][cam][0][0]
         yield str(i).zfill(4), {
             'image': images[i, ...],
-            'label': labels[i, ...]
+            'label': labels[i, ...],
+            'name': cam + "_" + str(timestamp)
         }
