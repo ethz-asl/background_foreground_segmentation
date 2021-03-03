@@ -3,17 +3,15 @@
   ROS node that takes the sparse label of the projected pointcloud and aggregates them
 """
 import sys
-import message_filters
 import rospy
-from std_msgs.msg import *
-from std_msgs.msg import String
-from sensor_msgs.msg import CameraInfo, Image
-import yaml
-import time
-from bfseg.utils.image_enhancement import aggregate_sparse_labels
-import numpy as np
 import os
+from sensor_msgs.msg import CameraInfo, Image
+import message_filters
+import numpy as np
+import time
 import cv2
+
+from bfseg.utils.image_enhancement import aggregate_sparse_labels
 
 
 def callback(original, labels, distance):
@@ -30,16 +28,38 @@ def callback(original, labels, distance):
   t1 = time.time()
 
   options = rospy.get_param('~label_options')
-  aggregate_labels = aggregate_sparse_labels(
-      np_labels,
-      np_distance,
-      np_original,
-      outSize=(np_labels.shape[1] // options['downsamplingFactor'],
-               np_labels.shape[0] // options['downsamplingFactor']),
-      useSuperpixel=options['useSuperpixel'],
-      foregroundTrustRegion=options['foregroundTrustRegion'],
-      fg_bg_threshold=options['fgBgThreshold'],
-      superpixelCount=options['numberOfSuperPixel'])
+  if options['agreement'] or options['useSuperpixel']:
+    superpixels = aggregate_sparse_labels(
+        np_labels,
+        np_distance,
+        np_original,
+        outSize=(np_labels.shape[1] // options['downsamplingFactor'],
+                 np_labels.shape[0] // options['downsamplingFactor']),
+        stdDevThreshold=options.get('stdDevThreshold', 0.5),
+        useSuperpixel=True,
+        foregroundTrustRegion=options['foregroundTrustRegion'],
+        fg_bg_threshold=options['fgBgThreshold'],
+        superpixelCount=options['numberOfSuperPixel'])
+  if options['agreement'] or not options['useSuperpixel']:
+    region_growing = aggregate_sparse_labels(
+        np_labels,
+        np_distance,
+        np_original,
+        outSize=(np_labels.shape[1] // options['downsamplingFactor'],
+                np_labels.shape[0] // options['downsamplingFactor']),
+        stdDevThreshold=options.get('stdDevThreshold', 0.5),
+        useSuperpixel=False,
+        foregroundTrustRegion=options['foregroundTrustRegion'],
+        fg_bg_threshold=options['fgBgThreshold'],
+        superpixelCount=options['numberOfSuperPixel'])
+
+  if options['agreement']:
+    aggregate_labels = np.where(superpixels == region_growing, superpixels,
+                                np.ones_like(superpixels))
+  elif options['useSuperpixel']:
+    aggregate_labels = superpixels
+  else:
+    aggregate_labels = region_growing
   # swap classes 1 and 2
   labelmap = np.array([0, 2, 1])
   aggregate_labels = labelmap[aggregate_labels]
