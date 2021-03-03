@@ -24,7 +24,7 @@ def ignorant_cross_entropy_loss(y_true,
     """
 
   # convert true labels to one hot encoded images
-  data = tf.squeeze(tf.keras.backend.one_hot(y_true, 3))
+  data = tf.keras.backend.one_hot(y_true, num_classes)
   # extracts classes that should be ignored
   ignore = data[..., class_to_ignore]
   # invert class to be used as weights
