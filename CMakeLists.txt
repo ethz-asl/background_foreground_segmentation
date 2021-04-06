@@ -3,6 +3,9 @@ project(background_foreground_segmentation)
 
 find_package(catkin_simple REQUIRED)
 
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
 find_package(
         Boost
 )
@@ -30,6 +33,7 @@ cs_add_library(${PROJECT_NAME}2
 cs_add_executable(${PROJECT_NAME}_node
         src/background_foreground_segmentation_node.cpp
         )
+
 cs_add_executable(${PROJECT_NAME}_node2
         src/background_foreground_segmentation_node2.cpp
         )

@@ -1,7 +1,7 @@
 minReadingPointCount: 500
 inputQueueSize: 1
 mapSamplingDensity: 100 # sampling density for mesh map
-tfMapFrame: /map
+tfMapFrame: map
 lidarFrame: rslidar
 minOverlap: 0.2 # for ICP
 mappingTrigger: false # create map
