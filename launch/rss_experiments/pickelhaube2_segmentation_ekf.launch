@@ -109,8 +109,8 @@ Launch file for Selective ICP with rviz and Realsense Integration
                 <param name="icpCovLin" value="0.1"/>
                 <param name="icpCovRot" value="0.1"/>
                 <param name="realsenseCov" value="0.1"/>
-                <param name="odomPosePub" value="false"/>
-                <param name="mapOdomPub" value="true"/>
+                <param name="odomPosePub" value="true"/>
+                <param name="mapOdomPub" value="false"/>
         <param name="cadTopic" value="mesh_publisher/mesh_out" />
         <param name="icpConfig"
                value="$(find background_foreground_segmentation)/launch/rss_experiments/full_icp.yaml" />
