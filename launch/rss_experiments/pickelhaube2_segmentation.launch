@@ -89,7 +89,7 @@ Launch file for Selective ICP with rviz
     <!-- should be started last for handover to ICP-->
     <include file="$(find background_foreground_segmentation)/launch/pickelhaube/pickelhaube_versavis_from_bag.launch">
         <arg name="rosbag" value="$(arg rosbag)" />
-        <arg name="rate" value="0.05" />
+        <arg name="rate" value="0.1" />
     </include>
 
     <node name="mapper"

@@ -94,7 +94,7 @@ Launch file for Selective ICP with rviz and Realsense Integration
 
     <!-- for Realsense: Fix camera_pose_frame to robot-->
     <node pkg="tf2_ros" type="static_transform_publisher" name="tracking_cam_to_rslidar"
-				args="-0.309 -0.008 0.12 0 0 -0.707 0.707  /camera_pose_frame /rslidar"/>
+				args="0.008 -0.309 0.12 0 0 0 1  /camera_pose_frame /rslidar"/>
 
     <node name="mapper"
           type="cpt_selective_icp_dyn_node"
@@ -105,6 +105,8 @@ Launch file for Selective ICP with rviz and Realsense Integration
                 <param name="standaloneICP" value="false" />
                 <param name="scanTopic" value="/points_filtered" />
                 <param name="odomTopic" value="/camera/odom/sample" />
+                <param name="skipScans" value="5" /> 
+                <param name="ekfEnable" value="false" />
         <param name="cadTopic" value="mesh_publisher/mesh_out" />
         <param name="icpConfig"
                value="$(find background_foreground_segmentation)/launch/rss_experiments/full_icp.yaml" />
@@ -119,6 +121,7 @@ Launch file for Selective ICP with rviz and Realsense Integration
         <param name="path"
                  value="$(find cpt_selective_icp_dyn)" />
     </node>
+
     <node name="mesh_publisher"
           pkg="cpt_utils"
           type="mesh_publisher_node"
