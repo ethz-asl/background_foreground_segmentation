@@ -80,6 +80,11 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = 'fused'
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
+  # new
+  elif (dataset_name == 'MeshdistPseudolabels'):
+    if (scene_type is None):
+      print("load rumlang2")
+      name = 'rumlang2'
   else:
     raise Exception("Dataset %s not found!" % dataset_name)
 
@@ -99,6 +104,11 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     ds = ds.map(preprocess_nyu,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name == 'BfsegCLAMeshdistLabels'):
+    ds = ds.map(preprocess_cla,
+                num_parallel_calls=tf.data.experimental.AUTOTUNE)
+  # new
+  elif (dataset_name == 'MeshdistPseudolabels'):
+    print("preprocessing start")
     ds = ds.map(preprocess_cla,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   ds = ds.cache()

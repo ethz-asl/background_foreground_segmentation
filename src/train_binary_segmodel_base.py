@@ -10,7 +10,7 @@ from bfseg.utils.callbacks import SaveModelAndLogs, TestCallback
 from bfseg.utils.datasets import load_datasets
 
 ex = Experiment()
-ex.observers.append(get_observer())
+#ex.observers.append(get_observer())
 
 
 @ex.main
