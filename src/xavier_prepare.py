@@ -17,4 +17,4 @@ def load_gdrive_file(file_id,
   return filename
 
 if __name__ == "__main__":
-    load_gdrive_file("1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad.h5")
+    load_gdrive_file("1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad")
