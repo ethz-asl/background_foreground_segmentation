@@ -5,14 +5,10 @@ Launch file for Selective ICP with rviz and Realsense integration
 
 <launch>
 
-	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube2_labelgen_dyn.launch">
+	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube2_full_dyn.launch">
 		<arg name="rosbag" value="/home/matthias/data/rosbags/pickelhaube_2021-02-08-12-32-19.bag"/>
 		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/rss_experiments/210212_Rumlang_Meters_SE.off" />
-		<arg name="logprefix" value="pickelhaube_segmentation_rumlang1" />
-		<arg name="segmentation_model" value="173xrQTkbeJhpHHARhF_JvbRnDYcb7ykc" />
-		<arg name="input_height" value="480" />
-		<arg name="input_width" value="640" />
-		<arg name="threshold" value="200" />
+		<arg name="logprefix" value="pickelhaube_full_rumlang1_dyn" />
 	</include>
 
     <node pkg="tf2_ros"

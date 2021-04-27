@@ -19,7 +19,7 @@ from bfseg.sacred_utils import get_observer
 from bfseg.utils.models import create_model
 
 ex = Experiment()
-ex.observers.append(get_observer())
+#ex.observers.append(get_observer())
 
 
 @ex.main

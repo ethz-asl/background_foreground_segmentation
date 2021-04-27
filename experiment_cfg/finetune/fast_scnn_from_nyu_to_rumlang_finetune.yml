@@ -5,7 +5,7 @@ network_params:
   model_params:
     image_h: 480
     image_w: 640
-  normalization_type: batch
+  normalization_type: group
 training_params:
   batch_size: 10
   learning_rate: 0.00001
@@ -14,8 +14,8 @@ training_params:
 dataset_params:
   test_dataset: NyuDepthV2Labeled
   test_scene: null
-  train_dataset: MeshdistPseudolabels
-  train_scene: null
+  train_dataset: MeshdistPseudolabelsDyn
+  train_scene: rumlang1_full_dyn
   validation_percentage: 10
 logging_params:
   model_save_freq: 1
@@ -23,5 +23,4 @@ logging_params:
 cl_params:
   cl_framework: finetune
   # Note: this needs to be specified.
-  pretrained_dir: null
-  # /home/matthias/.keras/datasets/1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad.h5
+  pretrained_dir: /home/matthias/.keras/datasets/1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad.h5 #null

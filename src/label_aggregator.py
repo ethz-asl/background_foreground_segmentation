@@ -102,6 +102,7 @@ def getCallbackForTopic(topicNumber, publisher, counters):
     if rospy.get_param('~publish_labels', False):
       publisher.publish(msg)
     if rospy.get_param('~store_labels', False):
+      print("Writing to {}...".format(rospy.get_param('~label_path')))
       cv2.imwrite(
           os.path.join(
               rospy.get_param('~label_path'),
