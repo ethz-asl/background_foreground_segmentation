@@ -23,4 +23,4 @@ logging_params:
 cl_params:
   cl_framework: finetune
   # Note: this needs to be specified.
-  pretrained_dir: /home/matthias/.keras/datasets/1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad.h5 #null
+  pretrained_dir: /home/xavier/.keras/datasets/1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad.h5
