@@ -178,6 +178,8 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = "rumlang1_full_dyn"
     elif (scene_type == "rumlang1_full"):
       name = "rumlang1_full"
+    elif (scene_type == "rumlang1_full_test1"):
+      name = "rumlang1_full_test1"
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
   elif (dataset_name == 'BfsegValidationLabeled'):
