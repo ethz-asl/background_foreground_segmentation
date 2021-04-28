@@ -15,11 +15,11 @@ dataset_params:
   test_dataset: NyuDepthV2Labeled
   test_scene: null
   train_dataset: MeshdistPseudolabelsDyn
-  train_scene: rumlang1_full
+  train_scene: rumlang1_full_dyn
   validation_percentage: 10
 logging_params:
   model_save_freq: 1
-  exp_name: fast_scnn_from_nyu_to_rumlang_finetune
+  exp_name: fast_scnn_from_nyu_to_rumlang_dyn_finetune
 cl_params:
   cl_framework: finetune
   # Note: this needs to be specified.
