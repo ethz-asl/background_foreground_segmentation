@@ -12,8 +12,8 @@ training_params:
   num_training_epochs: 1
   stopping_patience: 100
 dataset_params:
-  test_dataset: NyuDepthV2Labeled
-  test_scene: null
+  test_dataset: MeshdistPseudolabelsDyn
+  test_scene: rumlang1_full
   train_dataset: MeshdistPseudolabelsDyn
   train_scene: rumlang1_full
   validation_percentage: 10
