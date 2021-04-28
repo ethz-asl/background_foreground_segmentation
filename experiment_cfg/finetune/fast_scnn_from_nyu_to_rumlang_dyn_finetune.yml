@@ -13,7 +13,7 @@ training_params:
   stopping_patience: 100
 dataset_params:
   test_dataset: MeshdistPseudolabelsDyn
-  test_scene: rummlang1_full_dyn
+  test_scene: rumlang1_full_dyn
   train_dataset: MeshdistPseudolabelsDyn
   train_scene: rumlang1_full_dyn
   validation_percentage: 10
