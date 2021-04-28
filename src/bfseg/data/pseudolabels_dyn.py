@@ -42,10 +42,9 @@ class MeshdistPseudolabelsDyn(tfds.core.GeneratorBasedBuilder):
     """Returns SplitGenerators."""
     dataset_paths = dl_manager.download_and_extract({
         'rumlang1_full_dyn':
-            'https://drive.google.com/uc?export=download&id=1GbrDCuFiy3S8L2M1evyR3lttEGfqihJ-',
+            'https://drive.google.com/uc?export=download&id=1HBoIcdRW7FY_qALmObUfiIu7p0vjfQ82',
         'rumlang1_full':
             'https://drive.google.com/uc?export=download&id=1DDiX5K-aN3wxJF_JlvEgr6X74XiItCoR',
-   
     })
     return [
         tfds.core.SplitGenerator(
