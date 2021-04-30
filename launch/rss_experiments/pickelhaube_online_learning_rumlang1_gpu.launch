@@ -9,14 +9,14 @@ Launch file for Selective ICP with rviz
   <env name="ROSCONSOLE_FORMAT" value="[${severity}] (${node}) [${time}]: ${message}\n" />
 
     <!-- ONLINE LEARNING NODE -->
-    <node pkg="background_foreground_segmentation"
+    <node pkg="gpu_learning"
           type="online_learning.py"
           name="online_learning"
           output="screen">
         <param name="model_gdrive_id" value="1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad" />
         <param name="input_height" value="480" />
         <param name="input_width" value="640" />
-        <param name="log_folder" value="/home/xavier/data/rss_2021_data/online_learning_{}" />
+        <param name="log_folder" value="/home/matthias/data/rss_2021_data/online_learning_{}" />
         <rosparam>
         learning_rate: 0.00001
         image_topics:
