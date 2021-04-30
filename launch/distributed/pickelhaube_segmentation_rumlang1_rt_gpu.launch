@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Launch file for Selective ICP with rviz and Realsense Integration
+-->
+
+<launch>
+
+  <!-- Proper Output Info -->
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}] (${node}) [${time}]: ${message}\n" />
+
+    <node pkg="gpu_learning"
+          type="inference_node.py"
+          name="inference_node"
+          output="screen">
+        <param name="model_gdrive_id" value="173xrQTkbeJhpHHARhF_JvbRnDYcb7ykc" />
+        <param name="input_height" value="480" />
+        <param name="input_width" value="640" />
+        <rosparam>
+          image_topics:
+            - /pickelhaube_resized/cam0/image
+            - /pickelhaube_resized/cam1/image
+            - /pickelhaube_resized/cam2/image
+          segmentation_output_topics:
+            - /pickelhaube_resized/cam0/segmented
+            - /pickelhaube_resized/cam1/segmented
+            - /pickelhaube_resized/cam2/segmented
+          pointcloud_topic: /rslidar_points
+        </rosparam>
+    </node>
+
+</launch>
