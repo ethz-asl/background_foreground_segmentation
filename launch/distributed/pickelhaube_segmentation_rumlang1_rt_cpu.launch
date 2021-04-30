@@ -5,7 +5,7 @@ Launch file for Selective ICP with rviz and Realsense integration
 
 <launch>
 
-	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube2_segmentation_rt_cpu.launch">
+	<include file="$(find background_foreground_segmentation)/launch/distributed/pickelhaube2_segmentation_rt_cpu.launch">
 		<arg name="rosbag" value="/home/matthias/data/rosbags/pickelhaube_2021-02-08-12-32-19.bag"/>
 		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/rss_experiments/210212_Rumlang_Meters_SE.off" />
 		<arg name="logprefix" value="pickelhaube_segmentation_rumlang1" />
