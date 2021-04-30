@@ -96,6 +96,19 @@ Launch file for Selective ICP with rviz and Realsense Integration
     <node pkg="tf2_ros" type="static_transform_publisher" name="tracking_cam_to_rslidar"
 				args="0.008 -0.309 0.12 0 0 0 1  /camera_pose_frame /rslidar"/>
 
+    <node name="realsense_broadcast"
+          type="realsense_broadcast_node"
+          pkg="cpt_selective_icp_dyn"
+          output="screen" >
+          <param name="odomTopic" value="/camera/odom/sample" />
+          <param name="realsenseOdomTopic" value="/realsense_odom" />
+          <param name="inputQueueSize" value="5" />
+          <param name="tfMapFrame" value="5" />
+          <param name="cameraPoseFrame" value="camera_pose_frame" />
+          <param name="cameraOdomFrame" value="camera_odom_frame" />
+          <param name="realsenseCov" value="0.1" />
+    </node>
+
     <node name="mapper"
           type="cpt_selective_icp_dyn_node"
           pkg="cpt_selective_icp_dyn"
@@ -108,9 +121,6 @@ Launch file for Selective ICP with rviz and Realsense Integration
                 <param name="ekfEnable" value="true" />
                 <param name="icpCovLin" value="0.1"/>
                 <param name="icpCovRot" value="0.1"/>
-                <param name="realsenseCov" value="0.1"/>
-                <param name="odomPosePub" value="true"/>
-                <param name="mapOdomPub" value="false"/>
         <param name="cadTopic" value="mesh_publisher/mesh_out" />
         <param name="icpConfig"
                value="$(find background_foreground_segmentation)/launch/rss_experiments/full_icp.yaml" />

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Launch file for Selective ICP with rviz
+-->
+
+<launch>
+
+  <!-- Proper Output Info -->
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}] (${node}) [${time}]: ${message}\n" />
+
+    <!-- ONLINE LEARNING NODE -->
+    <node pkg="background_foreground_segmentation"
+          type="online_learning.py"
+          name="online_learning"
+          output="screen">
+        <param name="model_gdrive_id" value="1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad" />
+        <param name="input_height" value="480" />
+        <param name="input_width" value="640" />
+        <rosparam>
+        learning_rate: 0.00001
+        image_topics:
+          - - /pickelhaube_resized/cam0/image
+            - /meshdist/cam0/projected_pc
+            - /meshdist/cam0/projected_pc_distance
+          - - /pickelhaube_resized/cam1/image
+            - /meshdist/cam1/projected_pc
+            - /meshdist/cam1/projected_pc_distance
+          - - /pickelhaube_resized/cam2/image
+            - /meshdist/cam2/projected_pc
+            - /meshdist/cam2/projected_pc_distance
+        segmentation_output_topics:
+          - /pickelhaube_resized/cam0/segmented
+          - /pickelhaube_resized/cam1/segmented
+          - /pickelhaube_resized/cam2/segmented
+        pointcloud_topic: /rslidar_points
+        label_frequency: 3
+        label_options:
+          useSuperpixel: true
+          foregroundTrustRegion: false
+          fgBgThreshold: 50
+          numberOfSuperPixel: 400
+        </rosparam>
+    </node>
+</launch>
