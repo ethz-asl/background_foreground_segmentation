@@ -17,6 +17,19 @@ import gdown
 from bfseg.settings import TMPDIR
 
 tf.executing_eagerly()
+# TODO: Not sure if required
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+  # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
+  try:
+    tf.config.experimental.set_virtual_device_configuration(
+        gpus[0],
+        [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=7000)])
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Virtual devices must be set before GPUs have been initialized
+    print(e)
 
 
 def load_gdrive_file(file_id,
@@ -53,9 +66,12 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
     img = tf.image.resize(
         img, (rospy.get_param('~input_height'), rospy.get_param('~input_width')))
     imgs.append(img)
-
+  inputTime = time.time() 
+  print("input time: {}".format(inputTime - startTime))
   # predict batch of images
   final_prediction = pred_func(tf.stack(imgs, axis=0))
+  predictTime = time.time() 
+  print("predict time: {}".format(predictTime - inputTime))
   for i, pred in enumerate(tf.unstack(final_prediction, axis=0)):
     # resize each prediction to the original image size
     prediction = tf.image.resize(pred[..., tf.newaxis], img_shapes[i],
@@ -71,7 +87,8 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
     img_msg.data = prediction.flatten().tolist()
     img_msg.encoding = "mono8"
     img_pubs[i].publish(img_msg)
-
+  outputTime = time.time()
+  print("output time: {}".format(outputTime - predictTime))
   timeDiff = time.time() - startTime
   print("published segmented images in {:.4f}s, {:.4f} FPs".format(
       timeDiff, 1 / timeDiff))

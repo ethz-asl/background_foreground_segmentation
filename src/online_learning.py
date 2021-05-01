@@ -19,6 +19,20 @@ from bfseg.utils.losses import BalancedIgnorantCrossEntropyLoss
 from bfseg.utils.image_enhancement import aggregate_sparse_labels
 from bfseg.utils.images import augmentation
 
+# TODO: Not sure if required
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+  # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
+  try:
+    tf.config.experimental.set_virtual_device_configuration(
+        gpus[0],
+        [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=7000)])
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Virtual devices must be set before GPUs have been initialized
+    print(e)
+
 tf.executing_eagerly()
 
 nyu_data = iter(
@@ -64,6 +78,8 @@ def callback(pred_func, img_pubs, checkpointer, pointcloud, *image_msgs):
     img = tf.image.convert_image_dtype(tf.convert_to_tensor(img), tf.float32)
     img = tf.image.resize(img, (INPUT_HEIGHT, INPUT_WIDTH))
     input_batch.append(img)
+  inputTime = time.time()
+  print("input time: {}".format(inputTime - startTime))
 
   # fill batch with training data
   # 3 for inference, 9 replaying from the past, 1 (10%) replaying from NYU
@@ -75,8 +91,12 @@ def callback(pred_func, img_pubs, checkpointer, pointcloud, *image_msgs):
       tf.image.convert_image_dtype(nyu_sample[0], tf.float32))
   label_batch.append(nyu_sample[1])
   # predict batch of images
+  batchTime = time.time()
+  print("batch preparation time: {}".format(batchTime - inputTime))
   final_prediction = pred_func(tf.stack(input_batch, axis=0),
                                tf.stack(label_batch, axis=0))
+  trainTime = time.time()
+  print("train time: {}".format(trainTime - batchTime))
   # save checkpoint
   checkpointer.save()
   for i, pred in enumerate(tf.unstack(final_prediction, axis=0)):
@@ -94,7 +114,8 @@ def callback(pred_func, img_pubs, checkpointer, pointcloud, *image_msgs):
     img_msg.data = prediction.flatten().tolist()
     img_msg.encoding = "mono8"
     img_pubs[i].publish(img_msg)
-
+  outputTime = time.time()
+  print("output time: {}".format(outputTime - trainTime))
   timeDiff = time.time() - startTime
   print("published segmented images in {:.4f}s, {:.4f} FPs".format(
       timeDiff, 1 / timeDiff))
