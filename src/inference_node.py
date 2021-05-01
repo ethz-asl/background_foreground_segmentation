@@ -90,6 +90,7 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
                                  tf.image.ResizeMethod.BILINEAR)
     resizeTime += time.time() - timeB
     # convert to numpy
+    time.sleep(0.1)
     timeC = time.time()
     prediction = prediction.numpy()
     numpyTime += time.time() - timeC
