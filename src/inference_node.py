@@ -56,6 +56,7 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
   imgs = []
   img_shapes = []
   img_headers = []
+  tensorTime = 0
   for msg in image_msgs:
     img = np.frombuffer(msg.data, dtype=np.uint8)
     img = img.reshape(msg.height, msg.width, 3)
@@ -65,12 +66,14 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
     img_shapes.append((msg.height, msg.width))
     img_headers.append(msg.header)
     # resize to common input format
+    timeF = time.time()
     img = tf.image.convert_image_dtype(tf.convert_to_tensor(img), tf.float32)
+    tensorTime += time.time() - timeF
     img = tf.image.resize(
         img, (rospy.get_param('~input_height'), rospy.get_param('~input_width')))
     imgs.append(img)
   inputTime = time.time() 
-  print("input time: {}".format(inputTime - startTime))
+  print("input (tensor) time: {:.4f} ({:.4f})".format(inputTime - startTime, tensorTime))
   # predict batch of images
   final_prediction = pred_func(tf.stack(imgs, axis=0))
   predictTime = time.time() 
