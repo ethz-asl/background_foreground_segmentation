@@ -83,6 +83,7 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
   conversionTime = 0
   flattenTime = 0
   numpyTime = 0
+  time.sleep(0.1)
   for i, pred in enumerate(tf.unstack(final_prediction, axis=0)):
     # resize each prediction to the original image size
     timeB = time.time()
@@ -90,7 +91,7 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
                                  tf.image.ResizeMethod.BILINEAR)
     resizeTime += time.time() - timeB
     # convert to numpy
-    time.sleep(0.1)
+    #time.sleep(0.1)
     timeC = time.time()
     prediction = prediction.numpy()
     numpyTime += time.time() - timeC
