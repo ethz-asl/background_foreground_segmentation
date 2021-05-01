@@ -88,7 +88,7 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
     resizeTime += time.time() - timeB
     # convert to numpy
     timeC = time.time()
-    prediction = prediction.numpy()
+    prediction = np.array(prediction)
     numpyTime += time.time() - timeC
     timeE = time.time()
     prediction = prediction.astype('uint8')
