@@ -79,6 +79,7 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
   resizeTime = 0
   conversionTime = 0
   flattenTime = 0
+  numpyTime = 0
   for i, pred in enumerate(tf.unstack(final_prediction, axis=0)):
     # resize each prediction to the original image size
     timeB = time.time()
@@ -87,8 +88,11 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
     resizeTime += time.time() - timeB
     # convert to numpy
     timeC = time.time()
-    prediction = prediction.numpy().astype('uint8')
-    conversionTime += time.time() - timeC
+    prediction = prediction.numpy()
+    numpyTime += time.time() - timeC
+    timeE = time.time()
+    prediction = prediction.astype('uint8')
+    conversionTime += time.time() - timeE
     # Create and publish image message
     img_msg = Image()
     img_msg.header = img_headers[i]
@@ -103,7 +107,7 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
     img_pubs[i].publish(img_msg)
     publishTime += time.time()-timeA
   outputTime = time.time()
-  print("output (resize/conversion/flatten/publish) time: {:.4f} ({:.4f}/{:.4f}/{:.4f}/{:.4f})".format(outputTime - predictTime, resizeTime, conversionTime, flattenTime, publishTime))
+  print("output (resize/numpy/conversion/flatten/publish) time: {:.4f} ({:.4f}/{:.4f}/{:.4f}/{:.4f}/{:.4f})".format(outputTime - predictTime, resizeTime, numpyTime, conversionTime, flattenTime, publishTime))
   timeDiff = time.time() - startTime
   print("published segmented images in {:.4f}s, {:.4f} FPs".format(
       timeDiff, 1 / timeDiff))
