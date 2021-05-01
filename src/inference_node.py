@@ -30,7 +30,10 @@ if gpus:
   except RuntimeError as e:
     # Virtual devices must be set before GPUs have been initialized
     print(e)
-
+print("--------------------------------------------- Versions (Python, np, tf) ----------------------------------------")
+print(sys.version)
+print(np.version.version)
+print(tf.__version__)
 
 def load_gdrive_file(file_id,
                      ending='',
