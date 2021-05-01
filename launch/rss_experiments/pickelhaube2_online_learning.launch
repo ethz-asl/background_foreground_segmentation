@@ -80,6 +80,7 @@ Launch file for Selective ICP with rviz
         <param name="model_gdrive_id" value="$(arg segmentation_model)" />
         <param name="input_height" value="$(arg input_height)" />
         <param name="input_width" value="$(arg input_width)" />
+        <param name="log_folder" value="/home/matthias/data/rss_2021_data/online_learning_{}" />
         <rosparam>
         learning_rate: 0.00001
         image_topics:

@@ -99,6 +99,7 @@ def callback(pred_func, img_pubs, checkpointer, pointcloud, *image_msgs):
   print("train time: {}".format(trainTime - batchTime))
   # save checkpoint
   checkpointer.save()
+  publishTime = 0
   for i, pred in enumerate(tf.unstack(final_prediction, axis=0)):
     # resize each prediction to the original image size
     prediction = tf.image.resize(pred[..., tf.newaxis], img_shapes[i],
@@ -113,9 +114,11 @@ def callback(pred_func, img_pubs, checkpointer, pointcloud, *image_msgs):
     img_msg.step = img_msg.width
     img_msg.data = prediction.flatten().tolist()
     img_msg.encoding = "mono8"
+    timeA = time.time()
     img_pubs[i].publish(img_msg)
+    publishTime += time.time() - timeA
   outputTime = time.time()
-  print("output time: {}".format(outputTime - trainTime))
+  print("output (publish) time: {} ({})".format(outputTime - trainTime, publishTime))
   timeDiff = time.time() - startTime
   print("published segmented images in {:.4f}s, {:.4f} FPs".format(
       timeDiff, 1 / timeDiff))
