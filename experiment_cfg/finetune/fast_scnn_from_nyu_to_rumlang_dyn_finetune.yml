@@ -9,14 +9,14 @@ network_params:
 training_params:
   batch_size: 10
   learning_rate: 0.00001
-  num_training_epochs: 20
+  num_training_epochs: 40
   stopping_patience: 100
 dataset_params:
   test_dataset: MeshdistPseudolabelsDyn
   test_scene: rumlang1_full_dyn
   train_dataset: MeshdistPseudolabelsDyn
   train_scene: rumlang1_full_dyn
-  validation_percentage: 10
+  validation_percentage: 0
 logging_params:
   model_save_freq: 1
   exp_name: fast_scnn_from_nyu_to_rumlang_dyn_finetune
