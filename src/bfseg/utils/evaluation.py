@@ -1,3 +1,4 @@
+import cv2
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import os
@@ -205,10 +206,17 @@ def evaluate_model(model,
   for sample in test_dataset:
     if (len(sample) == 3):
       x, y, mask = sample
+      assert (False)
     else:
       assert (len(sample) == 2)
       x, y = sample
-      mask = tf.ones(shape=x.shape[:-1])
+      #mask = tf.ones(shape=x.shape[:-1])
+      raise OSError("Set the correct path to the `mask.png` file here.")
+      mask = cv2.imread('mask.png')
+      assert (mask.shape == (480, 640, 3))
+      mask = tf.cast(mask[:, :, 0] / 255., dtype=tf.uint8)
+      batch_size = x.shape[0]
+      mask = tf.repeat(tf.expand_dims(mask, axis=0), batch_size, axis=0)
     [_, pred_y] = model(x, training=False)
     y_masked = tf.boolean_mask(y, mask)
     pred_y = tf.keras.backend.argmax(pred_y, axis=-1)
@@ -317,7 +325,8 @@ def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
     all_output_evaluation_filenames = [
         os.path.join(
             save_folder,
-            f"{test_dataset_name}_{test_dataset_scene}_epoch_{epoch}.yml")
+            #f"{test_dataset_name}_{test_dataset_scene}_epoch_{epoch}.yml")
+            f"new_{test_dataset_name}_{test_dataset_scene}_epoch_{epoch}.yml")
         for epoch in epochs_to_evaluate
     ]
     epochs_to_evaluate_for_curr_ds = set()
