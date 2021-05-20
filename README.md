@@ -66,10 +66,7 @@ ln -s /your/rosbag/location $BFSEG_ROOT/rosbags
 
 ## Localisation without Segmentation
 
-<table>
-<th><td>Name</td><td>Launchfile</td><td>Rosbag</td></th>
-<tr><td>Garage 1</td><td>`pickelhaube_full_garage1.launch`</td><td>[download](https://drive.google.com/file/d/1bVjDkZkycKaDUXlDpqKvr6hIjR4oC8ng/view?usp=sharing)</td></tr>
-</table>
+- **Garage1**: `pickelhaube_full_garage1.launch` [download bagfile](https://drive.google.com/file/d/1bVjDkZkycKaDUXlDpqKvr6hIjR4oC8ng/view?usp=sharing)
 
 # Software Overview
 
