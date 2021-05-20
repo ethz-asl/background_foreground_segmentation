@@ -24,14 +24,26 @@ class DistillationModel(BaseCLModel):
           "Pre-trained weights must be specified when using distillation.")
     try:
       self._lambda_distillation = run.config['cl_params']['lambda_distillation']
-      if (not (isinstance(self._lambda_distillation, float) and
-               0. <= self._lambda_distillation <= 1.)):
-        raise ValueError(
-            "The parameter `lambda_ewc` must be a float between 0.0 and 1.0.")
+      self._lambda_type = run.config['cl_params']['lambda_type']
+      if (self._lambda_type == "both_ce_and_regularization"):
+        if (not (isinstance(self._lambda_distillation, float) and
+                 0. <= self._lambda_distillation <= 1.)):
+          raise ValueError(
+              "The parameter `lambda_distillation` must be a float between 0.0 "
+              "and 1.0.")
+      elif (self._lambda_type == "regularization_only"):
+        if (not (isinstance(self._lambda_distillation, float) and
+                 self._lambda_distillation >= 0.)):
+          raise ValueError(
+              "The parameter `lambda_distillation` must be a non-negative "
+              "float.")
+      else:
+        raise KeyError("The CL parameter `lambda_type` must be one of: "
+                       "'both_ce_and_regularization', 'regularization_only'.")
     except KeyError:
       raise KeyError(
-          "Distillation model requires the CL parameter `lambda_distillation` "
-          "to be specified.")
+          "Distillation model requires the CL parameters `lambda_distillation` "
+          "and `lambda_type` to be specified.")
 
     try:
       self._distillation_type = run.config['cl_params']['distillation_type']
@@ -113,8 +125,11 @@ class DistillationModel(BaseCLModel):
       distillation_loss = self.loss_ce(tf.stop_gradient(pseudo_y_masked),
                                        pred_y_masked)
     output_loss = self.loss_ce(y_masked, pred_y_masked)
-    loss = (1 - self._lambda_distillation
-           ) * output_loss + self._lambda_distillation * distillation_loss
+    if (self._lambda_type == "both_ce_and_regularization"):
+      loss = (1 - self._lambda_distillation
+             ) * output_loss + self._lambda_distillation * distillation_loss
+    else:
+      loss = output_loss + self._lambda_distillation * distillation_loss
 
     # Return also the distillation loss for tracking.
     loss = {

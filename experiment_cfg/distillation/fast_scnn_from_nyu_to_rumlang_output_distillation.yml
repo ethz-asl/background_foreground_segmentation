@@ -1,0 +1,35 @@
+# Train on Rumlang with output distillation using with Fast-SCNN architecture pretrained on NYU.
+network_params:
+  architecture: fast_scnn
+  freeze_encoder: false
+  model_params:
+    image_h: 480
+    image_w: 640
+  normalization_type: group
+training_params:
+  batch_size: 10
+  learning_rate: 0.00001
+  num_training_epochs: 250
+  perform_data_augmentation: true
+  stopping_min_epoch: 50
+  stopping_patience: 20
+  use_balanced_loss: false
+dataset_params:
+  replay_datasets: null
+  replay_datasets_scene: null
+  test_dataset: NyuDepthV2Labeled
+  test_scene: null
+  train_dataset: MeshdistPseudolabels
+  train_scene: rumlang_full
+  validation_percentage: 10
+logging_params:
+  model_save_freq: 1
+  exp_name: fast_scnn_from_nyu_to_rumlang_output_distillation
+cl_params:
+  cl_framework: distillation
+  distillation_type: output
+  fraction_replay_ds_to_use: null
+  lambda_distillation: 0.1
+  lambda_type: both_ce_and_regularization
+  pretrained_dir: TO_BE_SPECIFIED
+  ratio_main_ds_replay_ds: null

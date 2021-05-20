@@ -1,10 +1,16 @@
-from bfseg.utils.metrics import IgnorantBalancedMeanIoU, IgnorantMeanIoU, IgnorantBalancedAccuracyMetric, \
-  IgnorantAccuracyMetric
+import cv2
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import os
 from PIL import Image
 import numpy as np
+import yaml as yml
+
+from bfseg.utils.datasets import load_data
+from bfseg.utils.metrics import (IgnorantBalancedMeanIoU, IgnorantMeanIoU,
+                                 IgnorantBalancedAccuracyMetric,
+                                 IgnorantAccuracyMetric)
+from bfseg.utils.models import create_model
 
 
 def oneMetricIteration(metric, label, pred):
@@ -162,3 +168,232 @@ def scoreAndPlotPredictions(imageCallback,
       f.write(
           f"{tag},{iam_valid_value:.4f},{ibm_valid_value:.4f},{MIOUM_valid_value:.4f},{MIOUM_B_valid_value:.4f}\n"
       )
+
+
+def evaluate_model(model,
+                   test_dataset,
+                   pretrained_dir=None,
+                   output_image_folder=None):
+  r"""Evaluates a model on a given test dataset.
+
+  Args:
+    model (tensorflow.keras.Model): Model to evaluate.
+    test_dataset (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Test
+      dataset on which to evaluate the CL model.
+    pretrained_dir (str): If not None, path from which the weights of a
+      pretrained model will be loaded.
+    output_image_folder (str): If not None, segmentation predictions on the
+      given test dataset will be saved to this folder.
+
+  Returns:
+    accuracy (float): Accuracy of the given model over the given test dataset.
+    mean_iou (float): Mean IoU of the given model over the given test dataset.
+  """
+  # Optionally load weights.
+  if (pretrained_dir is not None):
+    model.load_weights(pretrained_dir)
+  # If the segmentation predictions should be saved, set up the output folder.
+  if (output_image_folder is not None):
+    if (not os.path.isdir(output_image_folder)):
+      os.makedirs(output_image_folder)
+  accuracy_tracker = tf.keras.metrics.Accuracy(name='accuracy',
+                                               dtype=tf.float32)
+  miou_tracker = tf.keras.metrics.MeanIoU(name='mean_iou', num_classes=2)
+
+  accuracy_tracker.reset_states()
+  miou_tracker.reset_states()
+  image_idx = 0
+  for sample in test_dataset:
+    if (len(sample) == 3):
+      x, y, mask = sample
+      assert (False)
+    else:
+      assert (len(sample) == 2)
+      x, y = sample
+      #mask = tf.ones(shape=x.shape[:-1])
+      raise OSError("Set the correct path to the `mask.png` file here.")
+      mask = cv2.imread('mask.png')
+      assert (mask.shape == (480, 640, 3))
+      mask = tf.cast(mask[:, :, 0] / 255., dtype=tf.uint8)
+      batch_size = x.shape[0]
+      mask = tf.repeat(tf.expand_dims(mask, axis=0), batch_size, axis=0)
+    [_, pred_y] = model(x, training=False)
+    y_masked = tf.boolean_mask(y, mask)
+    pred_y = tf.keras.backend.argmax(pred_y, axis=-1)
+    pred_y_masked = tf.boolean_mask(pred_y, mask)
+    accuracy_tracker.update_state(y_masked, pred_y_masked)
+    miou_tracker.update_state(y_masked, pred_y_masked)
+
+    # Optionally save the prediction images.
+    if (output_image_folder is not None):
+      assert (len(x.shape) == 4)
+      assert (len(y.shape) == 4)
+      assert (len(pred_y.shape) == 3)
+      for prediction_image, gt_image, input_image in zip(pred_y, y, x):
+        prediction_image = tf.cast(tf.expand_dims(prediction_image, axis=-1),
+                                   dtype=tf.float32) * 255. * 0.7
+        gt_image = tf.cast(gt_image, dtype=tf.float32) * 255. * 0.7
+        # - Save prediction.
+        tf.keras.preprocessing.image.save_img(os.path.join(
+            output_image_folder, f"{image_idx}_prediction.png"),
+                                              prediction_image,
+                                              scale=False)
+        # - Also save corresponding ground-truth segmentation and the input
+        #   image.
+        tf.keras.preprocessing.image.save_img(os.path.join(
+            output_image_folder, f"{image_idx}_gt.png"),
+                                              gt_image,
+                                              scale=False)
+        tf.keras.preprocessing.image.save_img(
+            os.path.join(output_image_folder, f"{image_idx}_input.png"),
+            input_image)
+        image_idx += 1
+
+  accuracy = accuracy_tracker.result().numpy().item()
+  mean_iou = miou_tracker.result().numpy().item()
+
+  return accuracy, mean_iou
+
+
+def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
+                                                epochs_to_evaluate,
+                                                datasets_names_to_evaluate,
+                                                datasets_scenes_to_evaluate,
+                                                save_folder,
+                                                save_predictions=False):
+  r"""Evaluates a model with the checkpoint(s) from the given epoch(s) on the
+  given test dataset(s).
+
+  Args:
+    pretrained_dirs (str or list of str): Path to pretrained models that should
+      be used to perform the evaluation.
+    epochs_to_evaluate (int/str or list of int/str): Epoch(s) at which the
+      corresponding model used to perform evaluation was saved.
+    datasets_names_to_evaluate (str or list of str): Names of the dataset(s) on
+      which the model(s) should be evaluated.
+    datasets_scenes_to_evaluate (str or list of str): Scenes of the dataset(s)
+      which the model(s) should be evaluated.
+    save_folder (str): Folder where the results of the evalutions should be
+      saved.
+    save_predictions (bool): Whether or not to save the images with the
+      segmentation predictions.
+  
+  Returns:
+    accuracies (dict): Accuracies, indexed by the concatenation of the dataset
+      name and scene and by the epoch number.
+    mean_ious (dict): Mean IoUs, indexed by the concatenation of the dataset
+      name and scene and by the epoch number.
+  """
+  if (isinstance(pretrained_dirs, str)):
+    pretrained_dirs = [pretrained_dirs]
+  else:
+    assert (isinstance(pretrained_dirs, list))
+  if (isinstance(epochs_to_evaluate, int)):
+    epochs_to_evaluate = [epochs_to_evaluate]
+  else:
+    assert (isinstance(epochs_to_evaluate, list))
+  if (isinstance(datasets_names_to_evaluate, str)):
+    datasets_names_to_evaluate = [datasets_names_to_evaluate]
+  else:
+    assert (isinstance(datasets_names_to_evaluate, list))
+  if (isinstance(datasets_scenes_to_evaluate, str)):
+    datasets_scenes_to_evaluate = [datasets_scenes_to_evaluate]
+  else:
+    assert (isinstance(datasets_scenes_to_evaluate, list))
+  assert (len(pretrained_dirs) == len(epochs_to_evaluate))
+  assert (len(datasets_names_to_evaluate) == len(datasets_scenes_to_evaluate))
+
+  # Create the model.
+  encoder, full_model = create_model(model_name="fast_scnn",
+                                     freeze_encoder=False,
+                                     freeze_whole_model=False,
+                                     normalization_type="group",
+                                     image_h=480,
+                                     image_w=640)
+  model = tf.keras.Model(inputs=full_model.input,
+                         outputs=[encoder.output, full_model.output])
+
+  accuracies = {}
+  mean_ious = {}
+
+  for test_dataset_name, test_dataset_scene in zip(datasets_names_to_evaluate,
+                                                   datasets_scenes_to_evaluate):
+    curr_dataset_and_scene = f"{test_dataset_name}_{test_dataset_scene}"
+    accuracies[curr_dataset_and_scene] = {}
+    mean_ious[curr_dataset_and_scene] = {}
+    # Skip re-evaluating if evaluation was already performed.
+    all_output_evaluation_filenames = [
+        os.path.join(
+            save_folder,
+            #f"{test_dataset_name}_{test_dataset_scene}_epoch_{epoch}.yml")
+            f"new_{test_dataset_name}_{test_dataset_scene}_epoch_{epoch}.yml")
+        for epoch in epochs_to_evaluate
+    ]
+    epochs_to_evaluate_for_curr_ds = set()
+    for epoch, output_evaluation_filename, pretrained_dir in zip(
+        epochs_to_evaluate, all_output_evaluation_filenames, pretrained_dirs):
+      if (os.path.exists(output_evaluation_filename)):
+        # Load the precomputed accuracies.
+        with open(output_evaluation_filename, 'r') as f:
+          evaluation_metrics = yml.load(f, Loader=yml.FullLoader)
+        # Check that also the pretrained model used matches.
+        if (evaluation_metrics['pretrained_dir'] == pretrained_dir):
+          accuracies[curr_dataset_and_scene][epoch] = evaluation_metrics[
+              'accuracy']
+          mean_ious[curr_dataset_and_scene][epoch] = evaluation_metrics[
+              'mean_iou']
+        else:
+          epochs_to_evaluate_for_curr_ds.add(epoch)
+      else:
+        epochs_to_evaluate_for_curr_ds.add(epoch)
+
+    # No evaluation needs to be performed.
+    if (len(epochs_to_evaluate_for_curr_ds) == 0):
+      print(f"Skipping evaluation of model from epochs {epochs_to_evaluate} on "
+            f"dataset {test_dataset_name}, scene {test_dataset_scene}, because "
+            f"already found at '{all_output_evaluation_filenames}'.")
+      continue
+
+    # Load test dataset.
+    test_dataset = load_data(dataset_name=test_dataset_name,
+                             scene_type=test_dataset_scene,
+                             fraction=None,
+                             batch_size=8,
+                             shuffle_data=False)
+
+    for epoch, output_evaluation_filename, pretrained_dir in zip(
+        epochs_to_evaluate, all_output_evaluation_filenames, pretrained_dirs):
+      if (not epoch in epochs_to_evaluate_for_curr_ds):
+        print(f"Skipping evaluation of model from epoch {epoch} on dataset "
+              f"{test_dataset_name}, scene {test_dataset_scene}, because "
+              f"already found at '{output_evaluation_filename}'.")
+        continue
+
+      # Evaluate the pretrained model on the given dataset.
+      # - Optionally save the segmentation predictions.
+      if (save_predictions):
+        output_image_folder = os.path.join(save_folder,
+                                           f"predictions_epoch_{epoch}")
+      else:
+        output_image_folder = None
+
+      accuracy, mean_iou = evaluate_model(
+          model=model,
+          test_dataset=test_dataset,
+          pretrained_dir=pretrained_dir,
+          output_image_folder=output_image_folder)
+      accuracies[curr_dataset_and_scene][epoch] = accuracy
+      mean_ious[curr_dataset_and_scene][epoch] = mean_iou
+      # Write the result to file.
+      with open(output_evaluation_filename, 'w') as f:
+        yml.dump(
+            {
+                'accuracy': accuracy,
+                'mean_iou': mean_iou,
+                'pretrained_dir': pretrained_dir
+            }, f)
+      print(f"Saved evaluation of model from epoch {epoch} on dataset "
+            f"{test_dataset_name}, scene {test_dataset_scene} at "
+            f"'{output_evaluation_filename}'.")
+
+  return accuracies, mean_ious
