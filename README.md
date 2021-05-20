@@ -82,6 +82,7 @@ roslaunch background_foreground_segmentation pickelhaube_segmentation_garage1.la
 ```
 
 **Localisation with Segmentation model trained first on Office and then on Garage**
+
 localising in the Garage on a different trajectory:
 ```bash
 roslaunch background_foreground_segmentation crossdomain_nyutoofficetocla_garage3.launch
