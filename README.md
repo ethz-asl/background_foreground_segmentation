@@ -64,10 +64,22 @@ roslaunch background_foreground_segmentation <experiment>.launch rosbag_folder:=
 ln -s /your/rosbag/location $BFSEG_ROOT/rosbags
 ```
 
-## Localisation without Segmentation
+## Examples for localization experiments
 
-- **Garage1**: `pickelhaube_full_garage1.launch` [download bagfile](https://drive.google.com/file/d/1bVjDkZkycKaDUXlDpqKvr6hIjR4oC8ng/view?usp=sharing)
+Use an example bagfile (**Garage1**): [download bagfile](https://drive.google.com/file/d/1bVjDkZkycKaDUXlDpqKvr6hIjR4oC8ng/view?usp=sharing)
 
+**Localisation without Segmentation**
+```bash
+roslaunch background_foreground_segmentation pickelhaube_full_garage1.launch
+```
+**Localisation with NYU-pretrained weights**
+```bash
+roslaunch background_foreground_segmentation pickelhaube_nyusegmentation_garage1.launch
+```
+**Localisation with Segmentation model trained in same environment (not on same dataset)**
+```bash
+roslaunch background_foreground_segmentation pickelhaube_segmentation_garage1.launch
+```
 # Software Overview
 
 ## Dataset Creator
