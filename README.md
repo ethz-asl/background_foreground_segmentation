@@ -2,11 +2,26 @@
 
 Structure allows for standalone python usage and usage within ROS.
 
-## Setting up the Python package
+# Installation
+The software is organized as a hybrid ROS and python workspace. Localisation experiments and online learning are running in the ROS workspace. Segmentation training and evaluation are running in the python-only workspace. Please follow the respective instructions below to set up the different workspaces.
+
+## Installing the ROS workspace
+First, setup a catkin workspace on ROS melodic. We usually follow [this guide](https://github.com/ethz-asl/maplab/wiki/Installation-Ubuntu#create-a-catkin-workspace) for our workspaces.
+
+Use `wstool` or some other ROS dependency manager to install all packages from `dependencies.rosinstall`.
+
+## Installing the python workspace
 ### Create virtualenv
+Use your favourite way to create a python environment. We recommend one of these:
+
 ```bash
 mkvirtualenv background_foreground_segmentation --python=$(which python3)
 ```
+
+```bash
+python3 -m venv py3_venv
+```
+
 ### Install dependencies
 Letting `$BFSEG_ROOT` be the folder of this repo (i.e., where this README is located), assuming the virtualenv created above is always sourced:
 - Install required dependencies:
@@ -19,6 +34,18 @@ Letting `$BFSEG_ROOT` be the folder of this repo (i.e., where this README is loc
   cd $BFSEG_ROOT/src
   pip install -e .
   ```
+
+### Load Datasets
+For training and evaluation, some datasets are required. We use [TFDS](https://www.tensorflow.org/datasets) to automatically download and extract these datasets. This will require around 50GB and can take a couple of hours to prepare.
+
+```bash
+cd $BFSEG_ROOT
+python data_setup.py
+```
+
+# Reproducing Experiments
+
+# Software Overview
 
 ## Dataset Creator
 ## Overview
@@ -34,33 +61,6 @@ This package extracts the following information from a ROS Bag:
         - Projected PointCloud in camera image (Only point cloud)
         - Projecctted PointCloud in camera image containing distance of point as grey value
         - Projecctted PointCloud in camera image containing distance to closest mesh as grey value
-
-## Getting Started
-The following extracts all images from cam0 into the output folder <outputFolder>
-1. Terminal A: `roscore`
-2. Terminal B: `rosparam set use_sim_time true`
-3. Terminal B: `roslaunch background_foreground_segmentation dataset_creator_standalone_rviz.launch output_folder:=<outputFolder>/ use_camera_stick:=cam0`
-4. Terminal C: Play rosbag `rosbag play --clock <path/to/bagfile>`
-5. RVIZ: Align Mesh with Pointcloud and right click marker -> load mesh, publish mesh
-
-Sometimes due to bad timings running the standalone launch script can confuse the state estimator. In this case, start every node seperately:
-
-1. Terminal A: `roscore`
-2. Terminal B: `rosparam set use_sim_time true`
-3. Terminal B: `roslaunch smb_state_estimator smb_state_estimator_standalone.launch`
-4. Terminal C: `roslaunch cpt_selective_icp supermegabot_selective_icp_with_rviz.launch publish_distance:=true`
-5. Terminal D: `roslaunch background_foreground_segmentation dataset_creator.launch outputFolder:=<outputFolder>/ use_camera_stick:=cam0`
-5. Terminal E: `roslaunch segmentation_filtered_icp extrinsics.launch`
-6. Terminal F: `rosbag play --clock <path/to/bagfile>`
-5. RVIZ: Align Mesh with Pointcloud and right click marker -> load CAD, publish mesh
-
-## Generating Pseudo Labels on the Fly
-Pseudo Labels can also be generated on the fly for each camera mounted on the robot.
-### For the SMB with a camera stick setup
-1. Terminal A: `roslaunch background_foreground_segmentation cla_label_projector_standalone_with_rviz.launch`
-2. Terminal B: `rosrun background_foreground_segmentation label_aggregator.py`
-3. Terminal C: `rosbag play --clock <path/to/bagfile>`
-In order to change the segmentation method, modify the parameters inside the `config/label_aggregator_cla.yaml` file.
 
 
 ## Continual learning
