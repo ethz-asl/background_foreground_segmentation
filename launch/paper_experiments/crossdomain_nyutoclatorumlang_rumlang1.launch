@@ -7,9 +7,9 @@ Launch file for Selective ICP with rviz
 	<arg name="rosbag_folder" default="$(find background_foreground_segmentation)/rosbags" />
     <arg name="finetune" />
 
-	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube2_segmentation.launch">
+	<include file="$(find background_foreground_segmentation)/launch/paper_experiments/pickelhaube2_segmentation.launch">
 		<arg name="rosbag" value="/media/blumh/ext_2tb/pickelhaube_2021-02-08-12-32-19.bag" />
-		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/rss_experiments/210212_Rumlang_Meters_SE.off" />
+		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/paper_experiments/210212_Rumlang_Meters_SE.off" />
 		<arg unless="$(arg finetune)" name="logprefix" value="crossdomain_nyutoclatorumlang_rumlang1" />
 		<arg if="$(arg finetune)" name="logprefix" value="crossdomain_nyutoclafinetunetorumlangfinetune_rumlang1" />
 		<arg unless="$(arg finetune)" name="segmentation_model" value="15Cy3Fxj7GHBwROSjp2oNWn8fMi3r2BFJ" />

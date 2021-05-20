@@ -119,20 +119,20 @@ Launch file for Selective ICP with rviz
           pkg="cpt_selective_icp"
           output="screen" >
           <!--launch-prefix="tmux split-window" -->
-    <rosparam command="load" file="$(find background_foreground_segmentation)/launch/rss_experiments/mapper_parameters.yaml" />
+    <rosparam command="load" file="$(find background_foreground_segmentation)/launch/paper_experiments/mapper_parameters.yaml" />
                 <param name="standaloneICP" value="true" />
                 <param name="scanTopic" value="/rslidar_points" />
         <param name="cadTopic" value="mesh_publisher/mesh_out" />
         <param name="icpConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/office_icp.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/office_icp.yaml" />
         <param name="selectiveIcpConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/selective_icp.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/selective_icp.yaml" />
         <param name="inputFiltersConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/office_input_filters.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/office_input_filters.yaml" />
         <param name="mapPostFiltersConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/map_post_filter.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/map_post_filter.yaml" />
         <param name="mapPreFiltersConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/map_pre_filter.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/map_pre_filter.yaml" />
         <param name="path"
                  value="$(find cpt_selective_icp)" />
     </node>

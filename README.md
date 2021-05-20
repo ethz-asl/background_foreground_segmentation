@@ -63,7 +63,7 @@ roslaunch background_foreground_segmentation <experiment>.launch rosbag_folder:=
 ```bash
 ln -s /your/rosbag/location $BFSEG_ROOT/rosbags
 ```
-
+The bagfiles are listed [here](https://github.com/ethz-asl/background_foreground_segmentation/blob/cleanup/rosbags.md).
 ## Examples for localization experiments
 
 Use an example bagfile (**Garage1**): [download bagfile](https://drive.google.com/file/d/1bVjDkZkycKaDUXlDpqKvr6hIjR4oC8ng/view?usp=sharing)
@@ -179,18 +179,12 @@ Before you start, please modify the last line in [`Unet.py`](https://github.com/
 
 **Experiment pipeline:**
 
-Get the bag file [here](https://drive.google.com/file/d/1c8BHz06J9P8NjZeNcnCduAFsUaC8mTYE/view?usp=sharing) and save it to your previously specified rosbag folder.
+Get the bag file [here](https://drive.google.com/file/d/1uJQkurwowBo5NmOd9aCYqvV2wDAx2FHs/view?usp=sharing) and save it to your previously specified rosbag folder.
 
-Run the online learning script:
+Run the online learning experiment:
 
-Source your python3 virtualenv, e.g.:
 ```bash
-source ~/.virtualenvs/background_foreground_segmentation/bin/activate
-cd $BFSEG_ROOT/src
-```
-And execute the online learning script:
-```bash
-python online_learning.py
+roslaunch background_foreground_segmentation pickelhaube_online_learning_rumlang1.launch
 ```
 **<span style="color:red">TODO</span>**
 
