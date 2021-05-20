@@ -17,7 +17,7 @@ In the following, let us denote the path where the folder is saved via the envir
 ## Re-run the training
 To re-run a training job, use the `config.yml` from the experiment folder downloaded as detailed above, and run the corresponding training script shown in the tabel below. For instance, for experiment ID 1059, from the root folder run:
 ```bash
-python train_binary_segmodel_base with ${SAVED_FOLDER}/configs/1059/config.yml
+python train_binary_segmodel_base.py with ${SAVED_FOLDER}/configs/1059/config.yml
 ```
 | Experiment ID  | Training script to use |
 | ---- | ---- |
