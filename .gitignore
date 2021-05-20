@@ -140,3 +140,16 @@ src/bfseg/settings.py
 
 omniboard/**
 logs/**
+
+lsf.*
+leonhard_log_files.zip
+*.bak
+old/*
+
+experiment_cfg/distillation/*_bn.yml
+experiment_cfg/distillation/*_var*
+experiment_cfg/ewc/*_bn.yml
+experiment_cfg/ewc/*_var*
+experiment_cfg/finetune/*_bn.yml
+
+.vscode
