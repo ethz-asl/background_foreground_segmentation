@@ -123,4 +123,21 @@ Before you start, please modify the last line in [`Unet.py`](https://github.com/
 
 **Experiment pipeline:**
 
+Get the bag file [here](https://drive.google.com/file/d/1c8BHz06J9P8NjZeNcnCduAFsUaC8mTYE/view?usp=sharing) and save it to your previously specified rosbag folder.
+
+Run the online learning script:
+
+Source your python3 virtualenv, e.g.:
+```bash
+source ~/.virtualenvs/background_foreground_segmentation/bin/activate
+cd $BFSEG_ROOT/src
+```
+And execute the online learning script:
+```bash
+python online_learning.py
+```
 **<span style="color:red">TODO</span>**
+
+### <span style="color:red">Necessary additions</span>
+- Link to pretrained weights
+- How to train bulk
