@@ -173,6 +173,8 @@ python src/train_binary_segmodel_base.py with /path/to/config.yaml --name "my tr
 ```
 The results like model snapshots and metrics are then stored in the directory set in `src/bfseg/settings.py` (see Installation).
 
+You may also use the pre-trained models or the config files used to obtain these (see [`pretrained_models_and_configs.md`](pretrained_models_and_configs.md)).
+
 ## Online Learning
 The paper experiment was conducted on bagfile [Rumlang1](https://drive.google.com/file/d/1uJQkurwowBo5NmOd9aCYqvV2wDAx2FHs/view?usp=sharing).
 
