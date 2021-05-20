@@ -162,6 +162,14 @@ ds = tfds.load('meshdist_pseudolabels', split='office5')  # for office
 ds = tfds.load('bfseg_cla_meshdist_labels')  # for garage
 ```
 
+## Running Trainings
+
+We use the [sacred library](https://github.com/IDSIA/sacred) to organize our training scripts and log results. You can start a training e.g. with
+```bash
+python src/train_binary_segmodel_base.py with /path/to/config.yaml --name "my training"
+```
+The results like model snapshots and metrics are then stored in the directory set in `src/bfseg/settings.py` (see Installation).
+
 ## Online Learning
 The paper experiment was conducted on bagfile [Rumlang1](https://drive.google.com/file/d/1uJQkurwowBo5NmOd9aCYqvV2wDAx2FHs/view?usp=sharing).
 
