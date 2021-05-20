@@ -93,6 +93,40 @@ localising in the Office (to measure forgetting):
 roslaunch background_foreground_segmentation crossdomain_nyutoofficetocla_office7.launch
 ```
 
+## Evaluation of Localised Trajectories
+When running the experiments as above, poses from the ground-truth (leica) and the robot (icp) are recorded in the `$BFSEG_ROOT/logs` directory. To get the localisation accuracy, use the following script to interpolate the leica pose to the timestamps of the icp localisation:
+
+```python
+import pandas as pd
+import numpy as np
+import scipy as sp
+import scipy.interpolate
+import scipy.spatial.transform as stf
+import matplotlib.pyplot as plt
+
+icp = pd.read_csv('logs/pickelhaube_full_garage1_icp_1.csv')
+leica = pd.read_csv('logs/pickelhaube_full_garage1_leica_1.csv')
+plt.figure()
+plt.plot(icp['trans_x'], icp['trans_y'])
+plt.plot(-leica['trans_y'], leica['trans_x'])
+plt.show()
+# interpolate with calibrated time-offset
+interpolated_gt_x = sp.interpolate.interp1d(
+    leica['headerstamp']  + 4.5e8, leica['aligned_x'],
+    bounds_error=False, fill_value=np.nan)
+interpolated_gt_y = sp.interpolate.interp1d(
+    leica['headerstamp']  + 4.5e8, leica['aligned_y'],
+    bounds_error=False, fill_value=np.nan)
+
+icp['gt_trans_x'] = interpolated_gt_x(icp['headerstamp'])
+icp['gt_trans_y'] = interpolated_gt_y(icp['headerstamp'])
+icp['rmse_xy'] = np.sqrt(
+    np.square(icp['trans_x'] - icp['gt_trans_x']) +
+    np.square(icp['trans_y'] - icp['gt_trans_y']))
+icp.plot('headerstamp', 'rmse_xy')
+print('Mean: {:.3f}, Median: {:.3f}, Std: {:.3f}'.format(icp['rmse_xy'].mean(), icp['rmse_xy'].median(), icp['rmse_xy'].std()))
+```
+
 ## Online Learning
 The paper experiment was conducted on bagfile [Rumlang1](https://drive.google.com/file/d/1uJQkurwowBo5NmOd9aCYqvV2wDAx2FHs/view?usp=sharing).
 
