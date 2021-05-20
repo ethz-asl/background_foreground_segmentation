@@ -6,10 +6,10 @@ Launch file for Selective ICP with rviz
 <launch>
 	<arg name="rosbag_folder" default="$(find background_foreground_segmentation)/rosbags" />
 
-	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube2_full_office.launch">
-		<arg name="rosbag" value="$(arg rosbag_folder)/pickelhaube_2021-02-18-11-19-59_filtered.bag" />
-		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/rss_experiments/191130_286_lee_j_vf_20160101_SE.off" />
-		<arg name="logprefix" value="pickelhaube_full_office4f" />
+	<include file="$(find background_foreground_segmentation)/launch/paper_experiments/pickelhaube2_full_office.launch">
+		<arg name="rosbag" value="$(arg rosbag_folder)/pickelhaube_2021-02-25-18-09-32.bag" />
+		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/paper_experiments/191130_286_lee_j_vf_20160101_SE.off" />
+		<arg name="logprefix" value="pickelhaube_full_office7" />
 	</include>
 
 	<!--node name="mesh_positioning"
@@ -22,7 +22,7 @@ Launch file for Selective ICP with rviz
     <node pkg="tf2_ros"
 	      type="static_transform_publisher"
 		  name="mesh_positioning"
-		  args="1.438 -0.805 -0.739 0 0 0.705, 0.709 map marker" />
+		  args="-1.854 6.546 -0.739 0 0 -0.666 0.746 map marker" />
     <node pkg="rosservice"
 	      type="rosservice"
 		  name="start_icp"

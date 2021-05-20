@@ -6,14 +6,14 @@ Launch file for Selective ICP with rviz
 <launch>
 	<arg name="rosbag_folder" default="$(find background_foreground_segmentation)/rosbags" />
 
-	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube2_online_learning.launch">
+	<include file="$(find background_foreground_segmentation)/launch/paper_experiments/pickelhaube2_segmentation.launch">
 		<arg name="rosbag" value="$(arg rosbag_folder)/pickelhaube_2021-02-08-12-32-19.bag" />
-		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/rss_experiments/210212_Rumlang_Meters_SE.off" />
-		<arg name="logprefix" value="pickelhaube_online_learning_rumlang1" />
-		<arg name="segmentation_model" value="1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad" />
+		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/paper_experiments/210212_Rumlang_Meters_SE.off" />
+		<arg name="logprefix" value="pickelhaube_segmentation_rumlang1" />
+		<arg name="segmentation_model" value="173xrQTkbeJhpHHARhF_JvbRnDYcb7ykc" />
 		<arg name="input_height" value="480" />
 		<arg name="input_width" value="640" />
-		<arg name="threshold" value="100" />
+		<arg name="threshold" value="200" />
 	</include>
 
     <node pkg="tf2_ros"
