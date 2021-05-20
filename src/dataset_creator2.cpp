@@ -24,7 +24,7 @@ Creator::Creator(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
     ros::requestShutdown();
   }
 
-  if (!initOutputFolder()) {
+  if (output_any_files && !initOutputFolder()) {
     ROS_ERROR("Could not init output folder");
     ros::requestShutdown();
   }
@@ -86,6 +86,8 @@ bool Creator::readParameters() {
     return false;
   if (!nodeHandle_.getParam("labelsTopic", labels_topic))
     return false;
+  if (!nodeHandle_.getParam("outputFiles", output_any_files))
+    return false;
 
   return true;
 }
@@ -123,7 +125,7 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
   image_geometry::PinholeCameraModel model;
   model.fromCameraInfo(c_info);
 
-  if (store_images) {
+  if (output_any_files && store_images) {
     // Create information file containing pinhole camera parameters
     createInfoFile(timestamp, model);
   }
@@ -133,7 +135,7 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
   // Camera image
   const cv::Mat &camera_image = img->image;
 
-  if (store_images) {
+  if (output_any_files && store_images) {
     // Store original image
     cv::imwrite(output_folder + "/" + timestamp + "/original.png",
                 camera_image);
@@ -242,7 +244,7 @@ void Creator::projectPointCloud(
     }
   }
 
-  if (store_images) {
+  if (output_any_files && store_images) {
     // Save images
     cv::imwrite(output_folder + "/" + timestamp + "/preview." + file_type,
                 preview_img);
@@ -296,11 +298,15 @@ bool Creator::initOutputFolder() {
 // Write Camera Information
 void Creator::createInfoFile(std::string timestamp,
                              image_geometry::PinholeCameraModel camera) {
-  if (!initialized_dataset) {
+  if (!output_any_files) {
     initialized_dataset = true;
-    std::ofstream myfile(output_folder + "camera_info.txt");
-    myfile << camera.cameraInfo();
-    myfile.close();
+  } else {
+    if (!initialized_dataset) {
+      initialized_dataset = true;
+      std::ofstream myfile(output_folder + "camera_info.txt");
+      myfile << camera.cameraInfo();
+      myfile.close();
+    }
   }
 }
 } // namespace dataset_creator
