@@ -4,11 +4,11 @@ Launch file for Selective ICP with rviz
 -->
 
 <launch>
-
+	<arg name="rosbag_folder" default="$(find background_foreground_segmentation)/rosbags" />
     <arg name="finetune" />
 
-	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube_segmentation.launch">
-		<arg name="rosbag" value="/media/blumh/ext_2tb/pickelhaube_2021-01-29-15-42-47.bag" />
+	<include file="$(find background_foreground_segmentation)/launch/paper_experiments/pickelhaube_segmentation.launch">
+		<arg name="rosbag" value="$(arg rosbag_folder)/pickelhaube_2021-01-29-15-42-47.bag" />
 		<arg name="cad_file" value="$(find cpt_selective_icp)/resources/CLA_CAD_simplified_single_wall_no_ceiling.off" />
 		<arg unless="$(arg finetune)" name="logprefix" value="crossdomain_nyutoofficereplaytoclareplay_garage3" />
 		<arg if="$(arg finetune)" name="logprefix" value="crossdomain_nyutoofficefinetunetoclafinetune_garage3" />

@@ -4,6 +4,7 @@ Launch file for Selective ICP with rviz
 -->
 
 <launch>
+	<arg name="rosbag_folder" default="$(find background_foreground_segmentation)/rosbags" />
     <arg name="finetune" />
 
 	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube_segmentation.launch">
