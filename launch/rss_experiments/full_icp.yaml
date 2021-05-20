@@ -23,7 +23,7 @@ outlierFilters:
 
 errorMinimizer:
   PointToPlaneErrorMinimizer:
-    force4DOF: 1
+    force4DOF: 0
 
 transformationCheckers:
   - DifferentialTransformationChecker:

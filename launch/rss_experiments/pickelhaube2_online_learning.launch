@@ -17,6 +17,12 @@ Launch file for Selective ICP with rviz
     <arg name="input_width" />
     <arg name="threshold" default="150" />
 
+ <node pkg="rosbag"
+        type="record"
+        name="output_recorder"
+        args="-o /tmp/bfseg_output_$(arg logprefix)  /mesh_publisher/mesh_out /leica/position /rslidar_points /points_filtered /pickelhaube_resized/cam0/image /pickelhaube_resized/cam0/segmented /pickelhaube_resized/cam1/image /pickelhaube_resized/cam1/segmented /pickelhaube_resized/cam2/image /pickelhaube_resized/cam2/segmented /tf /tf_static"
+        />
+
     <node pkg="background_foreground_segmentation"
           type="pose_logger.py"
           name="poselogger">

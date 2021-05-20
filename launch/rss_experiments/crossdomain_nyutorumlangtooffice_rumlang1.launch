@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Launch file for Selective ICP with rviz
+-->
+
+<launch>
+
+    <arg name="finetune" />
+
+	<include file="$(find background_foreground_segmentation)/launch/rss_experiments/pickelhaube2_segmentation.launch">
+		<arg name="rosbag" value="/media/blumh/ext_2tb/pickelhaube_2021-02-08-12-32-19.bag" />
+		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/rss_experiments/210212_Rumlang_Meters_SE.off" />
+		<arg unless="$(arg finetune)" name="logprefix" value="crossdomain_nyutorumlangreplaytoofficereplay_rumlang1" />
+		<arg if="$(arg finetune)" name="logprefix" value="crossdomain_nyutorumlangfinetunetoofficefinetune_rumlang1" />
+		<arg unless="$(arg finetune)" name="segmentation_model" value="1WvhuTJ4Emi7__R8euIrKEMILnWUDLLH8" />
+		<arg if="$(arg finetune)" name="segmentation_model" value="1BFRENNQEu52okNK2uo1MTP2wQN_Kai73" />
+		<arg name="input_height" value="480" />
+		<arg name="input_width" value="640" />
+		<arg name="threshold" value="200" />
+	</include>
+
+    <node pkg="tf2_ros"
+	      type="static_transform_publisher"
+		  name="mesh_positioning"
+		  args="14.505 -3.089 -1.667 0.000 0.000 0.999 -0.041 map marker" />
+    <node pkg="rosservice"
+	      type="rosservice"
+		  name="start_icp"
+		  args="call --wait /mapper/load_published_map"
+		  launch-prefix="bash -c 'sleep 2; $0 $@'" />
+
+</launch>
