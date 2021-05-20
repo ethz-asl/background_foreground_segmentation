@@ -139,3 +139,4 @@ py3/**
 src/bfseg/settings.py
 
 omniboard/**
+logs/**

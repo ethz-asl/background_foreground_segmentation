@@ -26,12 +26,12 @@ Launch file for Selective ICP with rviz
     <node pkg="background_foreground_segmentation"
           type="pose_logger.py"
           name="poselogger">
-        <param name="filename" value="/home/blumh/asl/rss_2021_data/$(arg logprefix)_icp.csv" />
+        <param name="filename" value="$(find background_foreground_segmentation)/logs/$(arg logprefix)_icp.csv" />
     </node>
     <node pkg="background_foreground_segmentation"
           type="point_logger.py"
           name="leicalogger">
-        <param name="filename" value="/home/blumh/asl/rss_2021_data/$(arg logprefix)_leica.csv" />
+        <param name="filename" value="$(find background_foreground_segmentation)/logs/$(arg logprefix)_leica.csv" />
         <param name="overwrite" value="false" />
     </node>
 
