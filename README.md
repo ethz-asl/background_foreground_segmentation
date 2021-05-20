@@ -80,6 +80,17 @@ roslaunch background_foreground_segmentation pickelhaube_nyusegmentation_garage1
 ```bash
 roslaunch background_foreground_segmentation pickelhaube_segmentation_garage1.launch
 ```
+
+**Localisation with Segmentation model trained first on Office and then on Garage**
+localising in the Garage on a different trajectory:
+```bash
+roslaunch background_foreground_segmentation crossdomain_nyutoofficetocla_garage3.launch
+```
+
+localising in the Office (to measure forgetting):
+```bash
+roslaunch background_foreground_segmentation crossdomain_nyutoofficetocla_office7.launch
+```
 # Software Overview
 
 ## Dataset Creator
