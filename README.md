@@ -101,9 +101,6 @@ We implement the following methods for continual learning:
 - Feature distillation
 - Output distillation
 - [EWC](https://arxiv.org/pdf/1612.00796.pdf)
-- [Progress and Compress](https://arxiv.org/pdf/1805.06370.pdf)
-  - Fine tuning + compress
-  - Lateral connection + compress
 
 ### Getting Started
 
@@ -111,29 +108,4 @@ Before you start, please modify the last line in [`Unet.py`](https://github.com/
 
 **Experiment pipeline:**
 
-Step 1: Train/validate the model on `dataset1`, and test on `dataset2`.
-
-Step 2: Train/validate the model on `dataset2` with one of the above methods, and test on `dataset1`.
-
-Step 3: Final validation on `dataset3`.
-
-**Experiments:**
-
-|               dataset1                |               dataset2                |   dataset3   |
-| :-----------------------------------: | :-----------------------------------: | :----------: |
-| NYU Depth Dataset V2 (scene: kitchen) | NYU Depth Dataset V2 (scene: bedroom) |      -       |
-|         NYU Depth Dataset V2          |           Meshdist Dataset            | Hive Dataset |
-
-**Terminals:**
-
-1. Training on dataset1: `python train_binary_segmodel_base.py -train_dataset="dataset1" -test_dataset="dataset2"`
-2. Fine tuning on dataset2: `python train_binary_segmodel_base.py -train_dataset="dataset2" -test_dataset="dataset1"`
-3. Feature distillation on dataset2: ` python train_binary_segmodel_distillation.py -train_dataset="dataset2" -test_dataset="dataset1" -type_distillation="feature"`
-4. Output distillation on dataset2: ` python train_binary_segmodel_distillation.py -train_dataset="dataset2" -test_dataset="dataset1" -type_distillation="output"`
-5. EWC on dataset2: ` python train_binary_segmodel_EWC.py -train_dataset="dataset2" -test_dataset="dataset1"`
-6. Progress (lateral_connection) on dataset2: ` python train_binary_segmodel_progress.py -train_dataset="dataset2" -test_dataset="dataset1"`
-7. Compress (progress=lateral_connection) on dataset2: ` python train_binary_segmodel_compress.py -train_dataset="dataset2" -test_dataset="dataset1" -type_progress="lateral_connection"`
-8. Compress (progress=fine_tune) on dataset2: ` python train_binary_segmodel_compress.py -train_dataset="dataset2" -test_dataset="dataset1" -type_progress="fine_tune"`
-
-For more detailed configurations, please refer to `src/Experiment_Guidelines`.
-
+**<span style="color:red">TODO</span>**
