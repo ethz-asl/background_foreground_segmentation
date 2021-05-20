@@ -5,7 +5,7 @@ import tensorflow_datasets as tfds
 import warnings
 
 from bfseg.data.fsdata import load_fsdata
-from bfseg.utils.images import augmentation
+from bfseg.utils.images import augmentation_with_mask
 from bfseg.utils.replay_buffer import ReplayBuffer
 
 
@@ -99,7 +99,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       - If `dataset_name` is "BfsegCLAMeshdistLabels":
         - None: All the samples in the dataset are selected (no scene
             subdivision is available).
-      - If `dataset_name` is "MeshdistPseudolabels": 
+      - If `dataset_name` is "MeshdistPseudolabels":
         - None: All the scenes in the dataset are selected.
         - "garage_full": All the three scenes from the garage.
         - "rumlang_full": Both the scenes from Rumlang.
@@ -112,7 +112,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
           - "office4_2402"
           - "office5"
           - "office6_2502"
-          - "rumlang2" 
+          - "rumlang2"
           - "rumlang3"
       - If `dataset_name` is "BfsegValidationLabeled":
         - None: All the scenes in the dataset are selected.
@@ -388,6 +388,6 @@ def update_datasets_with_replay_and_augmentation(
     train_ds = train_no_replay_ds
     # Check if data augmentation should be used.
     if (perform_data_augmentation):
-      train_ds = train_ds.map(augmentation)
+      train_ds = train_ds.map(augmentation_with_mask)
 
   return train_ds, test_ds
