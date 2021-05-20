@@ -14,6 +14,7 @@ import time
 import numpy as np
 import random
 
+import bfseg.data.nyu_subsampled
 from bfseg.utils.models import create_model
 from bfseg.utils.losses import BalancedIgnorantCrossEntropyLoss
 from bfseg.utils.image_enhancement import aggregate_sparse_labels
