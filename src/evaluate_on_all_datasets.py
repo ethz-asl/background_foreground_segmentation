@@ -2,10 +2,8 @@ import os
 
 from bfseg.utils.evaluation import evaluate_model_multiple_epochs_and_datasets
 
-USER = TO_DEFINE
-
-save_folder = f"/cluster/scratch/{USER}/evaluation"
-pretrained_models_folder = f'/cluster/scratch/{USER}/pretrained_models/'
+save_folder = PATH_TO_THE_FOLDER_THAT_SHOULD_CONTAIN_THE_EVALUATION_RESULTS
+pretrained_models_folder = PATH_TO_THE_FOLDER_WITH_THE_PRETRAINED_MODELS
 # Set this to True to save the images with the segmentation predictions.
 save_predictions = False
 
