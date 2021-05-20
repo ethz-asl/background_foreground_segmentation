@@ -8,7 +8,7 @@ Launch file for Selective ICP with rviz
     <arg name="finetune" />
 
 	<include file="$(find background_foreground_segmentation)/launch/paper_experiments/pickelhaube2_segmentation.launch">
-		<arg name="rosbag" value="/media/blumh/ext_2tb/pickelhaube_2021-02-25-18-09-32.bag" />
+		<arg name="rosbag" value="$(arg rosbag_folder)/pickelhaube_2021-02-25-18-09-32.bag" />
 		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/paper_experiments/191130_286_lee_j_vf_20160101_SE.off" />
 		<arg unless="$(arg finetune)" name="logprefix" value="crossdomain_nyutoclareplaytoofficereplay_office7" />
 		<arg if="$(arg finetune)" name="logprefix" value="crossdomain_nyutoclafinetunetoofficefinetune_office7" />
