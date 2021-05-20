@@ -43,6 +43,13 @@ cd $BFSEG_ROOT
 python data_setup.py
 ```
 
+### Configure Settings
+create a file `src/bfseg/settings.py` with the following content:
+```python
+TMPDIR = '/tmp'  # a temporary storage folder
+EXPERIMENT_STORAGE_FOLDER = '<insert here>' # a folder where training logs should be stored
+```
+
 # Reproducing Experiments
 
 ## Rosbag Download
