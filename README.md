@@ -64,6 +64,9 @@ roslaunch background_foreground_segmentation <experiment>.launch rosbag_folder:=
 ln -s /your/rosbag/location $BFSEG_ROOT/rosbags
 ```
 
+## Localisation without Segmentation
+
+- **Garage1**: `pickelhaube_full_garage1.launch` [download bagfile](https://drive.google.com/file/d/1bVjDkZkycKaDUXlDpqKvr6hIjR4oC8ng/view?usp=sharing)
 
 # Software Overview
 
