@@ -173,6 +173,24 @@ roslaunch background_foreground_segmentation pickelhaube_online_learning_rumlang
 
 # Software Overview
 
+The repository is structured in the following way:
+
+- `src/` contains ROS nodes, including
+  - `src/dataset_creator.cpp`: measures distance between lidar points and mesh, projects into the camera images
+  - `src/cloud_filtering_node`: filters the pointcloud according to segmentation outputs from the cameras
+  - `src/inference_node.py`: runs inference of a trained network on the camera images and publishes segmentation maps
+  - `src/label_aggregator.py`: runs superpixel oversegmentation and uses the output of `src/dataset_creator.cpp` to generate the pseudolabels
+  - `src/online_learning.py`: runs online inference, training and pseudolabel generation
+- `src/` also contains training scripts:
+  - `src/train_binary_segmodel_base.py`: training with/without memory replay
+  - `src/train_binary_segmodel_distillation.py`: training with distillation based methods
+  - `src/train_binary_segmodel_EWC.py`: training with EWC
+- `src/bfseg/` is the python library used for both parts.
+  - `src/bfseg/data/` contains loaders for datasets
+  - `src/bfseg/cl_models/` implements continual-learning models
+  - `src/bfseg/models/` contains the fast-scnn network architecture
+  - `src/bfseg/utils/` contains helpers for image augmentation, superpixel segmentation, losses, metrics and factory functions
+
 ## Dataset Creator
 ## Overview
 This package extracts the following information from a ROS Bag:
