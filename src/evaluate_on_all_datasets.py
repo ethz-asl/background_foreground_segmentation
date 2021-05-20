@@ -6,7 +6,11 @@ USER = TO_DEFINE
 
 save_folder = f"/cluster/scratch/{USER}/evaluation"
 pretrained_models_folder = f'/cluster/scratch/{USER}/pretrained_models/'
+# Set this to True to save the images with the segmentation predictions.
+save_predictions = False
 
+# Change these with the experiments for which you want to obtain the evaluation,
+# in the format (id_experiment, epoch).
 id_and_epoch = [(1064, 100), (1069, 100)]
 
 datasets_to_evaluate = [
@@ -53,4 +57,5 @@ for id_, epoch_ in id_and_epoch:
           epochs_to_evaluate=epoch_,
           datasets_names_to_evaluate=[d[0] for d in datasets_to_evaluate],
           datasets_scenes_to_evaluate=[d[1] for d in datasets_to_evaluate],
-          save_folder=id_folder)
+          save_folder=id_folder,
+          save_predictions=save_predictions)
