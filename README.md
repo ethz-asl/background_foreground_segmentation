@@ -45,6 +45,19 @@ python data_setup.py
 
 # Reproducing Experiments
 
+## Rosbag Download
+Each localisation experiment requires a different bagfile with recorded sensor readings. Since each bagfile has 20-30 GB, we do not have a script that downloads all bagfiles in advance. Please download the bagfiles you need to a directory of choice and either
+
+- provide the location of the downloaded bagfiles as an argument:
+```bash
+roslaunch background_foreground_segmentation <experiment>.launch rosbag_folder:=/your/rosbag/location
+```
+- OR link the folder once into the workspace
+```bash
+ln -s /your/rosbag/location $BFSEG_ROOT/rosbags
+```
+
+
 # Software Overview
 
 ## Dataset Creator
