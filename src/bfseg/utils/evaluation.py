@@ -172,6 +172,7 @@ def scoreAndPlotPredictions(imageCallback,
 
 def evaluate_model(model,
                    test_dataset,
+                   use_fov_mask,
                    pretrained_dir=None,
                    output_image_folder=None):
   r"""Evaluates a model on a given test dataset.
@@ -180,6 +181,7 @@ def evaluate_model(model,
     model (tensorflow.keras.Model): Model to evaluate.
     test_dataset (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Test
       dataset on which to evaluate the CL model.
+    use_fov_mask (bool): Whether or not to use the FoV mask.
     pretrained_dir (str): If not None, path from which the weights of a
       pretrained model will be loaded.
     output_image_folder (str): If not None, segmentation predictions on the
@@ -210,11 +212,15 @@ def evaluate_model(model,
     else:
       assert (len(sample) == 2)
       x, y = sample
-      #mask = tf.ones(shape=x.shape[:-1])
-      raise OSError("Set the correct path to the `mask.png` file here.")
-      mask = cv2.imread('mask.png')
-      assert (mask.shape == (480, 640, 3))
-      mask = tf.cast(mask[:, :, 0] / 255., dtype=tf.uint8)
+      if (use_fov_mask):
+        # Read the FoV mask from file.
+        current_dir = os.path.dirname(__file__) 
+        mask_filename = os.path.realpath(f"{current_dir}/../../../fov_mask.png")
+        mask = cv2.imread(mask_filename)
+        assert (mask.shape == (480, 640, 3))
+        mask = tf.cast(mask[:, :, 0] / 255., dtype=tf.uint8)
+      else:
+        mask = tf.ones(shape=x.shape[:-1])
       batch_size = x.shape[0]
       mask = tf.repeat(tf.expand_dims(mask, axis=0), batch_size, axis=0)
     [_, pred_y] = model(x, training=False)
@@ -260,9 +266,11 @@ def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
                                                 datasets_names_to_evaluate,
                                                 datasets_scenes_to_evaluate,
                                                 save_folder,
+                                                use_fov_mask,
                                                 save_predictions=False):
   r"""Evaluates a model with the checkpoint(s) from the given epoch(s) on the
-  given test dataset(s).
+  given test dataset(s). NOTE: The model parameters (e.g., the normalization
+  type) need to be changed manually if needed (cf. `create_model`).
 
   Args:
     pretrained_dirs (str or list of str): Path to pretrained models that should
@@ -275,6 +283,7 @@ def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
       which the model(s) should be evaluated.
     save_folder (str): Folder where the results of the evalutions should be
       saved.
+    use_fov_mask (bool): Whether or not to use the FoV mask.
     save_predictions (bool): Whether or not to save the images with the
       segmentation predictions.
   
@@ -325,8 +334,7 @@ def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
     all_output_evaluation_filenames = [
         os.path.join(
             save_folder,
-            #f"{test_dataset_name}_{test_dataset_scene}_epoch_{epoch}.yml")
-            f"new_{test_dataset_name}_{test_dataset_scene}_epoch_{epoch}.yml")
+            f"{test_dataset_name}_{test_dataset_scene}_epoch_{epoch}.yml")
         for epoch in epochs_to_evaluate
     ]
     epochs_to_evaluate_for_curr_ds = set()
@@ -380,6 +388,7 @@ def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
       accuracy, mean_iou = evaluate_model(
           model=model,
           test_dataset=test_dataset,
+          use_fov_mask=use_fov_mask,
           pretrained_dir=pretrained_dir,
           output_image_folder=output_image_folder)
       accuracies[curr_dataset_and_scene][epoch] = accuracy

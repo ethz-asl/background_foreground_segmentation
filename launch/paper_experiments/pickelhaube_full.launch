@@ -116,6 +116,7 @@ Launch file for Selective ICP with rviz
           foregroundTrustRegion: false
           fgBgThreshold: 80
           numberOfSuperPixel: 400
+          agreement: false
         </rosparam>
         <param name="label_path" value="$(find background_foreground_segmentation)/logs/$(arg logprefix)/" />
     </node>
