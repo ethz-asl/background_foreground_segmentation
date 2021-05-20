@@ -10,6 +10,7 @@ In the following, let us denote the path where the folder is saved via the envir
     ```
 - Edit the placeholder `PRETRAINED_MODELS_FOLDER` in the `config.yml` files to be above path:
     ```bash
+    cd ${SAVED_FOLDER}
     find . -type f -name '*.yml' -exec sed -i "s@PRETRAINED_MODELS_FOLDER@${PRETRAINED_MODELS_FOLDER}@g" {} +
     ```
 
