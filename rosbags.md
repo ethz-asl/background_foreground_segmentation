@@ -3,7 +3,7 @@
 Download these rosbags to reproduce the corresponding experiments.
 
 <table>
-  <th><td>Name</td><td>Launchfile</td><td>Rosbag</td></th>
+  <tr><th>Name</th><th>Launchfile</th><th>Rosbag</th></tr>
   <tr><td>Garage</td><td>Garage1</td><td><a href="https://drive.google.com/file/d/1bVjDkZkycKaDUXlDpqKvr6hIjR4oC8ng/view?usp=sharing">download</a></td></tr>
   <tr><td>Garage</td><td>Garage2</td><td><a href="https://drive.google.com/file/d/1ZbDcWDvPgMNmr0v-HEF4hss4oI99oHUS/view?usp=sharing">download</a></td></tr>
   <tr><td>Garage</td><td>Garage3</td><td><a href="https://drive.google.com/file/d/17l58NSqjXAEm1TgRAZ7vu72_nW1seqoj/view?usp=sharing">download</a></td></tr>
