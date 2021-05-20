@@ -91,6 +91,16 @@ localising in the Office (to measure forgetting):
 ```bash
 roslaunch background_foreground_segmentation crossdomain_nyutoofficetocla_office7.launch
 ```
+
+## Online Learning
+The paper experiment was conducted on bagfile [Rumlang1](https://drive.google.com/file/d/1uJQkurwowBo5NmOd9aCYqvV2wDAx2FHs/view?usp=sharing).
+
+For online learning we rely on simultaneously executing nodes in python2 and python3, so in case you encounter import errors make sure to install the dependencies to both python versions.
+
+```bash
+roslaunch background_foreground_segmentation pickelhaube_online_learning_rumlang1.launch
+```
+
 # Software Overview
 
 ## Dataset Creator
