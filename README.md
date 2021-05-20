@@ -127,6 +127,41 @@ icp.plot('headerstamp', 'rmse_xy')
 print('Mean: {:.3f}, Median: {:.3f}, Std: {:.3f}'.format(icp['rmse_xy'].mean(), icp['rmse_xy'].median(), icp['rmse_xy'].std()))
 ```
 
+## Getting the Pseudolabels
+Each run with `pickelhaube_full_*.launch` will automatically store a dataset of pseudolabels in `$BFSEG_ROOT/logs/pickelhaube_full*/`. You can load the dataset into tensorflow like this:
+
+```python
+from bfseg.data.fsdata import load_fsdata
+import tensorflow as tf
+import os
+import json
+datapath = '$BFSEG_ROOT/logs/pickelhaube_full*/'
+if not os.path.exists(os.path.join(datapath, 'dataset_info.json')):
+    with open(os.path.join(datapath, 'dataset_info.json'), 'w') as f:
+        json.dump({
+            'output_shapes': {'rgb': [None, None, 3], 'labels': [None, None]},
+            'output_types': {'rgb': 'float32', 'labels': 'int32'}
+        }, f)
+ds = load_fsdata(datapath)
+# visualize
+import matplotlib.pyplot as plt
+for blob in ds.shard(10, 0).take(10).as_numpy_iterator():
+    _, axs = plt.subplots(1, 2, figsize=(10, 5))
+    axs[0].imshow(blob['rgb'] / 255)
+    axs[1].imshow(blob['labels'])
+```
+
+Alternatively, you can load already created pseudolabels that we used for our experiments:
+```python
+import bfseg.data.pseudolabels
+import bfseg.data.meshdist.bfseg_cla_meshdist_labels
+import tensorflow_datasets as tfds
+
+ds = tfds.load('meshdist_pseudolabels', split='rumlang3')  # for construction
+ds = tfds.load('meshdist_pseudolabels', split='office5')  # for office
+ds = tfds.load('bfseg_cla_meshdist_labels')  # for garage
+```
+
 ## Online Learning
 The paper experiment was conducted on bagfile [Rumlang1](https://drive.google.com/file/d/1uJQkurwowBo5NmOd9aCYqvV2wDAx2FHs/view?usp=sharing).
 
