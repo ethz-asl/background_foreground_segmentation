@@ -104,8 +104,8 @@ import scipy.interpolate
 import scipy.spatial.transform as stf
 import matplotlib.pyplot as plt
 
-icp = pd.read_csv('logs/pickelhaube_full_garage1_icp_1.csv')
-leica = pd.read_csv('logs/pickelhaube_full_garage1_leica_1.csv')
+icp = pd.read_csv('logs/pickelhaube_full_garage1_icp_<set correct number>.csv')
+leica = pd.read_csv('logs/pickelhaube_full_garage1_leica_<set correct number>.csv')
 plt.figure()
 plt.plot(icp['trans_x'], icp['trans_y'])
 plt.plot(-leica['trans_y'], leica['trans_x'])
