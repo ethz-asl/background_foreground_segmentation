@@ -1,6 +1,9 @@
-# background_foreground_segmentation
+# Self-Improving Semantic Perception on a Construction Robot
 
-Structure allows for standalone python usage and usage within ROS.
+[arxiv](https://arxiv.org/abs/2105.01595) [video](https://www.youtube.com/watch?v=awsynhkkFpk)
+
+This repository contains the code used on our self-improving robot, as well as links to all the data and configs to reproduce our results.
+
 
 # Installation
 The software is organized as a hybrid ROS and python workspace. Localisation experiments and online learning are running in the ROS workspace. Segmentation training and evaluation are running in the python-only workspace. Please follow the respective instructions below to set up the different workspaces.
