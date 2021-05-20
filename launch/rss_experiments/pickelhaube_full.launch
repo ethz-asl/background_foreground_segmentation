@@ -125,6 +125,7 @@ Launch file for Selective ICP with rviz
     <!-- should be started last for handover to ICP-->
     <include file="$(find alphasense_tools)/launch/pickelhaube_from_bag.launch">
         <arg name="rosbag" value="$(arg rosbag)" />
+        <arg name="rate" value="0.3" />
     </include>
 
     <node name="mapper"
