@@ -1,0 +1,23 @@
+depth:
+  cam_overlaps: []
+  camera_model: pinhole
+  distortion_coeffs: # taken from kalibration rosbag, but no idea whether they are true
+  - 0.5018158555030823
+  - -0.016600443050265312
+  - -0.00035871873842552304
+  -  5.936829256825149e-05 
+  - -0.0019593671895563602
+  - 0.8427433967590332
+  - 0.07765886187553406
+  - -0.010862121358513832
+  distortion_model: plumb_bob
+  intrinsics: # taken from calibration rosbag
+  - 504.7727966308594
+  - 504.8245544433594
+  - 516.58349609375
+  - 513.283447265625
+  #504.7727966308594, 0.0, 516.58349609375, 0.0, 504.8245544433594, 513.283447265625, 0.0, 0.0, 1.0
+  resolution:
+  - 1024
+  - 1024
+  rostopic: /depth/image_raw

@@ -1,7 +1,7 @@
 # Set this to true if you only want to extract images and poses from rosbag
 ignorePointcloud: false
 # Topic where point cloud with distance information is published
-cloudTopic: /distance_pc
+cloudTopic: /depth/distance_pc
 # In which frame is the cloud published?
 cloudFrame: /map
 # Max distance from a point to the groundtruth mesh. If a point has i bigger distance, it will be replaced with this value
@@ -14,4 +14,4 @@ overrideOutput: true
 fileType: "png"
 storeImages: true
 exportPose: false
-createPreview: false
+createPreview: true

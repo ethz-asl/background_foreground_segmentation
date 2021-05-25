@@ -1,0 +1,33 @@
+<launch>
+
+  <!-- Proper Output Info -->
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}] (${node}) [${time}]: ${message}\n" />
+  <arg name="nodelet_manager" />
+  <node pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="imu_depthcam_transformer"
+        args="-0.054722 -0.090945 0.005272 0.7071068, -0.7071068, 0, 0 IMUFRAME pickelhaubecamera_base" />
+        <!-- x y z qx qy qz qw frame_id child_frame_id -->
+  <node pkg="nodelet"
+        type="nodelet"
+        args="load depth_image_proc/point_cloud_xyz /$(arg nodelet_manager)"
+        name="depth_cloudifier">
+    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam1_intr_2.yaml"/>
+    <remap from="camera_info" to="/depth/camera_info"/>
+    <remap from="image_rect" to="/depth/image_raw"/>
+    <remap from="points" to="/depth/points"/>
+  </node>
+
+  <!-- <node pkg="nodelet"
+        type="nodelet"
+        args="load image_undistort/ImageUndistortNodelet /$(arg nodelet_manager)"
+        name="depth_undistorter">
+    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/kinect_depth_intr.yaml"/>
+    <param name="input_camera_info_from_ros_params" value="true"/>
+    <param name="input_camera_namespace" value="depth"/>
+    <param name="output_frame" value="cam1_rectified_frame"/>
+    <remap from="input/image" to="/depth/image_raw"/>
+    <remap from="output/image" to="/depth/image_undistorted"/>
+    <remap from="output/camera_info" to="/depth/camera_info"/>
+  </node> -->
+</launch>

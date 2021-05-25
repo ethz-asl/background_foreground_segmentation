@@ -27,6 +27,9 @@ cs_add_library(${PROJECT_NAME}
 cs_add_library(${PROJECT_NAME}2
         src/dataset_creator2.cpp)
 
+cs_add_library(${PROJECT_NAME}_dense
+        src/dataset_creator_dense.cpp)
+
 ############
 # BINARIES #
 ############
@@ -36,6 +39,10 @@ cs_add_executable(${PROJECT_NAME}_node
 
 cs_add_executable(${PROJECT_NAME}_node2
         src/background_foreground_segmentation_node2.cpp
+        )
+
+cs_add_executable(${PROJECT_NAME}_dense_node
+        src/background_foreground_segmentation_dense_node.cpp
         )
 
 cs_add_executable(pose_recorder_node
@@ -51,6 +58,7 @@ cs_add_executable(cloud_filtering_node
 
 target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME}_node2 ${PROJECT_NAME}2)
+target_link_libraries(${PROJECT_NAME}_dense_node ${PROJECT_NAME}_dense)
 
 ############
 #  TESTS   #

@@ -14,4 +14,4 @@ overrideOutput: true
 fileType: "png"
 storeImages: true
 exportPose: false
-createPreview: false
+createPreview: true

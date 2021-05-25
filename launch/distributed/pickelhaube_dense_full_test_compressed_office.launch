@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Launch file for Selective ICP with rviz and Realsense integration
+-->
+
+<launch>
+
+	<include file="$(find background_foreground_segmentation)/launch/distributed/pickelhaube2_dense_full_compressed.launch">
+		<arg name="rosbag" value="/media/matthias/sandisk/rosbags/2021-05-20-16-42-52_compressed1.bag"/>
+		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/rss_experiments/191130_286_lee_j_vf_20160101_SE.off" />
+		<arg name="logprefix" value="pickelhaube_dense_full_test" />
+	</include>
+
+    <node pkg="tf2_ros"
+	      type="static_transform_publisher"
+		  name="mesh_positioning"
+		  args="-8.11 22 0 0 0 0.8660254, 0.5 map marker" />
+    <node pkg="rosservice"
+	      type="rosservice"
+		  name="start_icp"
+		  args="call --wait /mapper/load_published_map"
+		  launch-prefix="bash -c 'sleep 2; $0 $@'" />
+	<node pkg="rosservice"
+	      type="rosservice"
+		  name="start_cloud_distance"
+		  args="call --wait /load_published_map"
+		  launch-prefix="bash -c 'sleep 2; $0 $@'" />
+
+</launch>
+
+    <!-- <node pkg="tf2_ros" -8 17.3  (120)
+	      type="static_transform_publisher"
+		  name="mesh_positioning"
+		  args="-0.909 -15.024 0 0 0 -0.691 0.723 map marker" 
+		  "-11.11 19.5 0 0 0 0.8660254, 0.5 map marker"/> -->

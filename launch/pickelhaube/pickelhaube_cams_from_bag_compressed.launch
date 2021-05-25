@@ -1,0 +1,30 @@
+<launch>
+
+  <arg name="rosbag" default="" />
+  <arg name="rate" default="0.2" />
+
+  <!-- Proper Output Info -->
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}] (${node}) [${time}]: ${message}\n" />
+
+  <param name="/use_sim_time" value="true" />
+
+  <node pkg="rosbag" type="play"
+        name="rosbag"
+        args="--clock -d 1 -r $(arg rate) $(arg rosbag)"
+        />
+
+    <node pkg="nodelet" type="nodelet" name="pickelhaube_camera_manager"
+          args="manager"
+          output="screen"
+          required="true" >
+       <param name="num_worker_threads" value="6" />
+    </node>
+
+  <include file="$(find background_foreground_segmentation)/launch/pickelhaube/pickelhaube_versavis_calibrations_compressed.launch">
+    <arg name="nodelet_manager" value="pickelhaube_camera_manager" />
+  </include>
+
+  <include file="$(find background_foreground_segmentation)/launch/pickelhaube/pickelhaube_kinect_calibrations_compressed.launch">
+    <arg name="nodelet_manager" value="pickelhaube_camera_manager" />
+  </include>
+</launch>

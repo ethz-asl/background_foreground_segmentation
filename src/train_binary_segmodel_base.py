@@ -40,6 +40,7 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
   current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
   print("Current time is " + current_time)
   model = BaseCLModel(run=_run, root_output_dir=TMPDIR)
+  model.save_model(epoch="initial") # Todo: might remove
   # Get the datasets.
   train_ds, val_ds, test_ds = load_datasets(
       train_dataset=dataset_params['train_dataset'],
