@@ -110,6 +110,7 @@ private:
   std::string distance_topic;
   std::string labels_topic;
   std::string binary_labels_topic;
+  std::string preview_topic;
 
   bool create_preview;
   // if images should be stored on disk
@@ -139,6 +140,7 @@ private:
 
   image_transport::Publisher labels_publisher;
   image_transport::Publisher binary_labels_publisher;
+  image_transport::Publisher preview_publisher;
   image_transport::Publisher distance_publisher;
   // Used to publish images
   image_transport::ImageTransport it_;

@@ -6,7 +6,8 @@
   <node pkg="tf2_ros"
         type="static_transform_publisher"
         name="imu_depthcam_transformer"
-        args="-0.09133177 -0.09620763  0.00651344 -0.70645204  0.70772247 -0.00716721  0.00174496 IMUFRAME pickelhaubecamera_base" />
+        args="0.1 -0.0001  -0.1 -0.6966661, 0.7173143, -0.0077447, 0.0075217 IMUFRAME pickelhaubecamera_base" />
+        <!--args="0.1 -0.09620763  -0.1 -0.70645204  0.70772247 -0.00716721  0.00174496 IMUFRAME pickelhaubecamera_base" /-->
         <!--args="-0.054722 -0.090945 0.005272 0.7071068, -0.7071068, 0, 0 IMUFRAME pickelhaubecamera_base" /-->
         <!-- x y z qx qy qz qw frame_id child_frame_id -->
 

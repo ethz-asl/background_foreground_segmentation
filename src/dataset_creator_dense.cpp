@@ -34,6 +34,7 @@ Creator::Creator(ros::NodeHandle &nodeHandle)
   pub = it_.advertise(output_topic, 1);
   labels_publisher = it_.advertise(labels_topic, 1);
   binary_labels_publisher = it_.advertise(binary_labels_topic, 1);
+  preview_publisher = it_.advertise(preview_topic, 1);
   distance_publisher = it_.advertise(distance_topic, 1);
 
   if (!ignore_pointcloud) {
@@ -92,6 +93,8 @@ bool Creator::readParameters() {
   if (!nodeHandle_.getParam("labelsTopic", labels_topic))
     return false;  
   if (!nodeHandle_.getParam("binaryLabelsTopic", binary_labels_topic))
+    return false;
+  if (!nodeHandle_.getParam("previewTopic", preview_topic))
     return false;
   
 
@@ -283,8 +286,10 @@ void Creator::projectPointCloud(
     camera_frame_point.intensity = it->intensity;
     camera_frame_pc.push_back(camera_frame_point);
 
-    if (camera_local_tf.z() <= 0) {
-      // Point not visible for camera
+    // NEW: robot is also on pointcloud, needs to be eliminated (changed from 0 to 0.2)
+    //double abs_distance = sqrt(camera_local_tf.x()*camera_local_tf.x() + camera_local_tf.y()*camera_local_tf.y() + camera_local_tf.z()*camera_local_tf.z());
+    if (camera_local_tf.z() <= 0.6) {
+      // Point not visible for camera or too close
       continue;
     }
 
@@ -358,8 +363,19 @@ void Creator::projectPointCloud(
   out_msg.image = distance_img;
   distance_publisher.publish(out_msg.toImageMsg());
 
+  if (create_preview){
+      out_msg.image = preview_img2;
+      out_msg.encoding = sensor_msgs::image_encodings::BGR8;
+      preview_publisher.publish(out_msg.toImageMsg());
+  }
+
   out_msg.image = binary_labels_img;
   binary_labels_publisher.publish(out_msg.toImageMsg());
+
+
+
+  
+  
 }
 
 } // namespace dataset_creator_dense

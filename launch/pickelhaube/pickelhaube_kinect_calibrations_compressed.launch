@@ -13,8 +13,8 @@
         args="load depth_image_proc/point_cloud_xyz /$(arg nodelet_manager)"
         name="depth_cloudifier">
     <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam1_intr_2.yaml"/>
-    <remap from="camera_info" to="/depth_to_rgb/camera_info"/>
-    <remap from="image_rect" to="/depth_to_rgb/image_raw/compressedDepth"/>
+    <remap from="camera_info" to="/rgb/camera_info"/>
+    <remap from="image_rect" to="/depth_to_rgb/image_raw"/>
     <remap from="points" to="/depth/points"/>
   </node>
 

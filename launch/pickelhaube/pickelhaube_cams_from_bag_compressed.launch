@@ -20,7 +20,7 @@
        <param name="num_worker_threads" value="6" />
     </node>
 
-  <include file="$(find background_foreground_segmentation)/launch/pickelhaube/pickelhaube_versavis_calibrations_compressed.launch">
+  <include file="$(find background_foreground_segmentation)/launch/pickelhaube/pickelhaube_versavis_calibrations.launch">
     <arg name="nodelet_manager" value="pickelhaube_camera_manager" />
   </include>
 
