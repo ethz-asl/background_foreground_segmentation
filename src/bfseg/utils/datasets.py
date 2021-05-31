@@ -173,7 +173,6 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
         "rumlang3"
     ]):
       name = scene_type
-<<<<<<< HEAD
   elif (dataset_name == 'MeshdistPseudolabelsDyn'):
     if (scene_type == "rumlang1_full_dyn"):
       name = "rumlang1_full_dyn"
@@ -181,8 +180,11 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = "rumlang1_full"
     elif (scene_type == "rumlang1_full_test1"):
       name = "rumlang1_full_test1"
-=======
->>>>>>> cleanup
+    else:
+      raise Exception("Invalid scene type: %s!" % scene_type)
+  elif (dataset_name == 'MeshdistPseudolabelsDense1'):
+    if (scene_type in ["office12_dense20_dyn_complete", "office12_sparse20_dyn_cam2", "office3_dense20_dyn_complete", "office3_sparse20_dyn_cam2"]):
+      name = scene_type
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
   elif (dataset_name == 'BfsegValidationLabeled'):
@@ -257,12 +259,12 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     else:
       ds = ds.map(preprocess_bagfile,
                   num_parallel_calls=tf.data.experimental.AUTOTUNE)
-<<<<<<< HEAD
   elif (dataset_name == 'MeshdistPseudolabelsDyn'):
     ds = ds.map(preprocess_bagfile,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
-=======
->>>>>>> cleanup
+  elif (dataset_name == 'MeshdistPseudolabelsDense1'):
+    ds = ds.map(preprocess_bagfile,
+                num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name
         in ['BfsegValidationLabeled', 'OfficeRumlangValidationLabeled']):
     ds = ds.map(preprocess_hive,
@@ -354,10 +356,6 @@ def update_datasets_with_replay_and_augmentation(
     perform_data_augmentation):
   r"""Returns training and test datasets after creating a replay buffer and
   performing data augmentation, if necessary.
-<<<<<<< HEAD
-=======
-
->>>>>>> cleanup
   Args:
     train_no_replay_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset):
       Training dataset before replay and augmentation.
@@ -371,10 +369,6 @@ def update_datasets_with_replay_and_augmentation(
     batch_size (int): Batch size to use in the optional replay buffer.
     perform_data_augmentation (bool): Whether or not to perform data
       augmentation.
-<<<<<<< HEAD
-=======
-
->>>>>>> cleanup
   Returns:
     train_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Training
       dataset after optional replay and augmentation.
@@ -408,12 +402,6 @@ def update_datasets_with_replay_and_augmentation(
     train_ds = train_no_replay_ds
     # Check if data augmentation should be used.
     if (perform_data_augmentation):
-<<<<<<< HEAD
-      train_ds = train_ds.map(augmentation)
-
-  return train_ds, test_ds
-=======
       train_ds = train_ds.map(augmentation_with_mask)
 
   return train_ds, test_ds
->>>>>>> cleanup
