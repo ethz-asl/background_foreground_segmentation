@@ -110,19 +110,12 @@ class ReplayBuffer:
   def flow(self):
     r"""Performs one merge of the datasets, drawing a new set of samples to
     select.
-<<<<<<< HEAD
-    Modified from https://stackoverflow.com/a/58573644.
-    Returns:
-      merged_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Merged
-        dataset with the desired batch size.
-=======
 
     Modified from https://stackoverflow.com/a/58573644.
 
     Returns:
       merged_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Merged
         dataset with the desired batch size.          
->>>>>>> cleanup
     """
     if (self._ratio_main_ds_replay_ds is not None):
       ratio_main = self._ratio_main_ds_replay_ds[0]
@@ -196,8 +189,4 @@ class ReplayBuffer:
 
     merged_ds = merged_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
-<<<<<<< HEAD
     return merged_ds
-=======
-    return merged_ds
->>>>>>> cleanup
