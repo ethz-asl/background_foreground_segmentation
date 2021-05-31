@@ -42,17 +42,17 @@ class MeshdistPseudolabelsDense1(tfds.core.GeneratorBasedBuilder):
     """Returns SplitGenerators."""
     dataset_paths = dl_manager.download_and_extract({
         # 'office1_dense20_dyn_complete':
-        #     'https://drive.google.com/uc?export=download&id=1Np4nnU5ryIuKe_0-dP5-1wdFQv6xADK7',
+        #     '',
         # 'office1_sparse20_dyn_cam2':
-        #     'https://drive.google.com/uc?export=download&id=1CPl9inIiBog3oqws-BmWGt_RiYVFSVn6',
+        #     '',
         # 'office2_dense20_dyn_complete':
-        #     'https://drive.google.com/uc?export=download&id=1p0g8OFStekDnvbMOVqiBcgtYhr_JXcQu',
+        #     '',
         # 'office2_sparse20_dyn_cam2':
-        #     'https://drive.google.com/uc?export=download&id=18W48K-1leeFnXiZobiqxd9-p6OCbc3wu',
+        #     '',
         'office12_dense20_dyn_complete':
-            'https://drive.google.com/uc?export=download&id=1mxkQdAs0inBLy3NqwUnLEtqAlMDTE-gp',
+            'https://drive.google.com/uc?export=download&id=1XVuOwg9MLpQIYZR8_AAwJzT5z_O30O2Z',
         'office12_sparse20_dyn_cam2':
-            'https://drive.google.com/uc?export=download&id=1if8HY3AB-SiEK_I4k4hRN-ep9c4e8hbL'
+            'https://drive.google.com/uc?export=download&id=1ZqvVX9sovQm4rgrRbKmgWlHMkrO-G2mk'
     })
     return [
         tfds.core.SplitGenerator(
