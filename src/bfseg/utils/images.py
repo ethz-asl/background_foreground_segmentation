@@ -35,6 +35,7 @@ def resize_with_crop(image, shape, method='bilinear'):
   return tf.image.resize(image, (target_h, target_w), method=method)
 
 
+@tf.function
 def augmentation(image, label):
   # make sure image is in float space
   image = tf.image.convert_image_dtype(image, tf.float32)
@@ -43,7 +44,28 @@ def augmentation(image, label):
     image = tf.image.flip_left_right(image)
     label = tf.image.flip_left_right(label)
   # brightness
-  image = tf.image.random_brightness(image, max_delta=.1)
+  image = tf.image.random_brightness(image, max_delta=0.2)
   # hue
   image = tf.image.random_hue(image, max_delta=.1)
   return image, label
+
+
+@tf.function
+def augmentation_with_mask(image, label, mask):
+  # make sure image is in float space
+  image = tf.image.convert_image_dtype(image, tf.float32)
+  # random flip
+  if tf.random.uniform((1,)) < .5:
+    image = tf.image.flip_left_right(image)
+    label = tf.image.flip_left_right(label)
+    # Note: it is crucial that `expand_dims` is used, otherwise, since `mask`
+    # is in (B, H, W) format, rather than (B, H, W, 1). `flip_left_right`
+    # would wrongly flip the image upside down.
+    mask = tf.image.flip_left_right(tf.expand_dims(mask, axis=-1))
+    # Bring the mask back to its initial shape.
+    mask = tf.squeeze(mask, axis=-1)
+  # brightness
+  image = tf.image.random_brightness(image, max_delta=0.2)
+  # hue
+  image = tf.image.random_hue(image, max_delta=.1)
+  return image, label, mask

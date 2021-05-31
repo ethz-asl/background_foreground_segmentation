@@ -4,6 +4,7 @@ from shutil import make_archive
 from tensorflow import keras
 import warnings
 
+from bfseg.utils.metrics import get_balanced_weights
 from bfseg.utils.models import create_model
 
 
@@ -92,14 +93,21 @@ class BaseCLModel(keras.Model):
     r"""Adds loss criteria and metrics.
     """
     self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    self.loss_tracker = keras.metrics.Mean(f'loss', dtype=tf.float32)
-    self.accuracy_tracker = keras.metrics.Accuracy(f'accuracy',
-                                                   dtype=tf.float32)
+    self.loss_tracker = keras.metrics.Mean('loss', dtype=tf.float32)
+    self.accuracy_tracker = keras.metrics.Accuracy('accuracy', dtype=tf.float32)
+    self.miou_tracker = keras.metrics.MeanIoU(num_classes=2, name='mean_iou')
     # This stores optional logs about the test metrics, which is not
     # automatically handled by Keras.
     self.logs_test = {}
     # By default, no auxiliary losses are expected to be tracked.
     self._tracked_auxiliary_losses = None
+    # Check if balanced cross-entropy loss should be used.
+    if (self.run.config['training_params']['use_balanced_loss']):
+      assert (self.run.config['cl_params']['cl_framework'] == "finetune"
+             ), "Currently balanced loss is only supported with finetuning."
+      self._use_balanced_loss = True
+    else:
+      self._use_balanced_loss = False
 
   def forward_pass(self, training, x, y, mask):
     r"""Forward pass.
@@ -120,13 +128,18 @@ class BaseCLModel(keras.Model):
     [_, pred_y] = self.new_model(x, training=training)
     pred_y_masked = tf.boolean_mask(pred_y, mask)
     y_masked = tf.boolean_mask(y, mask)
-    loss = self.loss_ce(y_masked, pred_y_masked)
+    if (self._use_balanced_loss):
+      #TODO(fmilano): Make flexible to number of classes.
+      sample_weight = get_balanced_weights(labels=y_masked, num_classes=2)
+    else:
+      sample_weight = None
+    loss = self.loss_ce(y_masked, pred_y_masked, sample_weight=sample_weight)
 
     return pred_y, pred_y_masked, y_masked, loss
 
   def _handle_multiple_losses(self, loss):
     r"""Since derived classes might implement auxiliary losses that one also
-    want to keep track of, this method is used to separate the main (total)
+    wants to keep track of, this method is used to separate the main (total)
     loss from the auxiliary ones. It also sets up loss trackers for the
     auxiliary losses.
     
@@ -197,6 +210,7 @@ class BaseCLModel(keras.Model):
     # Update accuracy and loss.
     self.accuracy_tracker.update_state(train_y_masked, pred_y_masked)
     self.loss_tracker.update_state(total_loss)
+    self.miou_tracker.update_state(train_y_masked, pred_y_masked)
     if (auxiliary_losses is not None):
       for aux_loss_name, aux_loss in auxiliary_losses.items():
         getattr(self, f"{aux_loss_name}_tracker").update_state(aux_loss)
@@ -236,6 +250,7 @@ class BaseCLModel(keras.Model):
     # Update val/test metrics.
     self.loss_tracker.update_state(total_loss)
     self.accuracy_tracker.update_state(test_y_masked, pred_y_masked)
+    self.miou_tracker.update_state(test_y_masked, pred_y_masked)
     if (auxiliary_losses is not None):
       for aux_loss_name, aux_loss in auxiliary_losses.items():
         getattr(self, f"{aux_loss_name}_tracker").update_state(aux_loss)
@@ -264,12 +279,13 @@ class BaseCLModel(keras.Model):
     self.run.add_artifact(path_to_archive_model)
 
   def log_metrics(self, metric_type, logs, step):
-    r"""Logs to sacred the metrics for the given dataset type ("test", "train",
-    or "val") at the given step.
+    r"""Logs to sacred the metrics for the given dataset type ("train",
+    "train_no_replay", "val", or "test") at the given step.
 
     Args:
-      metric_type (str): Either "test", "train", or "val": type of the dataset
-        the metrics refer to.
+      metric_type (str): Either "train", "train_no_replay", "val", "test", or
+        the name of a dataset on which the model was evaluated: type of the
+        dataset the metrics refer to.
       logs (dict): Dictionary containing the metrics to log, indexed by the
         metric name, with their value at the given step.
       step (int): Training epoch to which the metrics are referred.
@@ -277,13 +293,27 @@ class BaseCLModel(keras.Model):
     Returns:
       None.
     """
-    assert (metric_type in ["train", "test", "val"])
     for metric_name, metric_value in logs.items():
       self.run.log_scalar(f'{metric_type}_{metric_name}',
                           metric_value,
                           step=step)
     self.loss_tracker.reset_states()
     self.accuracy_tracker.reset_states()
+    self.miou_tracker.reset_states()
+    if (self._tracked_auxiliary_losses is not None):
+      for aux_loss_name in self._tracked_auxiliary_losses:
+        getattr(self, f"{aux_loss_name}_tracker").reset_states()
+
+  def log_lr(self, step):
+    r"""Logs the learning rate at the given input step.
+
+    Args:
+      step (int): Training epoch at which the learning rate is logged.
+
+    Returns:
+      None.
+    """
+    self.run.log_scalar("lr", self.optimizer.lr.numpy(), step=step)
 
   @property
   def metrics(self):
@@ -295,4 +325,5 @@ class BaseCLModel(keras.Model):
           getattr(self, f"{loss_name}_tracker")
           for loss_name in self._tracked_auxiliary_losses
       ]
-    return [self.loss_tracker, self.accuracy_tracker] + auxiliary_losses
+    return [self.loss_tracker, self.accuracy_tracker, self.miou_tracker
+           ] + auxiliary_losses

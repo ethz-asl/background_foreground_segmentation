@@ -136,6 +136,6 @@ py3/**
 ._*
 */._*
 
-src/bfseg/settings.py
-
 omniboard/**
+logs/**
+src/bfseg/settings.py

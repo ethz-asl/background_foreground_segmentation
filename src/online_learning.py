@@ -14,6 +14,7 @@ import time
 import numpy as np
 import random
 
+import bfseg.data.nyu_subsampled
 from bfseg.utils.models import create_model
 from bfseg.utils.losses import BalancedIgnorantCrossEntropyLoss
 from bfseg.utils.image_enhancement import aggregate_sparse_labels
@@ -237,7 +238,11 @@ def main_loop():
   print('MODEL LOADED', flush=True)
 
   folder_counter = 1
+<<<<<<< HEAD
   checkpoints_folder = rospy.get_param('~log_folder', '/home/matthias/data/rss_2021_data/online_learning_{}')
+=======
+  checkpoints_folder = 'logs/online_learning_{}'
+>>>>>>> cleanup
   while os.path.exists(checkpoints_folder.format(folder_counter)):
     folder_counter += 1
   checkpoints_folder = checkpoints_folder.format(folder_counter)

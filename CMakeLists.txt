@@ -41,6 +41,7 @@ cs_add_executable(${PROJECT_NAME}_node2
         src/background_foreground_segmentation_node2.cpp
         )
 
+<<<<<<< HEAD
 cs_add_executable(${PROJECT_NAME}_dense_node
         src/background_foreground_segmentation_dense_node.cpp
         )
@@ -52,6 +53,8 @@ cs_add_executable(pose_recorder_node
 cs_add_executable(cloud_coloring_node
         src/cloud_coloring_node.cpp
         )
+=======
+>>>>>>> cleanup
 cs_add_executable(cloud_filtering_node
         src/cloud_filtering_node.cpp
         )
@@ -76,7 +79,6 @@ cs_export()
 
 
 catkin_install_python(PROGRAMS
-    src/ros_image_publisher.py
     src/pose_logger.py
     src/point_logger.py
     src/label_aggregator.py

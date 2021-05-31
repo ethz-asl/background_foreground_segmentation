@@ -117,6 +117,7 @@ private:
   // if images should be stored on disk
   bool store_images;
   bool export_pose;
+  bool output_any_files;
 
   // Point cloud distance from mesh will be stored as image -> [0,255]
   // Distances to mesh will be mapped as follows distance -> min(max_distance,
