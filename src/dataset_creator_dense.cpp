@@ -204,7 +204,7 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
 
   if (store_images) {
     // Store original image
-    cv::imwrite(output_folder + timestamp + "_original.png",
+    cv::imwrite(output_folder + timestamp + "_rgb.png",
                 camera_image);
   }
 
@@ -264,9 +264,9 @@ void Creator::projectPointCloud(
   cv::Mat labels_img(camera_image.rows, camera_image.cols, CV_8UC1,
                      cv::Scalar(0, 0, 0));
   
-  // Image that contains the binary labels
+  // Image that contains the binary labels, initialized with 2s since unknown
   cv::Mat binary_labels_img(camera_image.rows, camera_image.cols, CV_8UC1,
-                     cv::Scalar(0, 0, 0));
+                     cv::Scalar(2, 0, 0));
 
   // Image that contains distance information for each point of the pointcloud
   cv::Mat distance_img(camera_image.rows, camera_image.cols, CV_8UC1,
@@ -349,9 +349,9 @@ void Creator::projectPointCloud(
       // Save pointcloud
       pcl::io::savePCDFile(output_folder + timestamp + "_pcl.pcd",
                            camera_frame_pc);
-      cv::imwrite(output_folder + timestamp + "_labels.png", labels_img);
+      cv::imwrite(output_folder + timestamp + "_preview_labels2.png", labels_img);
     }
-    cv::imwrite(output_folder + timestamp + "_bin_labels.png", binary_labels_img);
+    cv::imwrite(output_folder + timestamp + "_labels.png", binary_labels_img);
   }
 
   cv_bridge::CvImage out_msg;

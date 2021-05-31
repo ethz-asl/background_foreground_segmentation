@@ -1,0 +1,26 @@
+# Train on CLA with EWC using with Fast-SCNN architecture pretrained on NYU.
+network_params:
+  architecture: fast_scnn
+  freeze_encoder: false
+  model_params:
+    image_h: 480
+    image_w: 640
+  normalization_type: group
+training_params:
+  batch_size: 10
+  learning_rate: 0.00001
+  num_training_epochs: 40
+  stopping_patience: 100
+dataset_params:
+  test_dataset: MeshdistPseudolabelsDyn 
+  test_scene: office12_sparse20_dyn_cam2
+  train_dataset: MeshdistPseudolabelsDyn
+  train_scene: office12_sparse20_dyn_cam2
+  validation_percentage: 5
+logging_params:
+  model_save_freq: 1
+  exp_name: office12_sparse20_dyn_cam2_finetune
+cl_params:
+  cl_framework: finetune
+  # Note: this needs to be specified.
+  pretrained_dir: /home/xavier/.keras/datasets/1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad

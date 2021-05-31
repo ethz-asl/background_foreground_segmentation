@@ -14,7 +14,7 @@ Launch file for Selective ICP with rviz and Realsense integration
     <node pkg="tf2_ros"
 	      type="static_transform_publisher"
 		  name="mesh_positioning"
-		  args="-1.2 -1 0 0 0 0 1 map marker" />
+		  args="-2 -1.8 0 0 0 0 1 map marker" />
     <node pkg="rosservice"
 	      type="rosservice"
 		  name="start_icp"
