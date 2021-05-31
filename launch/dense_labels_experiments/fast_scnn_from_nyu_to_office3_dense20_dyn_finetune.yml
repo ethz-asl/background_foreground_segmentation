@@ -1,0 +1,35 @@
+# Train on CLA with finetuning using Fast-SCNN architecture pretrained on NYU.
+network_params:
+  architecture: fast_scnn
+  freeze_encoder: false
+  model_params:
+    image_h: 480
+    image_w: 640
+  normalization_type: group
+training_params:
+  batch_size: 10
+  learning_rate: 0.00001
+  num_training_epochs: 40
+  perform_data_augmentation: false
+  reduce_lr_on_plateau: true
+  stopping_min_epoch: 50
+  stopping_patience: 100
+  use_balanced_loss: false
+dataset_params:
+  replay_datasets: null
+  replay_datasets_scene: null
+  test_dataset: MeshdistPseudolabelsDense1
+  test_scene: office3_dense20_dyn_complete
+  train_dataset: MeshdistPseudolabelsDense1
+  train_scene: office3_dense20_dyn_complete
+  validation_percentage: 10
+logging_params:
+  model_save_freq: 1
+  exp_name: office3_dense20_dyn_complete_finetune
+cl_params:
+  cl_framework: finetune
+  fraction_replay_ds_to_use: null
+  # Note: this needs to be specified.
+  pretrained_dir: /home/xavier/.keras/datasets/1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad
+  ratio_main_ds_replay_ds: null
+
