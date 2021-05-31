@@ -26,20 +26,12 @@ Launch file for Selective ICP with rviz
     <node pkg="background_foreground_segmentation"
           type="pose_logger.py"
           name="poselogger">
-<<<<<<< HEAD:launch/rss_experiments/pickelhaube2_full.launch
-        <param name="filename" value="/home/matthias/data/rss_2021_data/$(arg logprefix)_icp.csv" />
-=======
         <param name="filename" value="$(find background_foreground_segmentation)/logs/$(arg logprefix)_icp.csv" />
->>>>>>> cleanup:launch/paper_experiments/pickelhaube2_full.launch
     </node>
     <node pkg="background_foreground_segmentation"
           type="point_logger.py"
           name="leicalogger">
-<<<<<<< HEAD:launch/rss_experiments/pickelhaube2_full.launch
-        <param name="filename" value="/home/matthias/data/rss_2021_data/$(arg logprefix)_leica.csv" />
-=======
         <param name="filename" value="$(find background_foreground_segmentation)/logs/$(arg logprefix)_leica.csv" />
->>>>>>> cleanup:launch/paper_experiments/pickelhaube2_full.launch
         <param name="overwrite" value="false" />
     </node>
 
@@ -110,11 +102,7 @@ Launch file for Selective ICP with rviz
           fgBgThreshold: 50
           numberOfSuperPixel: 400
         </rosparam>
-<<<<<<< HEAD:launch/rss_experiments/pickelhaube2_full.launch
-        <param name="label_path" value="/home/matthias/data/rss_2021_data/label_aggregator/full_test/"/>
-=======
         <param name="label_path" value="$(find background_foreground_segmentation)/logs/$(arg logprefix)/" />
->>>>>>> cleanup:launch/paper_experiments/pickelhaube2_full.launch
     </node>
 
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find cpt_selective_icp)/launch/rviz.rviz" />

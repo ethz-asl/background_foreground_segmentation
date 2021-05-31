@@ -5,11 +5,7 @@ import tensorflow_datasets as tfds
 import warnings
 
 from bfseg.data.fsdata import load_fsdata
-<<<<<<< HEAD
-from bfseg.utils.images import augmentation
-=======
 from bfseg.utils.images import augmentation_with_mask
->>>>>>> cleanup
 from bfseg.utils.replay_buffer import ReplayBuffer
 
 

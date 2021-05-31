@@ -11,10 +11,6 @@ class ReplayBuffer:
   as to keep a desired ratio between the two datasets - or add the samples to
   replay on top of the main dataset - in which case a fraction of the dataset to
   to add needs to be specified. Optional online data augmentation is used.
-<<<<<<< HEAD
-=======
-
->>>>>>> cleanup
   Args:
     main_ds (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Main
       dataset from which the samples are selected.

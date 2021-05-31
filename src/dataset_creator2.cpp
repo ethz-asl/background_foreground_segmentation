@@ -243,13 +243,8 @@ void Creator::projectPointCloud(
       cv::circle(distance_img, pixel, 1, cv::Scalar(distance_value));
     }
   }
-<<<<<<< HEAD
-  std::cout << "LINE 244 !!!!!!!!!!" << std::endl;
-  if (store_images) {
-=======
 
   if (output_any_files && store_images) {
->>>>>>> cleanup
     // Save images
     std::cout << "LINE 246 !!!!!!!!!!" << std::endl;
     if (create_preview)
