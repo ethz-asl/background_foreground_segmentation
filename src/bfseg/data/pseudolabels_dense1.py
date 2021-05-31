@@ -14,7 +14,7 @@ Labels:
 """
 
 
-class MeshdistPseudolabelsDyn(tfds.core.GeneratorBasedBuilder):
+class MeshdistPseudolabelsDense1(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for BfsegCLAMeshdistLabels dataset."""
 
   VERSION = tfds.core.Version('0.2.0')
@@ -41,12 +41,18 @@ class MeshdistPseudolabelsDyn(tfds.core.GeneratorBasedBuilder):
   def _split_generators(self, dl_manager: tfds.download.DownloadManager):
     """Returns SplitGenerators."""
     dataset_paths = dl_manager.download_and_extract({
-        'rumlang1_full_dyn':
-            'https://drive.google.com/uc?export=download&id=1CJRx_C4bIKXGbsHX5QX4xTAE2a57SRuz',
-        'rumlang1_full':
-            'https://drive.google.com/uc?export=download&id=1DDiX5K-aN3wxJF_JlvEgr6X74XiItCoR',
-        'rumlang1_full_test1':
-            'https://drive.google.com/uc?export=download&id=1-ta1gK4jmTIzD4CVPo12ihkjjTil7t3_'
+        # 'office1_dense20_dyn_complete':
+        #     'https://drive.google.com/uc?export=download&id=1Np4nnU5ryIuKe_0-dP5-1wdFQv6xADK7',
+        # 'office1_sparse20_dyn_cam2':
+        #     'https://drive.google.com/uc?export=download&id=1CPl9inIiBog3oqws-BmWGt_RiYVFSVn6',
+        # 'office2_dense20_dyn_complete':
+        #     'https://drive.google.com/uc?export=download&id=1p0g8OFStekDnvbMOVqiBcgtYhr_JXcQu',
+        # 'office2_sparse20_dyn_cam2':
+        #     'https://drive.google.com/uc?export=download&id=18W48K-1leeFnXiZobiqxd9-p6OCbc3wu',
+        'office12_dense20_dyn_complete':
+            'https://drive.google.com/uc?export=download&id=1mxkQdAs0inBLy3NqwUnLEtqAlMDTE-gp',
+        'office12_sparse20_dyn_cam2':
+            'https://drive.google.com/uc?export=download&id=1if8HY3AB-SiEK_I4k4hRN-ep9c4e8hbL'
     })
     return [
         tfds.core.SplitGenerator(
