@@ -6,8 +6,8 @@ Launch file for Selective ICP with rviz and Realsense integration
 <launch>
 	<arg name="rosbag_folder" default="$(find background_foreground_segmentation)/rosbags" />
 	<include file="$(find background_foreground_segmentation)/launch/distributed/pickelhaube2_dense_full_office.launch">
-		<arg name="rosbag" value="$(arg rosbag_folder)/rosbags/2021-05-20-11-52-48_office1.bag"/>
-		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/rss_experiments/191130_286_lee_j_vf_20160101_SE.off" />
+		<arg name="rosbag" value="$(arg rosbag_folder)/2021-05-20-11-52-48_office1.bag"/>
+		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/paper_experiments/191130_286_lee_j_vf_20160101_SE.off" />
 		<arg name="logprefix" value="pickelhaube_dense_full_test" />
 	</include>
 

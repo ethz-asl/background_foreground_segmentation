@@ -93,7 +93,7 @@ Launch file for Selective ICP with rviz
           type="cpt_selective_icp_dyn_node"
           pkg="cpt_selective_icp_dyn"
           output="screen" >
-    <rosparam command="load" file="$(find background_foreground_segmentation)/launch/rss_experiments/mapper_parameters_dyn_realsense.yaml" />
+    <rosparam command="load" file="$(find background_foreground_segmentation)/launch/brucker_experiments/mapper_parameters_dyn_realsense.yaml" />
                 <param name="scanTopic" value="/rslidar_points" />
                 <param name="odomTopic" value="/realsense_t265/odom/sample" />
                 <param name="skipScans" value="1" /> 
@@ -101,15 +101,15 @@ Launch file for Selective ICP with rviz
 
         <param name="cadTopic" value="mesh_publisher/mesh_out" />
         <param name="icpConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/office_icp.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/office_icp.yaml" />
         <param name="selectiveIcpConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/selective_icp.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/selective_icp.yaml" />
         <param name="inputFiltersConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/office_input_filters.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/office_input_filters.yaml" />
         <param name="mapPostFiltersConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/map_post_filter.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/map_post_filter.yaml" />
         <param name="mapPreFiltersConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/map_pre_filter.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/map_pre_filter.yaml" />
         <param name="path"
                  value="$(find cpt_selective_icp_dyn)" />
     </node>
@@ -118,20 +118,20 @@ Launch file for Selective ICP with rviz
           type="cpt_selective_icp_node"
           pkg="cpt_selective_icp"
           output="screen" >
-    <rosparam command="load" file="$(find background_foreground_segmentation)/launch/rss_experiments/mapper_parameters.yaml" />
+    <rosparam command="load" file="$(find background_foreground_segmentation)/launch/paper_experiments/mapper_parameters.yaml" />
                 <param name="standaloneICP" value="true" />
                 <param name="scanTopic" value="/rslidar_points" />
         <param name="cadTopic" value="mesh_publisher/mesh_out" />
         <param name="icpConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/full_icp.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/full_icp.yaml" />
         <param name="selectiveIcpConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/selective_icp.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/selective_icp.yaml" />
         <param name="inputFiltersConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/input_filters.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/input_filters.yaml" />
         <param name="mapPostFiltersConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/map_post_filter.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/map_post_filter.yaml" />
         <param name="mapPreFiltersConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/map_pre_filter.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/map_pre_filter.yaml" />
         <param name="path"
                  value="$(find cpt_selective_icp)" />
     </node> -->
