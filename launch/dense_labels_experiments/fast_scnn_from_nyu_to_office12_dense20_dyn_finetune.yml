@@ -18,8 +18,8 @@ training_params:
 dataset_params:
   replay_datasets: null
   replay_datasets_scene: null
-  test_dataset: MeshdistPseudolabelsDense1
-  test_scene: office12_dense20_dyn_complete
+  test_dataset: null
+  test_scene: null
   train_dataset: MeshdistPseudolabelsDense1
   train_scene: office12_dense20_dyn_complete
   validation_percentage: 73 # 73 (if 5 for sparse) since datasets are so imbalanced

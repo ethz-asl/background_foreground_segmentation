@@ -18,11 +18,11 @@ training_params:
 dataset_params:
   replay_datasets: null
   replay_datasets_scene: null
-  test_dataset: MeshdistPseudolabelsDense1
-  test_scene: office3_dense20_dyn_complete
+  test_dataset: null
+  test_scene: null
   train_dataset: MeshdistPseudolabelsDense1
   train_scene: office3_dense20_dyn_complete
-  validation_percentage: 10
+  validation_percentage: 50
 logging_params:
   model_save_freq: 1
   exp_name: office3_dense20_dyn_complete_finetune
