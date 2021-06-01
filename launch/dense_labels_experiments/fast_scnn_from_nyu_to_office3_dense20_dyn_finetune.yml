@@ -9,7 +9,7 @@ network_params:
 training_params:
   batch_size: 10
   learning_rate: 0.00001
-  num_training_epochs: 40
+  num_training_epochs: 15
   perform_data_augmentation: false
   reduce_lr_on_plateau: true
   stopping_min_epoch: 50
