@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Launch file for Selective ICP with rviz
+-->
+
+<launch>
+	<arg name="rosbag_folder" default="$(find background_foreground_segmentation)/rosbags" />
+
+	<include file="$(find background_foreground_segmentation)/launch/distributed/pickelhaube2_online_learning_dyn_dense_cpu.launch">
+		<arg name="rosbag" value="$(arg rosbag_folder)/2021-05-20-11-52-48_office1.bag"/>
+		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/paper_experiments/191130_286_lee_j_vf_20160101_SE.off" />
+		<arg name="logprefix" value="pickelhaube_online_learning_dense_office1" />
+		<arg name="segmentation_model" value="1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad" />
+		<arg name="input_height" value="480" />
+		<arg name="input_width" value="640" />
+		<arg name="threshold" value="100" />
+	</include>
+
+    <node pkg="tf2_ros"
+	      type="static_transform_publisher"
+		  name="mesh_positioning"
+		  args="-1.2 -4 0 0 0 0 1 map marker" />
+    <node pkg="rosservice"
+	      type="rosservice"
+		  name="start_icp"
+		  args="call --wait /mapper/load_published_map"
+		  launch-prefix="bash -c 'sleep 2; $0 $@'" />
+	<node pkg="rosservice"
+	      type="rosservice"
+		  name="start_cloud_distance"
+		  args="call --wait /load_published_map"
+		  launch-prefix="bash -c 'sleep 2; $0 $@'" />
+
+</launch>
