@@ -22,7 +22,7 @@ dataset_params:
   test_scene: null
   train_dataset: MeshdistPseudolabelsDense1
   train_scene: office12_dense20_dyn_complete
-  validation_percentage: 73 # 73 (if 5 for sparse) since datasets are so imbalanced
+  validation_percentage: 10 # 73 (if 5 for sparse) since datasets are so imbalanced
 logging_params:
   model_save_freq: 1
   exp_name: office12_dense20_dyn_complete_finetune
