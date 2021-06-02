@@ -83,7 +83,7 @@ def callback(pred_func, img_pubs, checkpointer, pointcloud, *image_msgs):
   print("input time: {}".format(inputTime - startTime))
 
   # fill batch with training data
-  # 3 for inference, 9 replaying from the past, 1 (10%) replaying from NYU
+  # 1 for inference, 9 replaying from the past, 1 (10%) replaying from NYU
   to_be_used = random.sample(LABELED_BUFFER, min(9, len(LABELED_BUFFER)))
   input_batch.extend([elem['image'] for elem in to_be_used])
   label_batch = [elem['label'] for elem in to_be_used]
@@ -105,9 +105,11 @@ def callback(pred_func, img_pubs, checkpointer, pointcloud, *image_msgs):
   conversionTime = 0
   flattenTime = 0
   numpyTime = 0
+  print("final prediction: {}".format(final_prediction.shape))
   for i, pred in enumerate(tf.unstack(final_prediction, axis=0)):
     # resize each prediction to the original image size
     timeB = time.time()
+    print("pred: {}".format(pred.shape))
     prediction = tf.image.resize(pred[..., tf.newaxis], img_shapes[i],
                                  tf.image.ResizeMethod.BILINEAR)
     resizeTime += time.time() - timeB
