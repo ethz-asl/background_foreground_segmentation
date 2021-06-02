@@ -96,6 +96,8 @@ def callback(pred_func, img_pubs, checkpointer, pointcloud, *image_msgs):
   print("batch preparation time: {}".format(batchTime - inputTime))
   final_prediction = pred_func(tf.stack(input_batch, axis=0),
                                tf.stack(label_batch, axis=0))
+  if len(final_prediction.shape) < 3: # if replay buffer is empty, only one image in here (TODO: check)
+    final_prediction = tf.expand_dims(final_prediction, axis=0)
   trainTime = time.time()
   print("train time: {}".format(trainTime - batchTime))
   # save checkpoint
