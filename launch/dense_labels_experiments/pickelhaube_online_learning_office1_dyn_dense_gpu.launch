@@ -10,8 +10,8 @@ Launch file for Selective ICP with rviz
 
     <!-- ONLINE LEARNING NODE -->
     <node pkg="gpu_learning"
-          type="online_learning.py"
-          name="online_learning"
+          type="online_learning_dense.py"
+          name="online_learning_dense"
           output="screen">
         <param name="model_gdrive_id" value="1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad" />
         <param name="input_height" value="480" />
