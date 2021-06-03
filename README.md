@@ -10,7 +10,8 @@ The software was developed under ubuntu 18.04 and ROS melodic.
 It is organized as a hybrid ROS and python workspace. Localisation experiments and online learning are running in the ROS workspace. Segmentation training and evaluation are running in the python-only workspace. Please follow the respective instructions below to set up the different workspaces.
 
 ## Installing the ROS workspace
-First, setup a catkin workspace on ROS melodic.
+First, install ROS melodic according to [[this]](http://wiki.ros.org/melodic/Installation/Ubuntu).
+Then, setup a catkin workspace:
 
 ```bash
 mkdir ~/catkin_ws
@@ -41,6 +42,12 @@ Finally, build and source the packages:
 cd $CATKIN_WS/src
 catkin build background_foreground_segmentation
 source $CATKIN_WS/devel/setup.bash
+```
+
+You can optionally add the workspace to your .bashrc, i.e.
+
+```bash
+echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
 ```
 
 ## Installing the python workspace
