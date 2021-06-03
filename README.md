@@ -92,6 +92,11 @@ EXPERIMENT_STORAGE_FOLDER = '<insert here>' # a folder where training logs shoul
 
 # Reproducing Experiments
 
+## Experimental setup
+We perform experimentation on a mobile robot that we deploy in three different environments, i.e. a garage, an office, and a construction site. The robot is equipped with a 3D LiDAR sensor and three cameras in a 360° horizontal configuration. For reference, the robot's ground-truth position is tracked using a prism and an external tracking station.
+<img alt="image of sensors" src="pickelhaube.jpg" height="400pt">
+<em>Sensor setup on mobile robot</em>
+
 ## Rosbag Download
 Each localisation experiment requires a different bagfile with recorded sensor readings. Since each bagfile has 20-30 GB, we do not have a script that downloads all bagfiles in advance. Please download the bagfiles you need to a directory of choice and either
 
