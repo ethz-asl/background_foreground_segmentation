@@ -95,6 +95,7 @@ EXPERIMENT_STORAGE_FOLDER = '<insert here>' # a folder where training logs shoul
 ## Experimental setup
 We perform experimentation on a mobile robot that we deploy in three different environments, i.e. a garage, an office, and a construction site. The robot is equipped with a 3D LiDAR sensor and three cameras in a 360° horizontal configuration. For reference, the robot's ground-truth position is tracked using a prism and an external tracking station.
 <img alt="image of sensors" src="pickelhaube.jpg" height="400pt">
+
 <em>Sensor setup on mobile robot</em>
 
 ## Rosbag Download
