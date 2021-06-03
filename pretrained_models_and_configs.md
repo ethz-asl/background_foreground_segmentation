@@ -35,9 +35,9 @@ python train_binary_segmodel_base.py with ${SAVED_FOLDER}/configs/1059/config.ym
 |   1072   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 4:1, batch norm  | - |
 |   1073   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 10:1, batch norm  | - |
 |   1074   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 20:1, batch norm  | - |
-|   1075   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 200:1, batch norm  | - |
-|   1077   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay fraction 0.05, batch norm | - |
-|   1078   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay fraction 0.1, batch norm | - |
+|   1075   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 200:1, batch norm | - |
+|   1077   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay fraction 5%, batch norm | - |
+|   1078   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay fraction 10%, batch norm| - |
 |   1080   |  `train_binary_segmodel_base.py`    | NYU -> Garage, finetuning, batch norm | - |
 |   1112   |  `train_binary_segmodel_base.py`    | NYU -> Garage -> Construction, replay fraction 0.1, starting from exp 1064 | - |
 |   1183   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay ratio 1:1  | - |
@@ -47,7 +47,7 @@ python train_binary_segmodel_base.py with ${SAVED_FOLDER}/configs/1059/config.ym
 |   1188   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay fraction 5% | - |
 |   1189   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay fraction 10% | `pickelhaube_segmentation_rumlang*` |
 |   1190   |  `train_binary_segmodel_base.py`    | NYU -> Construction, finetuning | - |
-|   1217   |  `train_binary_segmodel_base.py`    | NYU -> Construction -> Garage, replay fraction 0.1, starting from exp 1189 | - |
+|   1217   |  `train_binary_segmodel_base.py`    | NYU -> Construction -> Garage, replay fraction 10%, starting from exp 1189 | - |
 |   1219   |  `train_binary_segmodel_base.py`    | NYU -> Construction -> Garage, finetuning, starting from exp 1190 | - |
 |   1223   |  `train_binary_segmodel_base.py`    | NYU -> Garage -> Construction, finetuning, starting from exp 1069 | - |
 |   1286   |  `train_binary_segmodel_distillation.py`    | NYU -> Construction, output distillation with λ = 0.5 | - |
@@ -60,15 +60,15 @@ python train_binary_segmodel_base.py with ${SAVED_FOLDER}/configs/1059/config.ym
 |   1293   |  `train_binary_segmodel_distillation.py`    | NYU -> Construction, feature distillation with λ = 1 | - |
 |   1312   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay fraction 10% | `pickelhaube_segmentation_office*` |
 |   1313   |  `train_binary_segmodel_base.py`    | NYU -> Office, finetuning          | - |
-|   1314   |  `train_binary_segmodel_base.py`    | NYU -> Office -> Construction, replay fraction 0.1, starting from exp 1312 | `crossdomain_nyutoofficetorumlang*` |
+|   1314   |  `train_binary_segmodel_base.py`    | NYU -> Office -> Construction, replay fraction 10%, starting from exp 1312 | `crossdomain_nyutoofficetorumlang*` |
 |   1317   |  `train_binary_segmodel_base.py`    | NYU -> Office -> Construction, finetuning, starting from exp 1313          | `crossdomain_nyutoofficetorumlang*` |
-|   1318   |  `train_binary_segmodel_base.py`    | NYU -> Office -> Garage, replay fraction 0.1, starting from exp 1312       | `crossdomain_nyutoofficetocla*`     |
+|   1318   |  `train_binary_segmodel_base.py`    | NYU -> Office -> Garage, replay fraction 10%, starting from exp 1312       | `crossdomain_nyutoofficetocla*`     |
 |   1320   |  `train_binary_segmodel_base.py`    | NYU -> Office -> Garage, finetuning, starting from exp 1313                | `crossdomain_nyutoofficetocla*`     |
-|   1322   |  `train_binary_segmodel_base.py`    | NYU -> Garage -> Office, replay fraction 0.1, starting from exp 1064       | `crossdomain_nyutoclatooffice*`     |
+|   1322   |  `train_binary_segmodel_base.py`    | NYU -> Garage -> Office, replay fraction 10%, starting from exp 1064       | `crossdomain_nyutoclatooffice*`     |
 |   1325   |  `train_binary_segmodel_base.py`    | NYU -> Garage -> Office, finetuning, starting from exp 1069                | `crossdomain_nyutoclatooffice*`     |
-|   1326   |  `train_binary_segmodel_base.py`    | NYU -> Construction -> Office, replay fraction 0.1, starting from exp 1189 | `crossdomain_nyutorumlangtooffice*` |
+|   1326   |  `train_binary_segmodel_base.py`    | NYU -> Construction -> Office, replay fraction 10%, starting from exp 1189 | `crossdomain_nyutorumlangtooffice*` |
 |   1329   |  `train_binary_segmodel_base.py`    | NYU -> Construction -> Office, finetuning, starting from exp 1190          | `crossdomain_nyutorumlangtooffice*` |
-|   1340   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay fraction 0.05 |
+|   1340   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay fraction 5% |
 |   1341   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay ratio 1:1     |
 |   1342   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay ratio 3:1     |
 |   1343   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay ratio 4:1     |
