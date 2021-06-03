@@ -6,12 +6,42 @@ This repository contains the code used on our self-improving robot, as well as l
 
 
 # Installation
-The software is organized as a hybrid ROS and python workspace. Localisation experiments and online learning are running in the ROS workspace. Segmentation training and evaluation are running in the python-only workspace. Please follow the respective instructions below to set up the different workspaces.
+The software was developed under ubuntu 18.04 and ROS melodic.
+It is organized as a hybrid ROS and python workspace. Localisation experiments and online learning are running in the ROS workspace. Segmentation training and evaluation are running in the python-only workspace. Please follow the respective instructions below to set up the different workspaces.
 
 ## Installing the ROS workspace
-First, setup a catkin workspace on ROS melodic. We usually follow [this guide](https://github.com/ethz-asl/maplab/wiki/Installation-Ubuntu#create-a-catkin-workspace) for our workspaces.
+First, setup a catkin workspace on ROS melodic.
 
-Use `wstool` or some other ROS dependency manager to install all packages from `dependencies.rosinstall`.
+```bash
+mkdir ~/catkin_ws
+export ROS_VERSION=melodic
+export CATKIN_WS=~/catkin_ws
+mkdir -p $CATKIN_WS/src
+cd $CATKIN_WS
+catkin init
+catkin config --merge-devel # Necessary for catkin_tools >= 0.4.
+catkin config --extend /opt/ros/$ROS_VERSION
+catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
+cd src
+git clone https://github.com/ethz-asl/background_foreground_segmentation.git
+```
+
+You can use `wstool` or some other ROS dependency manager to install all packages from `dependencies.rosinstall`, e.g.
+
+```bash
+cd $CATKIN_WS/src
+wstool init
+wstool merge background_foreground_segmentation/dependencies.rosinstall
+wstool update
+```
+
+Finally, build and source the packages:
+
+```bash
+cd $CATKIN_WS/src
+catkin build background_foreground_segmentation
+source $CATKIN_WS/devel/setup.bash
+```
 
 ## Installing the python workspace
 ### Create virtualenv
