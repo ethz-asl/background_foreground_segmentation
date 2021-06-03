@@ -1,0 +1,19 @@
+<launch>
+
+  <arg name="rosbag" default="" />
+  <arg name="out" default="out.bag" />
+  <arg name="rate" default="0.1" />
+
+  <!-- Proper Output Info -->
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}] (${node}) [${time}]: ${message}\n" />
+
+  <param name="/use_sim_time" value="true" />
+
+  <node pkg="rosbag" type="play"
+        name="rosbag"
+        args="--clock -d 1 -r $(arg rate) $(arg rosbag)"
+        />
+
+  <include file="$(find background_foreground_segmentation)/launch/alphasense_tools/pickelhaube_calibrations.launch" />
+
+</launch>

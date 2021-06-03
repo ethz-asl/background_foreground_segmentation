@@ -1,9 +1,19 @@
-from os import path
 import argparse
-import re
+import gdown
 import h5py
 import numpy as np
-import gdown
+from os import path
+import re
+import tensorflow as tf
+import tensorflow_datasets as tfds
+
+
+@tf.function
+def normalize_img(image, label):
+  """Normalizes images to [0, 1]: `uint8` -> `float32`."""
+  label = tf.expand_dims(label, axis=2)
+  image = tf.cast(image, tf.float32) / 255.
+  return image, label
 
 
 def str2bool(v):

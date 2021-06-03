@@ -11,6 +11,7 @@
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl_ros/transforms.h>
+#include <ros/ros.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
 
 namespace dataset_creator {
@@ -23,7 +24,7 @@ Creator::Creator(ros::NodeHandle &nodeHandle)
     ros::requestShutdown();
   }
 
-  if (!initOutputFolder()) {
+  if (output_any_files && !initOutputFolder()) {
     ROS_ERROR("Could not init output folder");
     ros::requestShutdown();
   }
@@ -89,6 +90,8 @@ bool Creator::readParameters() {
     return false;
   if (!nodeHandle_.getParam("labelsTopic", labels_topic))
     return false;
+  if (!nodeHandle_.getParam("outputFiles", output_any_files))
+    return false;
 
   std::string camera_name;
   if (nodeHandle_.getParam("use_camera_stick", camera_name) &&
@@ -141,11 +144,15 @@ bool Creator::initOutputFolder() {
 // Write Camera Information
 void Creator::createInfoFile(std::string timestamp,
                              image_geometry::PinholeCameraModel camera) {
-  if (!initialized_dataset) {
+  if (!output_any_files) {
     initialized_dataset = true;
-    std::ofstream myfile(output_folder + "camera_info.txt");
-    myfile << camera.cameraInfo();
-    myfile.close();
+  } else {
+    if (!initialized_dataset) {
+      initialized_dataset = true;
+      std::ofstream myfile(output_folder + "camera_info.txt");
+      myfile << camera.cameraInfo();
+      myfile.close();
+    }
   }
 }
 
@@ -167,19 +174,26 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
   std_msgs::Header h = image->header;
   std::string timestamp = std::to_string(h.stamp.toSec());
 
-  boost::filesystem::create_directory((output_folder + timestamp));
+  if (output_any_files) {
+    boost::filesystem::create_directory((output_folder + timestamp));
+  }
 
   // Wait for transform for map
   std::shared_ptr<tf::StampedTransform> map_transform(new tf::StampedTransform);
   tf_listener->waitForTransform("/map", camera_frame, h.stamp,
                                 ros::Duration(0.5));
-  tf_listener->lookupTransform("/map", camera_frame, h.stamp, *map_transform);
+  try {
+    tf_listener->lookupTransform("/map", camera_frame, h.stamp, *map_transform);
+  } catch (const std::exception &e) {
+    ROS_WARN("TF Failed %s", e.what());
+    return;
+  }
 
   // Get image from camera
   image_geometry::PinholeCameraModel model;
   model.fromCameraInfo(c_info);
 
-  if (store_images) {
+  if (output_any_files && store_images) {
     // Create information file containing pinhole camera parameters
     createInfoFile(timestamp, model);
   }
@@ -189,7 +203,7 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
   // Camera image
   const cv::Mat &camera_image = img->image;
 
-  if (store_images) {
+  if (output_any_files && store_images) {
     // Store original image
     cv::imwrite(output_folder + "/" + timestamp + "/original.png",
                 camera_image);
@@ -200,7 +214,7 @@ void Creator::callback(const sensor_msgs::PointCloud2ConstPtr &cloud,
     projectPointCloud(timestamp, camera_image, cloud, model);
   }
 
-  if (export_pose) {
+  if (output_any_files && export_pose) {
     // Export pose of camera in map frame
     tf::Matrix3x3 rotation = (*map_transform).getBasis();
     tf::Vector3 origin = (*map_transform).getOrigin();
@@ -241,7 +255,7 @@ void Creator::projectPointCloud(
                                *t);
   cv::Mat preview_img;
 
-  if (create_preview) {
+  if (output_any_files && create_preview) {
     // Image that contains the projected pointcloud
     preview_img = camera_image.clone();
   }
@@ -304,7 +318,7 @@ void Creator::projectPointCloud(
     }
   }
 
-  if (store_images) {
+  if (output_any_files && store_images) {
     // Save images
     cv::imwrite(output_folder + "/" + timestamp + "/preview." + file_type,
                 preview_img);

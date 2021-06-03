@@ -1,0 +1,117 @@
+<launch>
+
+  <!-- Proper Output Info -->
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}] (${node}) [${time}]: ${message}\n" />
+  <arg name="nodelet_manager" />
+  <node pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="imu_cam0_transformer"
+        args="0.038390 0.077595 0.004094 0.348953 0.613627 0.611567 0.357321 IMUFRAME cam0" />
+        <!-- x y z qx qy qz qw frame_id child_frame_id -->
+  <node pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="imu_cam1_transformer"
+        args="-0.156410 0.077964 0.005051 -0.356063 0.615575 0.612224 -0.345642 IMUFRAME cam1" />
+        <!-- x y z qx qy qz qw frame_id child_frame_id -->
+  <node pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="imu_cam2_transformer"
+        args="-0.054722 -0.090945 0.005272 0.706215 -0.003002 0.002305 0.707987 IMUFRAME cam2" />
+        <!-- x y z qx qy qz qw frame_id child_frame_id -->
+  <node pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="imu_lidar_broadcaster"
+        args="0.035487 0.027148 0.102409 0.999722 0.021881 0.008602 -0.001760 rslidar IMUFRAME" />
+  <!--node pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="imu_lidar_broadcaster"
+        args="-0.0162661 0.105409 0.0479158 0.712755 0.0192672 -0.0103822 0.701072 IMUFRAME rslidar" /-->
+        <!-- x y z qx qy qz qw frame_id child_frame_id -->
+
+
+  <node pkg="nodelet"
+        type="nodelet"
+        args="load image_undistort/ImageUndistortNodelet /$(arg nodelet_manager)"
+        name="cam0_undistorter">
+    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam0_intr_2.yaml"/>
+    <param name="input_camera_info_from_ros_params" value="true"/>
+    <param name="input_camera_namespace" value="cam0"/>
+    <param name="output_frame" value="cam0_rectified_frame"/>
+    <remap from="input/image" to="/versavis/cam0/image_raw"/>
+    <remap from="output/image" to="/pickelhaube/cam0/image"/>
+    <remap from="output/camera_info" to="/pickelhaube/cam0/camera_info"/>
+  </node>
+  <node pkg="nodelet"
+        type="nodelet"
+        args="load image_undistort/ImageUndistortNodelet /$(arg nodelet_manager)"
+        name="cam1_undistorter">
+    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam1_intr_2.yaml"/>
+    <param name="input_camera_info_from_ros_params" value="true"/>
+    <param name="input_camera_namespace" value="cam0"/>
+    <param name="output_frame" value="cam1_rectified_frame"/>
+    <remap from="input/image" to="/versavis/cam1/image_raw"/>
+    <remap from="output/image" to="/pickelhaube/cam1/image"/>
+    <remap from="output/camera_info" to="/pickelhaube/cam1/camera_info"/>
+  </node>
+  <node pkg="nodelet"
+        type="nodelet"
+        args="load image_undistort/ImageUndistortNodelet /$(arg nodelet_manager)"
+        name="cam2_undistorter">
+    <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam2_intr_2.yaml"/>
+    <param name="input_camera_info_from_ros_params" value="true"/>
+    <param name="input_camera_namespace" value="cam0"/>
+    <param name="output_frame" value="cam2_rectified_frame"/>
+    <remap from="input/image" to="/versavis/cam2/image_raw"/>
+    <remap from="output/image" to="/pickelhaube/cam2/image"/>
+    <remap from="output/camera_info" to="/pickelhaube/cam2/camera_info"/>
+  </node>
+
+  <!-- RESIZING -->
+  <node pkg="nodelet"
+        type="nodelet"
+        args="load image_proc/crop_decimate /$(arg nodelet_manager)"
+        name="cam0_resize" >
+    <rosparam>
+      decimation_x: 3
+      decimation_y: 3
+      height: 1400
+      interpolation: 1
+    </rosparam>
+    <remap from="camera/image_raw" to="/pickelhaube/cam0/image"/>
+    <remap from="camera/camera_info" to="/pickelhaube/cam0/camera_info"/>
+    <remap from="camera_out/image_raw" to="/pickelhaube_resized/cam0/image"/>
+    <remap from="camera_out/camera_info" to="/pickelhaube_resized/cam0/camera_info"/>
+  </node>
+  <node pkg="nodelet"
+        type="nodelet"
+        args="load image_proc/crop_decimate /$(arg nodelet_manager)"
+        name="cam1_resize" >
+    <rosparam>
+      decimation_x: 3
+      decimation_y: 3
+      y_offset: 0
+      height: 1200
+      interpolation: 1
+    </rosparam>
+    <remap from="camera/image_raw" to="/pickelhaube/cam1/image"/>
+    <remap from="camera/camera_info" to="/pickelhaube/cam1/camera_info"/>
+    <remap from="camera_out/image_raw" to="/pickelhaube_resized/cam1/image"/>
+    <remap from="camera_out/camera_info" to="/pickelhaube_resized/cam1/camera_info"/>
+  </node>
+  <node pkg="nodelet"
+        type="nodelet"
+        args="load image_proc/crop_decimate /$(arg nodelet_manager)"
+        name="cam2_resize" >
+    <rosparam>
+      decimation_x: 3
+      decimation_y: 3
+      y_offset: 0
+      height: 1200
+      interpolation: 1
+    </rosparam>
+    <remap from="camera/image_raw" to="/pickelhaube/cam2/image"/>
+    <remap from="camera/camera_info" to="/pickelhaube/cam2/camera_info"/>
+    <remap from="camera_out/image_raw" to="/pickelhaube_resized/cam2/image"/>
+    <remap from="camera_out/camera_info" to="/pickelhaube_resized/cam2/camera_info"/>
+  </node>
+</launch>

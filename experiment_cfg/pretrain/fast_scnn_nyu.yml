@@ -1,0 +1,33 @@
+# Start training from scratch on NYU with Fast-SCNN architecture.
+network_params:
+  architecture: fast_scnn
+  freeze_encoder: false
+  model_params:
+    image_h: 480
+    image_w: 640
+  normalization_type: batch
+training_params:
+  batch_size: 10
+  learning_rate: 0.0001
+  num_training_epochs: 100
+  perform_data_augmentation: false
+  reduce_lr_on_plateau: true
+  stopping_min_epoch: 50
+  stopping_patience: 20
+  use_balanced_loss: false
+dataset_params:
+  replay_datasets: null
+  replay_datasets_scene: null
+  test_dataset: BfsegCLAMeshdistLabels
+  test_scene: null
+  train_dataset: NyuDepthV2Labeled
+  train_scene: null
+  validation_percentage: 10
+logging_params:
+  model_save_freq: 1
+  exp_name: exp_stage1
+cl_params:
+  cl_framework: finetune
+  fraction_replay_ds_to_use: null
+  pretrained_dir: null
+  ratio_main_ds_replay_ds: null

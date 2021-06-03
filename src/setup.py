@@ -8,5 +8,5 @@ with open(
 
 setup(name='bfseg',
       version='0.0',
-      install_requries=requirements,
+      install_requires=requirements,
       packages=['bfseg', 'bfseg.data', 'bfseg.data.nyu', 'bfseg.utils'])

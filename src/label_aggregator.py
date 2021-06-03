@@ -2,31 +2,16 @@
 """
   ROS node that takes the sparse label of the projected pointcloud and aggregates them
 """
-NAME = 'label_aggregator'
-
 import sys
-import message_filters
 import rospy
-from std_msgs.msg import *
-from std_msgs.msg import String
-from sensor_msgs.msg import CameraInfo, Image
-import yaml
-import time
-from bfseg.utils.image_enhancement import aggregate_sparse_labels
-import numpy as np
 import os
+from sensor_msgs.msg import CameraInfo, Image
+import message_filters
+import numpy as np
+import time
+import cv2
 
-# Load config.
-with open(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                 "../config/label_aggregator_cla.yaml"), 'r') as f:
-  config = yaml.safe_load(f)
-
-publishers = [
-    rospy.Publisher(topic, Image, queue_size=10)
-    for topic in config['outTopics']
-]
-labelOptions = config['labelOptions']
+from bfseg.utils.image_enhancement import aggregate_sparse_labels
 
 
 def callback(original, labels, distance):
@@ -42,18 +27,49 @@ def callback(original, labels, distance):
                                                       distance.width)
   t1 = time.time()
 
-  aggregate_labels = aggregate_sparse_labels(
-      np_labels,
-      np_distance,
-      np_original,
-      outSize=(np_labels.shape[1] // labelOptions['downsamplingFactor'],
-               np_labels.shape[0] // labelOptions['downsamplingFactor']),
-      useSuperpixel=labelOptions['useSuperixel'],
-      foregroundTrustRegion=labelOptions['foregroundTrustRegion'],
-      fg_bg_threshold=labelOptions['fgBgThreshold'],
-      superpixelCount=labelOptions['numberOfSuperPixel'])
+  options = rospy.get_param('~label_options')
+  if options['agreement'] or options['useSuperpixel']:
+    superpixels = aggregate_sparse_labels(
+        np_labels,
+        np_distance,
+        np_original,
+        outSize=(np_labels.shape[1] // options['downsamplingFactor'],
+                 np_labels.shape[0] // options['downsamplingFactor']),
+        stdDevThreshold=options.get('stdDevThreshold', 0.5),
+        useSuperpixel=True,
+        foregroundTrustRegion=options['foregroundTrustRegion'],
+        fg_bg_threshold=options['fgBgThreshold'],
+        superpixelCount=options['numberOfSuperPixel'])
+  if options['agreement'] or not options['useSuperpixel']:
+    region_growing = aggregate_sparse_labels(
+        np_labels,
+        np_distance,
+        np_original,
+        outSize=(np_labels.shape[1] // options['downsamplingFactor'],
+                 np_labels.shape[0] // options['downsamplingFactor']),
+        stdDevThreshold=options.get('stdDevThreshold', 0.5),
+        useSuperpixel=False,
+        foregroundTrustRegion=options['foregroundTrustRegion'],
+        fg_bg_threshold=options['fgBgThreshold'],
+        superpixelCount=options['numberOfSuperPixel'])
 
-  print(f"labeling took {(time.time() - t1):.4f}s")
+  if options['agreement']:
+    aggregate_labels = np.where(superpixels == region_growing, superpixels,
+                                np.ones_like(superpixels))
+  elif options['useSuperpixel']:
+    aggregate_labels = superpixels
+  else:
+    aggregate_labels = region_growing
+  # swap classes 1 and 2
+  labelmap = np.array([0, 2, 1])
+  aggregate_labels = labelmap[aggregate_labels]
+
+  print("labeling took {:.4f}s".format(time.time() - t1))
+
+  # downsampling of original image
+  resized_original = cv2.resize(
+      np_original, (np_original.shape[1] // options['downsamplingFactor'],
+                    np_original.shape[0] // options['downsamplingFactor']))
 
   img_msg = Image()
   img_msg.header.seq = original.header.seq
@@ -65,27 +81,58 @@ def callback(original, labels, distance):
   img_msg.data = aggregate_labels.ravel().tolist()
   img_msg.encoding = "mono8"
 
-  return img_msg
+  return img_msg, aggregate_labels, resized_original, original.encoding
 
 
-def getCallbackForTopic(topicNumber):
+def getCallbackForTopic(topicNumber, publisher, counters):
   """ Callback wrapper.
     Returns a callback function that segements the image and publishs it
 
     Args:
       topicNumber: Number that speciefies to which topic the image should be published
-
+      publisher: the publisher used
   """
 
   def m_callback(*args):
-    msg = callback(*args)
-    publishers[topicNumber].publish(msg)
+    # has to access nonlocal object, integers don't work in py2
+    counters[topicNumber] += 1
+    if not counters[topicNumber] % rospy.get_param('~label_frequency', 1) == 0:
+      return
+    msg, labels, img, img_enc = callback(*args)
+    if rospy.get_param('~publish_labels', False):
+      publisher.publish(msg)
+    if rospy.get_param('~store_labels', False):
+      cv2.imwrite(
+          os.path.join(
+              rospy.get_param('~label_path'),
+              '{}_cam{}_labels.png'.format(msg.header.stamp, topicNumber)),
+          labels.astype('uint8'))
+      # convert to BGR for opencv
+      if 'rgb' in img_enc:
+        img = img[..., ::-1]
+      cv2.imwrite(
+          os.path.join(rospy.get_param('~label_path'),
+                       '{}_cam{}_rgb.png'.format(msg.header.stamp,
+                                                 topicNumber)), img)
 
   return m_callback
 
 
 def main():
-  for idx, topics in enumerate(config['imageTopics']):
+  rospy.init_node('label_aggregator')
+  # prepare directory
+  if rospy.get_param('~store_labels', False) and not os.path.exists(
+      rospy.get_param('~label_path')):
+    os.mkdir(rospy.get_param('~label_path'))
+
+  # prepare publishers
+  publishers = [
+      rospy.Publisher(topic, Image, queue_size=10)
+      for topic in rospy.get_param('~out_topics')
+  ]
+  counters = [0 for topic in rospy.get_param('~out_topics')]
+
+  for idx, topics in enumerate(rospy.get_param('~image_topics')):
     originalTopic, labelsTopic, distanceTopic = (topics[0], topics[1],
                                                  topics[2])
     originalSub = message_filters.Subscriber(originalTopic, Image)
@@ -94,10 +141,9 @@ def main():
 
     ts = message_filters.ApproximateTimeSynchronizer(
         [originalSub, labelsSub, distanceSub], 10, 0.1, allow_headerless=True)
-    ts.registerCallback(getCallbackForTopic(idx))
+    ts.registerCallback(getCallbackForTopic(idx, publishers[idx], counters))
     print("Subscribed to", originalTopic)
 
-  rospy.init_node(NAME, anonymous=True)
   rospy.spin()
 
 
