@@ -74,34 +74,36 @@ python train_binary_segmodel_base.py with ${SAVED_FOLDER}/configs/1059/config.ym
 |   1343   |  `train_binary_segmodel_base.py`    |
 |   1345   |  `train_binary_segmodel_base.py`    |
 |   1346   |  `train_binary_segmodel_base.py`    |
-|   1351   |  `train_binary_segmodel_distillation.py`    |
-|   1353   |  `train_binary_segmodel_distillation.py`    |
-|   1354   |  `train_binary_segmodel_distillation.py`    |
-|   1359   |  `train_binary_segmodel_distillation.py`    |
-|   1360   |  `train_binary_segmodel_distillation.py`    |
-|   1361   |  `train_binary_segmodel_distillation.py`    |
-|   1363   |  `train_binary_segmodel_EWC.py`    |
-|   1364   |  `train_binary_segmodel_EWC.py`    |
-|   1365   |  `train_binary_segmodel_EWC.py`    |
-|   1366   |  `train_binary_segmodel_EWC.py`    |
-|   1371   |  `train_binary_segmodel_EWC.py`    |
-|   1372   |  `train_binary_segmodel_EWC.py`    |
-|   1373   |  `train_binary_segmodel_EWC.py`    |
-|   1374   |  `train_binary_segmodel_EWC.py`    |
-|   1379   |  `train_binary_segmodel_base.py`    |
-|   1380   |  `train_binary_segmodel_distillation.py`    |
-|   1381   |  `train_binary_segmodel_EWC.py`    |
-|   1382   |  `train_binary_segmodel_EWC.py`    |
-|   1383   |  `train_binary_segmodel_EWC.py`    |
-|   1384   |  `train_binary_segmodel_EWC.py`    |
-|   1393   |  `train_binary_segmodel_distillation.py`    |
-|   1394   |  `train_binary_segmodel_distillation.py`    |
-|   1395   |  `train_binary_segmodel_distillation.py`    |
-|   1401   |  `train_binary_segmodel_distillation.py`    |
-|   1402   |  `train_binary_segmodel_distillation.py`    |
-|   1403   |  `train_binary_segmodel_distillation.py`    |
-|   1404   |  `train_binary_segmodel_distillation.py`    |
-|   1410   |  `train_binary_segmodel_base.py`    |
-|   1411   |  `train_binary_segmodel_base.py`    |
+|   1351   |  `train_binary_segmodel_distillation.py`    | NYU -> Office, output distillation with λ = 0.5  |
+|   1353   |  `train_binary_segmodel_distillation.py`    | NYU -> Office, output distillation with λ = 1    |
+|   1354   |  `train_binary_segmodel_distillation.py`    | NYU -> Office, output distillation with λ = 10   |
+|   1359   |  `train_binary_segmodel_distillation.py`    | NYU -> Office, feature distillation with λ = 0.5 |
+|   1360   |  `train_binary_segmodel_distillation.py`    | NYU -> Office, feature distillation with λ = 1   |
+|   1361   |  `train_binary_segmodel_distillation.py`    | NYU -> Office, feature distillation with λ = 10  |
+|   1362   |  `train_binary_segmodel_distillation.py`    | NYU -> Office, feature distillation with λ = 50  |
+|   1363   |  `train_binary_segmodel_EWC.py`    | NYU -> Office, EWC with λ = 0.5       |
+|   1364   |  `train_binary_segmodel_EWC.py`    | NYU -> Office, EWC with λ = 1         |
+|   1365   |  `train_binary_segmodel_EWC.py`    | NYU -> Office, EWC with λ = 50        |
+|   1366   |  `train_binary_segmodel_EWC.py`    | NYU -> Office, EWC with λ = 10        |
+|   1371   |  `train_binary_segmodel_EWC.py`    | NYU -> Construction, EWC with λ = 0.5 |
+|   1372   |  `train_binary_segmodel_EWC.py`    | NYU -> Construction, EWC with λ = 1   |
+|   1373   |  `train_binary_segmodel_EWC.py`    | NYU -> Construction, EWC with λ = 10  |
+|   1374   |  `train_binary_segmodel_EWC.py`    | NYU -> Construction, EWC with λ = 50  |
+|   1379   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay ratio 10:1  |
+|   1380   |  `train_binary_segmodel_distillation.py`    | NYU -> Office, output distillation with λ = 50   |
+|   1381   |  `train_binary_segmodel_EWC.py`    | NYU -> Garage, EWC with λ = 0.5 |
+|   1382   |  `train_binary_segmodel_EWC.py`    | NYU -> Garage, EWC with λ = 1   |
+|   1383   |  `train_binary_segmodel_EWC.py`    | NYU -> Garage, EWC with λ = 50  |
+|   1384   |  `train_binary_segmodel_EWC.py`    | NYU -> Garage, EWC with λ = 10  |
+|   1393   |  `train_binary_segmodel_distillation.py`    | NYU -> Garage, output distillation with λ = 10   |
+|   1394   |  `train_binary_segmodel_distillation.py`    | NYU -> Garage, output distillation with λ = 1    |
+|   1395   |  `train_binary_segmodel_distillation.py`    | NYU -> Garage, output distillation with λ = 50   |
+|   1396   |  `train_binary_segmodel_distillation.py`    | NYU -> Garage, output distillation with λ = 0.5  |
+|   1401   |  `train_binary_segmodel_distillation.py`    | NYU -> Garage, feature distillation with λ = 0.5 |
+|   1402   |  `train_binary_segmodel_distillation.py`    | NYU -> Garage, feature distillation with λ = 10  |
+|   1403   |  `train_binary_segmodel_distillation.py`    | NYU -> Garage, feature distillation with λ = 1   |
+|   1404   |  `train_binary_segmodel_distillation.py`    | NYU -> Garage, featture distillation with λ = 50  |
+|   1410   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay ratio 4:1   |
+|   1411   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay ratio 200:1 | 
 
 
