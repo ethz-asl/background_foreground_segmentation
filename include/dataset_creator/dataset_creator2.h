@@ -1,7 +1,12 @@
 #pragma once
 
+#include "cpt_selective_icp/utils.h"
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
+#include <cgal_conversions/mesh_conversions.h>
+#include <cgal_definitions/cgal_typedefs.h>
+#include <cgal_definitions/mesh_model.h>
+#include <cgal_msgs/TriangleMeshStamped.h>
 #include <cv_bridge/cv_bridge.h>
 #include <geometry_msgs/PointStamped.h>
 #include <image_geometry/pinhole_camera_model.h>
@@ -21,11 +26,6 @@
 #include <tf/transform_listener.h>
 #include <tf_conversions/tf_eigen.h>
 #include <unordered_set>
-#include <cgal_definitions/cgal_typedefs.h>
-#include <cgal_conversions/mesh_conversions.h>
-#include <cgal_definitions/mesh_model.h>
-#include <cgal_msgs/TriangleMeshStamped.h>
-#include "cpt_selective_icp/utils.h"
 
 namespace dataset_creator {
 
