@@ -72,8 +72,7 @@ def callback(pred_func, img_pubs, checkpointer, pointcloud, *image_msgs):
   input_batch.extend([elem['image'] for elem in to_be_used])
   label_batch = [elem['label'] for elem in to_be_used]
   nyu_sample = next(nyu_data)
-  input_batch.append(
-      tf.image.convert_image_dtype(nyu_sample[0], tf.float32))
+  input_batch.append(tf.image.convert_image_dtype(nyu_sample[0], tf.float32))
   label_batch.append(nyu_sample[1])
   # predict batch of images
   final_prediction = pred_func(tf.stack(input_batch, axis=0),
@@ -207,12 +206,11 @@ def main_loop():
   checkpoints_folder = checkpoints_folder.format(folder_counter)
   checkpoint = tf.train.Checkpoint(model=model)
   checkpoint_step = tf.Variable(0)
-  manager = tf.train.CheckpointManager(
-    checkpoint,
-    directory=checkpoints_folder,
-    max_to_keep=None,
-    step_counter=checkpoint_step,
-    checkpoint_interval=10)
+  manager = tf.train.CheckpointManager(checkpoint,
+                                       directory=checkpoints_folder,
+                                       max_to_keep=None,
+                                       step_counter=checkpoint_step,
+                                       checkpoint_interval=10)
   # immidiately create a first checkpoint
   manager.save()
 
@@ -236,7 +234,8 @@ def main_loop():
   # only get those images that will be synchronized to the lidar
   synchronizer = message_filters.ApproximateTimeSynchronizer(
       [lidar_subscriber] + image_subscribers, 10, 0.1)
-  synchronizer.registerCallback(lambda *x: callback(pred_func, img_pubs, manager,  *x))
+  synchronizer.registerCallback(
+      lambda *x: callback(pred_func, img_pubs, manager, *x))
 
   # other callbacks to collect pseudolabels
   counters = [0 for topics in rospy.get_param('~image_topics')]

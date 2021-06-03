@@ -5,13 +5,13 @@
 #include <iostream>
 #include <message_filters/subscriber.h>
 #include <message_filters/sync_policies/approximate_time.h>
-#include <ros/ros.h>
 #include <message_filters/synchronizer.h>
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/conversions.h>
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl_ros/transforms.h>
+#include <ros/ros.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
 
 namespace dataset_creator {
@@ -32,10 +32,8 @@ Creator::Creator(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
   image_sub.subscribe(nodeHandle_, camera_image_topic, 10);
   cam_info_sub.subscribe(nodeHandle_, camera_info_topic, 10);
   cad_sub_ = nh.subscribe(
-    nodeHandle_.param<std::string>("mesh_topic", "/mesh_publisher/mesh_out"),
-    10,
-    &Creator::gotCAD,
-    this);
+      nodeHandle_.param<std::string>("mesh_topic", "/mesh_publisher/mesh_out"),
+      10, &Creator::gotCAD, this);
   pub = it_.advertise(output_topic, 1);
   labels_publisher = it_.advertise(labels_topic, 1);
   distance_publisher = it_.advertise(distance_topic, 1);
@@ -94,7 +92,7 @@ bool Creator::readParameters() {
 
 void Creator::gotCAD(const cgal_msgs::TriangleMeshStamped &cad_mesh_in) {
   std::cout << "Dataset created received CAD mesh" << std::endl;
-  map_frame_ = cad_mesh_in.header.frame_id;  // should be "marker2"
+  map_frame_ = cad_mesh_in.header.frame_id; // should be "marker2"
   cad_percept::cgal::msgToMeshModel(cad_mesh_in.mesh, &reference_mesh_);
 }
 
@@ -194,8 +192,7 @@ void Creator::projectPointCloud(
     // project point into map frame and get distance
     tf::Vector3 point_in_map_frame = *t_lidar_map * cloud_point;
     float squared_distance = (float)sqrt(reference_mesh_->squaredDistance(
-        cad_percept::cgal::Point(point_in_map_frame.x(),
-                                 point_in_map_frame.y(),
+        cad_percept::cgal::Point(point_in_map_frame.x(), point_in_map_frame.y(),
                                  point_in_map_frame.z())));
 
     tf::Vector3 camera_local_tf = *t * cloud_point;

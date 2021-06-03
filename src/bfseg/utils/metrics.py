@@ -6,7 +6,12 @@ class IgnorantMetricsWrapper(tf.keras.metrics.Metric):
   Wraps any keras metric to ignore a specific class or balance the weights
   """
 
-  def __init__(self, metric, balanced=False, class_to_ignore=1, num_classes=3, **kwargs):
+  def __init__(self,
+               metric,
+               balanced=False,
+               class_to_ignore=1,
+               num_classes=3,
+               **kwargs):
     super().__init__()
     self.metric = metric
     self.class_to_ignore = class_to_ignore

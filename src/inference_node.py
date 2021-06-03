@@ -51,7 +51,8 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
     # resize to common input format
     img = tf.image.convert_image_dtype(tf.convert_to_tensor(img), tf.float32)
     img = tf.image.resize(
-        img, (rospy.get_param('~input_height'), rospy.get_param('~input_width')))
+        img,
+        (rospy.get_param('~input_height'), rospy.get_param('~input_width')))
     imgs.append(img)
 
   # predict batch of images

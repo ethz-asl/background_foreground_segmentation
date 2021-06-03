@@ -214,7 +214,7 @@ def evaluate_model(model,
       x, y = sample
       if (use_fov_mask):
         # Read the FoV mask from file.
-        current_dir = os.path.dirname(__file__) 
+        current_dir = os.path.dirname(__file__)
         mask_filename = os.path.realpath(f"{current_dir}/../../../fov_mask.png")
         mask = cv2.imread(mask_filename)
         assert (mask.shape == (480, 640, 3))
@@ -286,7 +286,7 @@ def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
     use_fov_mask (bool): Whether or not to use the FoV mask.
     save_predictions (bool): Whether or not to save the images with the
       segmentation predictions.
-  
+
   Returns:
     accuracies (dict): Accuracies, indexed by the concatenation of the dataset
       name and scene and by the epoch number.

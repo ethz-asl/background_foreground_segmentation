@@ -46,7 +46,7 @@ def callback(original, labels, distance):
         np_distance,
         np_original,
         outSize=(np_labels.shape[1] // options['downsamplingFactor'],
-                np_labels.shape[0] // options['downsamplingFactor']),
+                 np_labels.shape[0] // options['downsamplingFactor']),
         stdDevThreshold=options.get('stdDevThreshold', 0.5),
         useSuperpixel=False,
         foregroundTrustRegion=options['foregroundTrustRegion'],
