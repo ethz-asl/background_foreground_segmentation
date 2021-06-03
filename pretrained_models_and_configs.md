@@ -58,22 +58,22 @@ python train_binary_segmodel_base.py with ${SAVED_FOLDER}/configs/1059/config.ym
 |   1291   |  `train_binary_segmodel_distillation.py`    |
 |   1292   |  `train_binary_segmodel_distillation.py`    |
 |   1293   |  `train_binary_segmodel_distillation.py`    |
-|   1312   |  `train_binary_segmodel_base.py`    |
-|   1313   |  `train_binary_segmodel_base.py`    |
-|   1314   |  `train_binary_segmodel_base.py`    |
-|   1317   |  `train_binary_segmodel_base.py`    |
-|   1318   |  `train_binary_segmodel_base.py`    |
-|   1320   |  `train_binary_segmodel_base.py`    |
-|   1322   |  `train_binary_segmodel_base.py`    |
-|   1325   |  `train_binary_segmodel_base.py`    |
-|   1326   |  `train_binary_segmodel_base.py`    |
-|   1329   |  `train_binary_segmodel_base.py`    |
-|   1340   |  `train_binary_segmodel_base.py`    |
-|   1341   |  `train_binary_segmodel_base.py`    |
-|   1342   |  `train_binary_segmodel_base.py`    |
-|   1343   |  `train_binary_segmodel_base.py`    |
-|   1345   |  `train_binary_segmodel_base.py`    |
-|   1346   |  `train_binary_segmodel_base.py`    |
+|   1312   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay fraction 0.1 |
+|   1313   |  `train_binary_segmodel_base.py`    | NYU -> Office, finetuning          |
+|   1314   |  `train_binary_segmodel_base.py`    | NYU -> Office -> Construction, replay fraction 0.1, starting from exp 1312 |
+|   1317   |  `train_binary_segmodel_base.py`    | NYU -> Office -> Construction, finetuning, starting from exp 1313          |
+|   1318   |  `train_binary_segmodel_base.py`    | NYU -> Office -> Garage, replay fraction 0.1, starting from exp 1312       |
+|   1320   |  `train_binary_segmodel_base.py`    | NYU -> Office -> Garage, finetuning, starting from exp 1313                | 
+|   1322   |  `train_binary_segmodel_base.py`    | NYU -> Garage -> Office, replay fraction 0.1, starting from exp 1064       |
+|   1325   |  `train_binary_segmodel_base.py`    | NYU -> Garage -> Office, finetuning, starting from exp 1069                | 
+|   1326   |  `train_binary_segmodel_base.py`    | NYU -> Construction -> Office, replay fraction 0.1, starting from exp 1189 |
+|   1329   |  `train_binary_segmodel_base.py`    | NYU -> Construction -> Office, finetuning, starting from exp 1190          |
+|   1340   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay fraction 0.05 |
+|   1341   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay ratio 1:1     |
+|   1342   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay ratio 3:1     |
+|   1343   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay ratio 4:1     |
+|   1345   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay ratio 20:1    |
+|   1346   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay ratio 200:1   |
 |   1351   |  `train_binary_segmodel_distillation.py`    | NYU -> Office, output distillation with λ = 0.5  |
 |   1353   |  `train_binary_segmodel_distillation.py`    | NYU -> Office, output distillation with λ = 1    |
 |   1354   |  `train_binary_segmodel_distillation.py`    | NYU -> Office, output distillation with λ = 10   |
