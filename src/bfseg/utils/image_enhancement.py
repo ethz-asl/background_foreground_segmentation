@@ -97,8 +97,8 @@ def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
       np.multiply(
           original,
           np.stack([
-              assign == class_background, assign == class_background,
-              assign == class_background
+              assign == class_background, assign == class_background, assign
+              == class_background
           ],
                    axis=-1)))
   plt.title("background")
@@ -107,8 +107,8 @@ def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
       np.multiply(
           original,
           np.stack([
-              assign == class_foreground, assign == class_foreground,
-              assign == class_foreground
+              assign == class_foreground, assign == class_foreground, assign
+              == class_foreground
           ],
                    axis=-1)))
   plt.title("foreground")
@@ -117,8 +117,8 @@ def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
       np.multiply(
           original,
           np.stack([
-              assign == class_unknown, assign == class_unknown,
-              assign == class_unknown
+              assign == class_unknown, assign == class_unknown, assign
+              == class_unknown
           ],
                    axis=-1)))
   plt.title("unknown")
