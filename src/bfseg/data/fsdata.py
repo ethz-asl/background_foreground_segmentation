@@ -32,8 +32,7 @@ def load_fsdata(base_path, dataset_info=None, modalities=None):
   if dataset_info is None:
     # load the info file and check whether it is consistent with info from other
     # sets
-    with open(path.join(base_path, 'dataset_info.json'),
-              'r') as f:
+    with open(path.join(base_path, 'dataset_info.json'), 'r') as f:
       dataset_info = json.load(f)
 
   if 'dataset_info.json' in all_files:
@@ -42,8 +41,7 @@ def load_fsdata(base_path, dataset_info=None, modalities=None):
   grouped_by_idx = {}
   for filename in sorted(all_files):
     prefix = '_'.join(filename.split('_')[:-1])
-    grouped_by_idx.setdefault(prefix,
-                              []).append(path.join(base_path, filename))
+    grouped_by_idx.setdefault(prefix, []).append(path.join(base_path, filename))
 
   data_shape_description = dataset_info['output_shapes']
   data_shape_description['filename'] = []

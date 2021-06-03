@@ -13,9 +13,7 @@ A perfectly random subsampled version of 144 NYU images and labels.
 class NyuSubsampled(tfds.core.GeneratorBasedBuilder):
 
   VERSION = tfds.core.Version('0.1.0')
-  RELEASE_NOTES = {
-      '0.1.0': 'Initial testing.'
-  }
+  RELEASE_NOTES = {'0.1.0': 'Initial testing.'}
 
   def _info(self) -> tfds.core.DatasetInfo:
     """Returns the dataset metadata."""

@@ -205,8 +205,11 @@ def aggregate_sparse_labels(np_labels,
         sigma=.2,
     )
 
-    mask = reduce_superpixel(seeds_bg, seeds_fg, superpixels, np_distance,
-        stdDevThreshold=stdDevThreshold)
+    mask = reduce_superpixel(seeds_bg,
+                             seeds_fg,
+                             superpixels,
+                             np_distance,
+                             stdDevThreshold=stdDevThreshold)
 
   else:
     markers = np.zeros(np_labels_foreground.shape, dtype=np.uint)
@@ -223,9 +226,7 @@ def aggregate_sparse_labels(np_labels,
     markers[height - bot_padding, step * i] = class_unknown + 1
 
     # Run watershed on canny edge filtered image.
-    mask = watershed(
-        canny(rgb2gray(np_orig), sigma=0.1),
-        markers) - 1
+    mask = watershed(canny(rgb2gray(np_orig), sigma=0.1), markers) - 1
 
   return mask
 

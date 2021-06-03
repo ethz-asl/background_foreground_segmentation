@@ -249,8 +249,9 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     else:
       ds = ds.map(preprocess_bagfile,
                   num_parallel_calls=tf.data.experimental.AUTOTUNE)
-  elif (dataset_name
-        in ['BfsegValidationLabeled', 'OfficeRumlangValidationLabeled']):
+  elif (dataset_name in [
+      'BfsegValidationLabeled', 'OfficeRumlangValidationLabeled'
+  ]):
     ds = ds.map(preprocess_hive,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   ds = ds.cache()
