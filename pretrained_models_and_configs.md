@@ -19,12 +19,12 @@ To re-run a training job, use the `config.yml` from the experiment folder downlo
 ```bash
 python train_binary_segmodel_base.py with ${SAVED_FOLDER}/configs/1059/config.yml
 ```
-| Experiment ID  | Training script to use |
-| ---- | ---- |
-|   1059   |  `train_binary_segmodel_base.py`    |
-|   1060   |  `train_binary_segmodel_base.py`    |
-|   1061   |  `train_binary_segmodel_base.py`    |
-|   1062   |  `train_binary_segmodel_base.py`    |
+| Experiment ID  | Training script to use | Description | Used in Launchfile |
+| ---- | ---- | ---- | ---- |
+|   1059   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 20:1 | - |
+|   1060   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 3:1  | - |
+|   1061   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 1:1  | - |
+|   1062   |  `train_binary_segmodel_base.py`    | 
 |   1063   |  `train_binary_segmodel_base.py`    |
 |   1064   |  `train_binary_segmodel_base.py`    |
 |   1066   |  `train_binary_segmodel_base.py`    |
