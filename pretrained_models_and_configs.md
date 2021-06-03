@@ -24,40 +24,40 @@ python train_binary_segmodel_base.py with ${SAVED_FOLDER}/configs/1059/config.ym
 |   1059   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 20:1 | - |
 |   1060   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 3:1  | - |
 |   1061   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 1:1  | - |
-|   1062   |  `train_binary_segmodel_base.py`    | 
-|   1063   |  `train_binary_segmodel_base.py`    |
-|   1064   |  `train_binary_segmodel_base.py`    |
-|   1066   |  `train_binary_segmodel_base.py`    |
-|   1067   |  `train_binary_segmodel_base.py`    |
-|   1069   |  `train_binary_segmodel_base.py`    |
-|   1070   |  `train_binary_segmodel_base.py`    |
-|   1071   |  `train_binary_segmodel_base.py`    |
-|   1072   |  `train_binary_segmodel_base.py`    |
-|   1073   |  `train_binary_segmodel_base.py`    |
-|   1074   |  `train_binary_segmodel_base.py`    |
-|   1075   |  `train_binary_segmodel_base.py`    |
-|   1077   |  `train_binary_segmodel_base.py`    |
-|   1078   |  `train_binary_segmodel_base.py`    |
-|   1080   |  `train_binary_segmodel_base.py`    |
+|   1062   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 10:1  | - |
+|   1063   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 4:1  | - |
+|   1064   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay fraction 10% | - |
+|   1066   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay fraction 5% | - |
+|   1067   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 200:1  | - |
+|   1069   |  `train_binary_segmodel_base.py`    | NYU -> Garage, finetuning | - |
+|   1070   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 1:1, batch norm  | - |
+|   1071   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 3:1, batch norm  | - |
+|   1072   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 4:1, batch norm  | - |
+|   1073   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 10:1, batch norm  | - |
+|   1074   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 20:1, batch norm  | - |
+|   1075   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay ratio 200:1, batch norm  | - |
+|   1077   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay fraction 5%, batch norm | - |
+|   1078   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay fraction 10%, batch norm | - |
+|   1080   |  `train_binary_segmodel_base.py`    | NYU -> Garage, finetuning, batch norm | - |
 |   1112   |  `train_binary_segmodel_base.py`    |
-|   1183   |  `train_binary_segmodel_base.py`    |
-|   1184   |  `train_binary_segmodel_base.py`    |
-|   1185   |  `train_binary_segmodel_base.py`    |
-|   1187   |  `train_binary_segmodel_base.py`    |
-|   1188   |  `train_binary_segmodel_base.py`    |
-|   1189   |  `train_binary_segmodel_base.py`    |
-|   1190   |  `train_binary_segmodel_base.py`    |
-|   1217   |  `train_binary_segmodel_base.py`    |
-|   1219   |  `train_binary_segmodel_base.py`    |
-|   1223   |  `train_binary_segmodel_base.py`    |
-|   1286   |  `train_binary_segmodel_distillation.py`    |
-|   1287   |  `train_binary_segmodel_distillation.py`    |
-|   1288   |  `train_binary_segmodel_distillation.py`    |
-|   1289   |  `train_binary_segmodel_distillation.py`    |
-|   1290   |  `train_binary_segmodel_distillation.py`    |
-|   1291   |  `train_binary_segmodel_distillation.py`    |
-|   1292   |  `train_binary_segmodel_distillation.py`    |
-|   1293   |  `train_binary_segmodel_distillation.py`    |
+|   1183   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay ratio 1:1  | - |
+|   1184   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay ratio 3:1  | - |
+|   1185   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay ratio 10:1  | - |
+|   1187   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay ratio 20:1  | - |
+|   1188   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay fraction 5% | - |
+|   1189   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay fraction 10% | - |
+|   1190   |  `train_binary_segmodel_base.py`    | NYU -> Construction, finetuning | - |
+|   1217   |  `train_binary_segmodel_base.py`    | NYU -> Construction -> Office, replay fraction 10% | - |
+|   1219   |  `train_binary_segmodel_base.py`    | NYU -> Construction -> Office, finetuning | - |
+|   1223   |  `train_binary_segmodel_base.py`    | NYU -> Office -> Construction, finetuning | - |
+|   1286   |  `train_binary_segmodel_distillation.py`    | NYU -> Construction, output distillation with λ = 0.5 | - |
+|   1287   |  `train_binary_segmodel_distillation.py`    | NYU -> Construction, output distillation with λ = 1.0 | - |
+|   1288   |  `train_binary_segmodel_distillation.py`    | NYU -> Construction, output distillation with λ = 10.0 | - |
+|   1289   |  `train_binary_segmodel_distillation.py`    | NYU -> Construction, output distillation with λ = 50.0 | - |
+|   1290   |  `train_binary_segmodel_distillation.py`    | NYU -> Construction, feature distillation with λ = 0.5 | - |
+|   1291   |  `train_binary_segmodel_distillation.py`    | NYU -> Construction, feature distillation with λ = 10.0 | - |
+|   1292   |  `train_binary_segmodel_distillation.py`    | NYU -> Construction, feature distillation with λ = 50.0 | - |
+|   1293   |  `train_binary_segmodel_distillation.py`    | NYU -> Construction, feature distillation with λ = 1.0 | - |
 |   1312   |  `train_binary_segmodel_base.py`    | NYU -> Office, replay fraction 0.1 |
 |   1313   |  `train_binary_segmodel_base.py`    | NYU -> Office, finetuning          |
 |   1314   |  `train_binary_segmodel_base.py`    | NYU -> Office -> Construction, replay fraction 0.1, starting from exp 1312 |
@@ -104,6 +104,6 @@ python train_binary_segmodel_base.py with ${SAVED_FOLDER}/configs/1059/config.ym
 |   1403   |  `train_binary_segmodel_distillation.py`    | NYU -> Garage, feature distillation with λ = 1   |
 |   1404   |  `train_binary_segmodel_distillation.py`    | NYU -> Garage, featture distillation with λ = 50  |
 |   1410   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay ratio 4:1   |
-|   1411   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay ratio 200:1 | 
+|   1411   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay ratio 200:1 |
 
 
