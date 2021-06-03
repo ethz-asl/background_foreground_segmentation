@@ -39,7 +39,7 @@ python train_binary_segmodel_base.py with ${SAVED_FOLDER}/configs/1059/config.ym
 |   1077   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay fraction 0.05, batch norm | - |
 |   1078   |  `train_binary_segmodel_base.py`    | NYU -> Garage, replay fraction 0.1, batch norm | - |
 |   1080   |  `train_binary_segmodel_base.py`    | NYU -> Garage, finetuning, batch norm | - |
-|   1112   |  `train_binary_segmodel_base.py`    |
+|   1112   |  `train_binary_segmodel_base.py`    | NYU -> Garage -> Construction, replay fraction 0.1, starting from exp 1064 | - |
 |   1183   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay ratio 1:1  | - |
 |   1184   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay ratio 3:1  | - |
 |   1185   |  `train_binary_segmodel_base.py`    | NYU -> Construction, replay ratio 10:1  | - |
