@@ -12,7 +12,7 @@ Launch file for Selective ICP with rviz and Realsense Integration
           type="inference_node.py"
           name="inference_node"
           output="screen">
-        <param name="model_gdrive_id" value="1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad" />
+        <param name="model_gdrive_id" value="1ZF2nYMD9PE0kr435TrDVLpaHuDUBSOC5" />
         <param name="input_height" value="480" />
         <param name="input_width" value="640" />
         <rosparam>
