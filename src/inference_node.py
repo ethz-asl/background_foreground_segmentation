@@ -76,6 +76,8 @@ def callback(pred_func, img_pubs, pointcloud, *image_msgs):
   print("input (tensor) time: {:.4f} ({:.4f})".format(inputTime - startTime, tensorTime))
   # predict batch of images
   final_prediction = pred_func(tf.stack(imgs, axis=0))
+  if len(final_prediction.shape) < 3: # if replay buffer is empty, only one image in here (TODO: check)
+    final_prediction = tf.expand_dims(final_prediction, axis=0)
   predictTime = time.time() 
   print("predict time: {}".format(predictTime - inputTime))
   publishTime = 0
