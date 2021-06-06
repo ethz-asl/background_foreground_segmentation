@@ -14,7 +14,7 @@ Labels:
 """
 
 
-class MeshdistPseudolabelsDense1(tfds.core.GeneratorBasedBuilder):
+class MeshdistPseudolabelsSparse1(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for BfsegCLAMeshdistLabels dataset."""
 
   VERSION = tfds.core.Version('0.2.0')
@@ -41,18 +41,8 @@ class MeshdistPseudolabelsDense1(tfds.core.GeneratorBasedBuilder):
   def _split_generators(self, dl_manager: tfds.download.DownloadManager):
     """Returns SplitGenerators."""
     dataset_paths = dl_manager.download_and_extract({
-        # 'office1_dense20_dyn_complete':
-        #     '',
-        # 'office1_sparse20_dyn_cam2':
-        #     '',
-        # 'office2_dense20_dyn_complete':
-        #     '',
-        # 'office2_sparse20_dyn_cam2':
-        #     '',
-        'office12_dense20_dyn_complete':
-            'https://drive.google.com/uc?export=download&id=1XVuOwg9MLpQIYZR8_AAwJzT5z_O30O2Z',
-        'office3_dense20_dyn_complete': 
-            'https://drive.google.com/uc?export=download&id=1q2IVkGwGIeIDBpWn1bqrokBPawb0Hxrt'
+        'office6_sparse50_all': 
+            'https://drive.google.com/uc?export=download&id=1EZVCO7nlnMQ8fpthPRsluXGojvjRt2SK'
     })
     return [
         tfds.core.SplitGenerator(
