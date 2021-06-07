@@ -108,10 +108,8 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
           - "garage2"
           - "garage3"
           - "office4"
-          - "office4_2302"
-          - "office4_2402"
           - "office5"
-          - "office6_2502"
+          - "office6"
           - "rumlang2"
           - "rumlang3"
       - If `dataset_name` is "BfsegValidationLabeled":
@@ -158,21 +156,9 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = "garage1+garage2+garage3"
     elif (scene_type == "rumlang_full"):
       name = "rumlang2+rumlang3"
-    elif (scene_type == "office4_2302"):
-      ds = load_fsdata(
-          '/cluster/work/riner/users/blumh/pickelhaube_full_office4')
-      name = scene_type
-    elif (scene_type == "office4_2402"):
-      ds = load_fsdata('/cluster/work/riner/users/blumh/'
-                       'pickelhaube_full_office4_agreement_dump')
-      name = scene_type
-    elif (scene_type == "office6_2502"):
-      ds = load_fsdata(
-          '/cluster/work/riner/users/blumh/pickelhaube_full_office6')
-      name = scene_type
     elif (scene_type in [
-        "garage1", "garage2", "garage3", "office4", "office5", "rumlang2",
-        "rumlang3"
+        "garage1", "garage2", "garage3", "office4", "office5", "office6",
+        "rumlang2", "rumlang3"
     ]):
       name = scene_type
     else:
