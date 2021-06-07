@@ -157,7 +157,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     elif (scene_type == "rumlang_full"):
       name = "rumlang2+rumlang3"
     elif (scene_type in [
-        "garage1", "garage2", "garage3", "office4", "office5", "office6", 
+        "garage1", "garage2", "garage3", "office4", "office5", "office6",
         "rumlang2", "rumlang3"
     ]):
       name = scene_type
