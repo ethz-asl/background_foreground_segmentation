@@ -84,6 +84,8 @@ bool Creator::readParameters() {
     return false;
   if (!nodeHandle_.getParam("storeImages", store_images))
     return false;
+  if (!nodeHandle_.getParam("getDepth", get_depth))
+    return false;
   if (!nodeHandle_.getParam("createPreview", create_preview))
     return false;
   if (!nodeHandle_.getParam("exportPose", export_pose))
@@ -345,13 +347,15 @@ void Creator::projectPointCloud(
                   preview_img);
       cv::imwrite(output_folder + timestamp + "_preview_labels." + file_type,
                   preview_img2);
-      cv::imwrite(output_folder + timestamp + "_distance.png", distance_img);
       // Save pointcloud
       pcl::io::savePCDFile(output_folder + timestamp + "_pcl.pcd",
                            camera_frame_pc);
       cv::imwrite(output_folder + timestamp + "_preview_labels2.png", labels_img);
     }
     cv::imwrite(output_folder + timestamp + "_labels.png", binary_labels_img);
+    if (get_depth){
+      cv::imwrite(output_folder + timestamp + "_distance.png", distance_img);
+    }  
   }
 
   cv_bridge::CvImage out_msg;

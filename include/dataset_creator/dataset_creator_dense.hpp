@@ -115,6 +115,7 @@ private:
   bool create_preview;
   // if images should be stored on disk
   bool store_images;
+  bool get_depth;
   bool export_pose;
 
   // Point cloud distance from mesh will be stored as image -> [0,255]

@@ -3,7 +3,7 @@
 import inspect
 import warnings
 
-from bfseg.models import FastSCNN, UNet
+from bfseg.models import FastSCNN, UNet, FastSCNNPlusDepth
 
 
 def create_model(model_name,
@@ -50,6 +50,10 @@ def create_model(model_name,
     model_fn = FastSCNN
     model_params['num_classes'] = 2
     model_params['normalization_type'] = normalization_type
+  elif (model_name == "fast_scnn_plus_depth"):
+    model_fn = FastSCNNPlusDepth
+    model_params['num_classes'] = 2
+    model_params['normalization_type'] = normalization_type
   elif (model_name == "unet"):
     model_fn = UNet
     model_params['classes'] = 2
@@ -60,7 +64,7 @@ def create_model(model_name,
           "as normalization type.")
   else:
     raise ValueError(
-        f"Invalid model name {model_name}. Valid values are: 'fast_scnn', "
+        f"Invalid model name {model_name}. Valid values are: 'fast_scnn', 'fast_scnn_plus_depth', "
         "'unet'.")
   model_params['input_shape'] = (image_h, image_w, 3)
 

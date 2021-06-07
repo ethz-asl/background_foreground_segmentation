@@ -13,5 +13,6 @@ overrideOutput: true
 # Filetype of the original image. Either png or jpg
 fileType: "png"
 storeImages: true
+getDepth: false
 exportPose: false
 createPreview: false

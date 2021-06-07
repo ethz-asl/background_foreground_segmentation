@@ -60,6 +60,29 @@ def preprocess_bagfile(image, label):
   image = tf.cast(image, tf.float32)
   return image, label, mask
 
+@tf.function
+def preprocess_bagfile_depth(image, label, distance):
+  r"""Preprocesses bagfile dataset (e.g., Rumlang). The dataset consists of
+  three labels (0, 1, 2) with the following meaning:
+  - 0: foreground
+  - 1: background
+  - 2: unsure (ignored in training)
+  """
+  image = tf.image.convert_image_dtype(image, tf.float32)
+  # Resize image and label.
+  image = tf.image.resize(image, (480, 640),
+                          method=tf.image.ResizeMethod.BILINEAR)
+  label = tf.image.resize(label, (480, 640),
+                          method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+  distance = tf.image.resize(distance, (480, 640),
+                          method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+  # Mask out unknown pixels.
+  mask = tf.squeeze(tf.not_equal(label, 2))
+  label = tf.cast(label == 1, tf.uint8)
+  distance = tf.cast(distance, tf.uint8)
+  image = tf.cast(image, tf.float32)
+  return image, label, mask, distance
+
 
 @tf.function
 def preprocess_bagfile_different_dataloader(blob):
@@ -187,6 +210,11 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = scene_type
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
+  elif (dataset_name == 'MeshdistPseudolabelsDenseDepth1'):
+    if (scene_type in ["office3_densedepth20_dyn_test", "office3_densedepth20_dyn_complete"]):
+      name = scene_type
+    else:
+      raise Exception("Invalid scene type: %s!" % scene_type)
   elif (dataset_name == 'MeshdistPseudolabelsSparse1'):
     if (scene_type in ["office6_sparse50_all"]):
       name = scene_type
@@ -269,6 +297,9 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name == 'MeshdistPseudolabelsDense1'):
     ds = ds.map(preprocess_bagfile,
+                num_parallel_calls=tf.data.experimental.AUTOTUNE)
+  elif (dataset_name == 'MeshdistPseudolabelsDenseDepth1'):
+    ds = ds.map(preprocess_bagfile_depth,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name == 'MeshdistPseudolabelsSparse1'):
     ds = ds.map(preprocess_bagfile,
