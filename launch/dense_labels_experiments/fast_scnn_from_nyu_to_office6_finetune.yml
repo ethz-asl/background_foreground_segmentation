@@ -16,13 +16,15 @@ training_params:
   stopping_patience: 20
   use_balanced_loss: false
 dataset_params:
-  replay_datasets: [NyuDepthV2Labeled]
-  replay_datasets_scene: [null]
+  replay_datasets: 
+    - NyuDepthV2Labeled
+  replay_datasets_scene: 
+    - null
   test_dataset: null
   test_scene: null
   train_dataset: MeshdistPseudolabelsSparse1
   train_scene: office6
-  validation_percentage: 95
+  validation_percentage: 10
 logging_params:
   model_save_freq: 1
   exp_name: office6_finetune
