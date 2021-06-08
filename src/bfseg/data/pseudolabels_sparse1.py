@@ -42,7 +42,9 @@ class MeshdistPseudolabelsSparse1(tfds.core.GeneratorBasedBuilder):
     """Returns SplitGenerators."""
     dataset_paths = dl_manager.download_and_extract({
         'office6_sparse50_all': 
-            'https://drive.google.com/uc?export=download&id=1EZVCO7nlnMQ8fpthPRsluXGojvjRt2SK'
+            'https://drive.google.com/uc?export=download&id=1EZVCO7nlnMQ8fpthPRsluXGojvjRt2SK',
+        'office6':
+            'https://drive.google.com/uc?export=download&id=1h0SSB1tRY76t4WvAKpH6AnguAsxSHWlv'
     })
     return [
         tfds.core.SplitGenerator(
