@@ -16,8 +16,8 @@ training_params:
   stopping_patience: 20
   use_balanced_loss: false
 dataset_params:
-  replay_datasets: NyuDepthV2Labeled
-  replay_datasets_scene: null
+  replay_datasets: [NyuDepthV2Labeled]
+  replay_datasets_scene: [null]
   test_dataset: null
   test_scene: null
   train_dataset: MeshdistPseudolabelsSparse1
