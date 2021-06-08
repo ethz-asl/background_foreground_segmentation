@@ -21,7 +21,7 @@ dataset_params:
   test_dataset: null
   test_scene: null
   train_dataset: MeshdistPseudolabelsSparse1
-  train_scene: office6_sparse50_all
+  train_scene: office6
   validation_percentage: 95
 logging_params:
   model_save_freq: 1
