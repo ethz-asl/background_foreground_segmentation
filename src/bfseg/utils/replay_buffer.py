@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from bfseg.utils.images import augmentation
+from bfseg.utils.images import augmentation_with_mask
 
 
 class ReplayBuffer:
@@ -185,7 +185,7 @@ class ReplayBuffer:
 
     # Optionally perform data augmentation.
     if (self._perform_data_augmentation):
-      merged_ds = merged_ds.map(augmentation)
+      merged_ds = merged_ds.map(augmentation_with_mask)
 
     merged_ds = merged_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
