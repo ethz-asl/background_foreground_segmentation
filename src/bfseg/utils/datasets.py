@@ -61,7 +61,7 @@ def preprocess_bagfile(image, label):
   return image, label, mask
 
 @tf.function
-def preprocess_bagfile_depth(image, label, distance):
+def preprocess_bagfile_depth(image, label):
   r"""Preprocesses bagfile dataset (e.g., Rumlang). The dataset consists of
   three labels (0, 1, 2) with the following meaning:
   - 0: foreground
@@ -72,16 +72,19 @@ def preprocess_bagfile_depth(image, label, distance):
   # Resize image and label.
   image = tf.image.resize(image, (480, 640),
                           method=tf.image.ResizeMethod.BILINEAR)
-  label = tf.image.resize(label, (480, 640),
+  seg_label = tf.image.resize(label['seg'], (480, 640),
                           method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-  distance = tf.image.resize(distance, (480, 640),
+  distance_label = tf.image.resize(label['distance'], (480, 640),
                           method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
   # Mask out unknown pixels.
-  mask = tf.squeeze(tf.not_equal(label, 2))
-  label = tf.cast(label == 1, tf.uint8)
-  distance = tf.cast(distance, tf.uint8)
+  seg_mask = tf.squeeze(tf.not_equal(seg_label, 2))
+  distance_mask = tf.squeeze(tf.not_equal(distance_label, 0))
+  seg_label = tf.cast(seg_label == 1, tf.uint8)
+  distance_label = tf.cast(distance_label, tf.uint8)
   image = tf.cast(image, tf.float32)
-  return image, label, mask, distance
+  labels = {'seg_label': seg_label, 'distance_label': distance_label}
+  masks = {'seg_mask': seg_mask, 'distance_mask': distance_mask}
+  return image, labels, masks
 
 
 @tf.function
@@ -216,7 +219,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
   elif (dataset_name == 'MeshdistPseudolabelsSparse1'):
-    if (scene_type in ["office6_sparse50_all"]):
+    if (scene_type in ["office6_sparse50_all", "office6"]):
       name = scene_type
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
