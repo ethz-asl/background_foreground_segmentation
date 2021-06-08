@@ -74,16 +74,49 @@ def preprocess_bagfile_depth(image, label):
                           method=tf.image.ResizeMethod.BILINEAR)
   seg_label = tf.image.resize(label['seg'], (480, 640),
                           method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-  distance_label = tf.image.resize(label['distance'], (480, 640),
+  depth_label = tf.image.resize(label['distance'], (480, 640),
                           method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-  # Mask out unknown pixels.
+
+  # Convert depth [0,255] to real distance [0m, 15m] (TODO: remove hardcoded 15)
+  depth_norm = ((tf.cast(depth_label, dtype=tf.float32) - 1.0) * 15 / 254)
+  # replace zeros with NaN for depth
+  depth_norm_2 = tf.where(
+        tf.equal(depth_label, tf.constant(0, dtype=tf.uint8)),
+        tf.constant(float('nan'), dtype=tf.float32), depth_norm)
+  # normalize depth (inverse)
+  depth_norm_2 = 15 / depth_norm_2
+
+  # Semseg: Mask out unknown pixels for semseg
   seg_mask = tf.squeeze(tf.not_equal(seg_label, 2))
-  distance_mask = tf.squeeze(tf.not_equal(distance_label, 0))
   seg_label = tf.cast(seg_label == 1, tf.uint8)
-  distance_label = tf.cast(distance_label, tf.uint8)
+
   image = tf.cast(image, tf.float32)
-  labels = {'seg_label': seg_label, 'distance_label': distance_label}
-  masks = {'seg_mask': seg_mask, 'distance_mask': distance_mask}
+  labels = {'seg_label': seg_label, 'depth_label': depth_norm_2}
+  masks = {'seg_mask': seg_mask}
+  return image, labels, masks
+
+@tf.function
+def preprocess_nyu_depth(image, label):
+  r"""Preprocesses NYU dataset:
+  - Normalize images: `uint8` -> `float32`.
+  - Assigns label: 1 if belong to background, 0 if foreground.
+  - Creates all-True mask, since NYU labels are all known.
+  """
+  seg_label = label['seg']
+  depth_label = label['distance']
+  seg_mask = tf.not_equal(seg_label, -1)  # All true.
+  seg_label = tf.expand_dims(seg_label, axis=2)
+  image = tf.cast(image, tf.float32) / 255.
+
+  # replace zeros with NaN for depth
+  depth_norm_2 = tf.where(
+        tf.equal(depth_label, tf.constant(0, dtype=tf.uint8)),
+        tf.constant(float('nan'), dtype=tf.float32), depth_norm)
+  # normalize depth (inverse)
+  depth_norm_2 = 10 / depth_norm_2
+
+  labels = {'seg_label': seg_label, 'depth_label': depth_norm_2}
+  masks = {'seg_mask': seg_mask}
   return image, labels, masks
 
 
@@ -219,7 +252,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
   elif (dataset_name == 'MeshdistPseudolabelsSparse1'):
-    if (scene_type in ["office6_sparse50_all", "office6"]):
+    if (scene_type in ["office6_sparse50_all_new", "office6"]):
       name = scene_type
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
