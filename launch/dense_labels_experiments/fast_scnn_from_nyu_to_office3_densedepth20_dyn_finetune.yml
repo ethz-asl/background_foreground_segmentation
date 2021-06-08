@@ -30,6 +30,9 @@ cl_params:
   cl_framework: finetune
   fraction_replay_ds_to_use: null
   # Note: this needs to be specified.
-  pretrained_dir: /home/xavier/.keras/datasets/1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad
+  pretrained_dir: null #/home/matthias/.keras/datasets/1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad
   ratio_main_ds_replay_ds: null
-
+depth_params:
+  semseg_weight: 1
+  depth_weight: 4
+  consistency_weight: 1
