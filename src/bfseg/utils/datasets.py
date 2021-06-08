@@ -5,7 +5,7 @@ import tensorflow_datasets as tfds
 import warnings
 
 from bfseg.data.fsdata import load_fsdata
-from bfseg.utils.images import augmentation_with_mask
+from bfseg.utils.images import augmentation_with_mask, augmentation_with_mask_depth
 from bfseg.utils.replay_buffer import ReplayBuffer
 
 
@@ -77,22 +77,25 @@ def preprocess_bagfile_depth(image, label):
   depth_label = tf.image.resize(label['distance'], (480, 640),
                           method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 
-  # Convert depth [0,255] to real distance [0m, 15m] (TODO: remove hardcoded 15)
-  depth_norm = ((tf.cast(depth_label, dtype=tf.float32) - 1.0) * 15 / 254)
+  # Convert depth [0,255] to real distance [0m, 10m] (TODO: remove hardcoded 10)
+  depth_norm = ((tf.cast(depth_label, dtype=tf.float32) - 1.0) * 10 / 254)
   # replace zeros with NaN for depth
   depth_norm_2 = tf.where(
         tf.equal(depth_label, tf.constant(0, dtype=tf.uint8)),
         tf.constant(float('nan'), dtype=tf.float32), depth_norm)
   # normalize depth (inverse)
-  depth_norm_2 = 15 / depth_norm_2
+  depth_norm_2 = 10 / depth_norm_2
 
   # Semseg: Mask out unknown pixels for semseg
   seg_mask = tf.squeeze(tf.not_equal(seg_label, 2))
   seg_label = tf.cast(seg_label == 1, tf.uint8)
 
+  # Depth mask for MAE only (not used in loss)
+  depth_mask = tf.squeeze(tf.not_equal(depth_norm, 0))
+
   image = tf.cast(image, tf.float32)
   labels = {'seg_label': seg_label, 'depth_label': depth_norm_2}
-  masks = {'seg_mask': seg_mask}
+  masks = {'seg_mask': seg_mask, 'depth_mask': depth_mask}
   return image, labels, masks
 
 @tf.function
@@ -103,20 +106,23 @@ def preprocess_nyu_depth(image, label):
   - Creates all-True mask, since NYU labels are all known.
   """
   seg_label = label['seg']
-  depth_label = label['distance']
+  depth_label = tf.expand_dims(label['distance'], -1)
   seg_mask = tf.not_equal(seg_label, -1)  # All true.
   seg_label = tf.expand_dims(seg_label, axis=2)
   image = tf.cast(image, tf.float32) / 255.
 
   # replace zeros with NaN for depth
   depth_norm_2 = tf.where(
-        tf.equal(depth_label, tf.constant(0, dtype=tf.uint8)),
-        tf.constant(float('nan'), dtype=tf.float32), depth_norm)
+        tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
+        tf.constant(float('nan'), dtype=tf.float32), depth_label)
   # normalize depth (inverse)
   depth_norm_2 = 10 / depth_norm_2
 
+  # Depth mask for MAE only (not used in loss)
+  depth_mask = tf.squeeze(tf.not_equal(depth_label, 0))
+
   labels = {'seg_label': seg_label, 'depth_label': depth_norm_2}
-  masks = {'seg_mask': seg_mask}
+  masks = {'seg_mask': seg_mask, 'depth_mask': depth_mask}
   return image, labels, masks
 
 
@@ -192,6 +198,17 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
   """
   # Select the scene.
   if (dataset_name == 'NyuDepthV2Labeled'):
+    if (scene_type == None):
+      name = 'full'
+    elif (scene_type == "kitchen"):
+      # The "kitchen" scene is referred to as "train" split in NYU.
+      name = 'train'
+    elif (scene_type == "bedroom"):
+      # The "bedroom" scene is referred to as "test" split in NYU.
+      name = 'test'
+    else:
+      raise Exception("Invalid scene type: %s!" % scene_type)
+  elif (dataset_name == 'NyuDepthV2LabeledDepth'):
     if (scene_type == None):
       name = 'full'
     elif (scene_type == "kitchen"):
@@ -318,6 +335,9 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
   if (dataset_name == 'NyuDepthV2Labeled'):
     ds = ds.map(preprocess_nyu,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
+  elif (dataset_name == 'NyuDepthV2LabeledDepth'):
+    ds = ds.map(preprocess_nyu_depth,
+                num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name == 'BfsegCLAMeshdistLabels'):
     ds = ds.map(preprocess_cla,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
@@ -428,7 +448,7 @@ def load_replay_datasets(replay_datasets, replay_datasets_scene, batch_size):
 def update_datasets_with_replay_and_augmentation(
     train_no_replay_ds, test_ds, fraction_replay_ds_to_use,
     ratio_main_ds_replay_ds, replay_datasets, replay_datasets_scene, batch_size,
-    perform_data_augmentation):
+    perform_data_augmentation, contains_depth=False):
   r"""Returns training and test datasets after creating a replay buffer and
   performing data augmentation, if necessary.
   Args:
@@ -477,6 +497,10 @@ def update_datasets_with_replay_and_augmentation(
     train_ds = train_no_replay_ds
     # Check if data augmentation should be used.
     if (perform_data_augmentation):
-      train_ds = train_ds.map(augmentation_with_mask)
+      # Special augmentation function in case augmentation is with depth (TODO: improve)
+      if (contains_depth):
+        train_ds = train_ds.map(augmentation_with_mask_depth)
+      else:
+        train_ds = train_ds.map(augmentation_with_mask)
 
   return train_ds, test_ds

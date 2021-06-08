@@ -254,7 +254,10 @@ def fast_scnn_plus_depth(input_shape,
     classifier = tfa.layers.GroupNormalization(groups=32)(classifier)
   classifier = tf.keras.activations.relu(classifier)
 
-  classifier = conv_block(classifier,
+  """## Step 5: Split up into semseg and depth """
+
+  # Semseg
+  semseg = conv_block(classifier,
                           'conv',
                           num_classes, (1, 1),
                           strides=(1, 1),
@@ -262,13 +265,40 @@ def fast_scnn_plus_depth(input_shape,
                           padding='same',
                           relu=False)
 
-  #classifier = tf.keras.layers.Dropout(0.3)(classifier)
+  #semseg = tf.keras.layers.Dropout(0.3)(semseg)
 
-  classifier = tf.keras.layers.UpSampling2D(
-      (2**num_downsampling_layers, 2**num_downsampling_layers))(classifier)
-  # classifier = tf.keras.activations.softmax(classifier)
+  semseg = tf.keras.layers.UpSampling2D(
+      (2**num_downsampling_layers, 2**num_downsampling_layers))(semseg)
+  # semseg = tf.keras.activations.softmax(semseg)
+  print("Semseg output shape: {}".format(semseg.shape))
+  print("num_classes: {}".format(num_classes))
+
+  # Depth (1 channel only)
+  depth = conv_block(classifier,
+                          'conv',
+                          1, (1, 1),
+                          strides=(1, 1),
+                          normalization_type=normalization_type,
+                          padding='same',
+                          relu=False)
+
+  #depth = tf.keras.layers.Dropout(0.3)(depth)
+
+  depth = tf.keras.layers.UpSampling2D(
+      (2**num_downsampling_layers, 2**num_downsampling_layers))(depth)
+  # depth = tf.keras.activations.softmax(depth)
+  print("Depth output shape: {}".format(depth.shape))
+
+
+  # Pseudo output only used for smooth consistency loss
+  combined = tf.keras.layers.concatenate([depth, semseg],
+                                         axis=-1,
+                                         name="combined")
+  print("FSCNN: Semseg shape: {}".format(semseg.shape))
+  print("FSCNN: Depth shape: {}".format(depth.shape))
+  print("FSCNN: Combined shape: {}".format(combined.shape))
 
   encoder = tf.keras.Model(inputs=inputs, outputs=ff_final)
-  model = tf.keras.Model(inputs=inputs, outputs=classifier)
+  model = tf.keras.Model(inputs=inputs, outputs=[semseg, combined, depth])
 
   return encoder, model

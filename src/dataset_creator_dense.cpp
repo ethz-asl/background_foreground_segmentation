@@ -318,6 +318,9 @@ void Creator::projectPointCloud(
         closeness_to_mesh = (int)(254 - 254 * (it->intensity / max_distance));
         binary_label = 1;
       }
+      // for sparse labels:
+      int distance_to_mesh = std::max(
+          0, std::min(254, (int)(254 * (it->intensity / max_distance))));
       //int distance_to_mesh = std::max(
       //    0, std::min(254, (int)(254 * (it->intensity / max_distance))));
 
@@ -331,7 +334,7 @@ void Creator::projectPointCloud(
                    CV_FILLED, 8, 0);
       }
       // Draw on labels groundtruth image
-      cv::circle(labels_img, pixel, 1, cv::Scalar(closeness_to_mesh));
+      cv::circle(labels_img, pixel, 1, cv::Scalar(distance_to_mesh));
       // Draw on binary labels groundtruth image
       cv::circle(binary_labels_img, pixel, 1, cv::Scalar(binary_label));
       // Draw on distance groundtruth image.

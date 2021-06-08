@@ -69,3 +69,37 @@ def augmentation_with_mask(image, label, mask):
   # hue
   image = tf.image.random_hue(image, max_delta=.1)
   return image, label, mask
+
+@tf.function
+def augmentation_with_mask_depth(image, labels, masks):
+  # make sure image is in float space
+  image = tf.image.convert_image_dtype(image, tf.float32)
+
+  # random flip
+  if tf.random.uniform((1,)) < .5:
+    # unpack
+    mask_seg = masks['seg_mask']
+    mask_depth = masks['depth_mask']
+    label_seg = labels['seg_label']
+    label_depth = labels['depth_label']
+
+    image = tf.image.flip_left_right(image)
+    label_seg = tf.image.flip_left_right(label_seg)
+    label_depth = tf.image.flip_left_right(label_depth)
+    # Note: it is crucial that `expand_dims` is used, otherwise, since `mask`
+    # is in (B, H, W) format, rather than (B, H, W, 1). `flip_left_right`
+    # would wrongly flip the image upside down.
+    mask_seg = tf.image.flip_left_right(tf.expand_dims(mask_seg, axis=-1))
+    mask_depth = tf.image.flip_left_right(tf.expand_dims(mask_depth, axis=-1))
+    # Bring the mask back to its initial shape.
+    mask_seg = tf.squeeze(mask_seg, axis=-1)
+    mask_depth = tf.squeeze(mask_depth, axis=-1)
+    # pack 
+    masks = {'seg_mask': mask_seg, 'depth_mask': mask_depth}
+    labels = {'seg_label': label_seg, 'depth_label': label_depth}
+
+  # brightness
+  image = tf.image.random_brightness(image, max_delta=0.2)
+  # hue
+  image = tf.image.random_hue(image, max_delta=.1)
+  return image, labels, masks
