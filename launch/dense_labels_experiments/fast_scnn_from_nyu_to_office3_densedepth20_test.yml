@@ -10,7 +10,8 @@ training_params:
   batch_size: 10
   learning_rate: 0.00001
   num_training_epochs: 250
-  perform_data_augmentation: 'depth'
+  perform_data_augmentation: true
+  perform_preprocessing: true
   reduce_lr_on_plateau: true
   stopping_min_epoch: 50
   stopping_patience: 20
@@ -20,8 +21,8 @@ dataset_params:
   replay_datasets_scene: null
   test_dataset: null
   test_scene: null
-  train_dataset: NyuDepthV2LabeledDepth #MeshdistPseudolabelsDenseDepth1
-  train_scene: null #office3_densedepth20_dyn_test
+  train_dataset: MeshdistPseudolabelsDenseDepth1 #NyuDepthV2LabeledDepth #
+  train_scene: office3_densedepth20_dyn_test # null
   validation_percentage: 50
 logging_params:
   model_save_freq: 1

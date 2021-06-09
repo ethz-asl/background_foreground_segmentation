@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from bfseg.utils.images import augmentation_with_mask
+from bfseg.utils.images import augmentation_with_mask, augmentation_with_mask_depth, preprocess_median_full_with_mask, preprocess_median_full_with_mask_depth
 
 
 class ReplayBuffer:
@@ -50,7 +50,9 @@ class ReplayBuffer:
                batch_size,
                ratio_main_ds_replay_ds=None,
                fraction_replay_ds_to_use=None,
-               perform_data_augmentation=True):
+               perform_data_augmentation=True,
+               contains_depth=False,
+               perform_preprocessing=False):
     assert (
         replay_ds is not None
     ), "Replay dataset must be specified in order to build the replay buffer."
@@ -91,6 +93,8 @@ class ReplayBuffer:
     self._ratio_main_ds_replay_ds = ratio_main_ds_replay_ds
     self._fraction_replay_ds_to_use = fraction_replay_ds_to_use
     self._perform_data_augmentation = perform_data_augmentation
+    self._perform_preprocessing = perform_preprocessing
+    self._contains_depth = contains_depth
     # Compute the number of samples in the two datasets.
     self._tot_num_samples_main = sum(
         sample[0].shape[0] for sample in self._main_ds)
@@ -185,7 +189,16 @@ class ReplayBuffer:
 
     # Optionally perform data augmentation.
     if (self._perform_data_augmentation):
-      merged_ds = merged_ds.map(augmentation_with_mask)
+      if (self._contains_depth):
+        merged_ds = merged_ds.map(augmentation_with_mask_depth)
+      else:
+        merged_ds = merged_ds.map(augmentation_with_mask)
+
+    if (self._perform_preprocessing):
+      if (self._contains_depth):
+        merged_ds = merged_ds.map(preprocess_median_full_with_mask_depth)
+      else:
+        merged_ds = merged_ds.map(preprocess_median_full_with_mask)
 
     merged_ds = merged_ds.prefetch(tf.data.experimental.AUTOTUNE)
 

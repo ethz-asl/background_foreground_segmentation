@@ -3,9 +3,10 @@
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import warnings
+import cv2 
 
 from bfseg.data.fsdata import load_fsdata
-from bfseg.utils.images import augmentation_with_mask, augmentation_with_mask_depth
+from bfseg.utils.images import augmentation_with_mask, augmentation_with_mask_depth, preprocess_median_full_with_mask_depth, preprocess_median_full_with_mask
 from bfseg.utils.replay_buffer import ReplayBuffer
 
 
@@ -124,6 +125,10 @@ def preprocess_nyu_depth(image, label):
   labels = {'seg_label': seg_label, 'depth_label': depth_norm_2}
   masks = {'seg_mask': seg_mask, 'depth_mask': depth_mask}
   return image, labels, masks
+
+
+
+  
 
 
 @tf.function
@@ -448,7 +453,7 @@ def load_replay_datasets(replay_datasets, replay_datasets_scene, batch_size):
 def update_datasets_with_replay_and_augmentation(
     train_no_replay_ds, test_ds, fraction_replay_ds_to_use,
     ratio_main_ds_replay_ds, replay_datasets, replay_datasets_scene, batch_size,
-    perform_data_augmentation, contains_depth=False):
+    perform_data_augmentation, contains_depth=False, perform_preprocessing=False):
   r"""Returns training and test datasets after creating a replay buffer and
   performing data augmentation, if necessary.
   Args:
@@ -483,7 +488,9 @@ def update_datasets_with_replay_and_augmentation(
         batch_size=batch_size,
         ratio_main_ds_replay_ds=ratio_main_ds_replay_ds,
         fraction_replay_ds_to_use=fraction_replay_ds_to_use,
-        perform_data_augmentation=perform_data_augmentation)
+        perform_data_augmentation=perform_data_augmentation,
+        contains_depth=contains_depth,
+        perform_preprocessing=perform_preprocessing)
     train_ds = replay_buffer.flow()
     # When using replay, evaluate separate metrics only on training set without
     # replay.
@@ -502,5 +509,10 @@ def update_datasets_with_replay_and_augmentation(
         train_ds = train_ds.map(augmentation_with_mask_depth)
       else:
         train_ds = train_ds.map(augmentation_with_mask)
+    if (perform_preprocessing):
+      if (contains_depth):
+        train_ds = train_ds.map(preprocess_median_full_with_mask_depth)
+      else:
+        train_ds = train_ds.map(preprocess_median_full_with_mask)
 
   return train_ds, test_ds

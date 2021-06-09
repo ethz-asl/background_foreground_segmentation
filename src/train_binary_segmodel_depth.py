@@ -66,7 +66,8 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
       replay_datasets_scene=dataset_params['replay_datasets_scene'],
       batch_size=training_params['batch_size'],
       perform_data_augmentation=training_params['perform_data_augmentation'],
-      contains_depth=True)
+      contains_depth=True,
+      perform_preprocessing = training_params['perform_preprocessing'])
 
   callbacks_to_use = [TestCallback(test_data=test_ds), SaveModelAndLogs()]
   if (training_params['reduce_lr_on_plateau']):

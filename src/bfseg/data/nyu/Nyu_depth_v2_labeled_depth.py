@@ -28,7 +28,7 @@ class NyuDepthV2LabeledDepth(tfds.core.GeneratorBasedBuilder):
 
   VERSION = tfds.core.Version('2.1.0')
   RELEASE_NOTES = {
-      # '1.0.0': 'Initial release.',
+      # '1.0.0': 'Initial 3release.',
       # '2.0.0': 'different scenes for train/test',
       '2.1.0': 'additional "full" split',
   }

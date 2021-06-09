@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow_addons as tfa
 
 
 @tf.function
@@ -103,3 +104,40 @@ def augmentation_with_mask_depth(image, labels, masks):
   # hue
   image = tf.image.random_hue(image, max_delta=.1)
   return image, labels, masks
+
+@tf.function
+def preprocess_median_full_with_mask_depth(image, labels, masks):
+  print("-------Inside preprocessing_median_full_with_mask_depth")
+  label_seg = labels['seg_label']
+  label_depth = labels['depth_label']
+  mask_seg = masks['seg_mask']
+  mask_depth = masks['depth_mask']
+  print("Mast_seg shape 1: {}".format(mask_seg.shape))
+  print("Label_seg shape 1: {}".format(label_seg.shape))
+  # Preprocess Labels with median filter and remove unknown category
+  label_seg_median = tfa.image.median_filter2d(label_seg, 11)
+  label_seg_median_full = tf.where(
+        tf.equal(label_seg_median, tf.constant(2, dtype=tf.uint8)),
+        tf.constant(0, dtype=tf.uint8), label_seg_median)
+  mask_seg = (tf.not_equal(label_seg, -1)) # All true.
+  mask_seg = tf.squeeze(mask_seg, axis=-1)
+  print("Label_seg_median: {}".format(label_seg_median.shape))
+  print("Label_seg_median_full: {}".format(label_seg_median_full.shape))
+  print("Mast_seg shape 2: {}".format(mask_seg.shape))
+
+  labels = {'seg_label': label_seg_median_full, 'depth_label': label_depth}
+  masks = {'seg_mask': mask_seg, 'depth_mask': mask_depth}
+  return image, labels, masks
+
+@tf.function
+def preprocess_median_full_with_mask(image, label, mask):
+  print("-------Inside preprocessing_median_full_with_mask")
+
+  label_seg_median = tfa.image.median_filter2d(label, 11)
+  label_seg_median_full = tf.where(
+        tf.equal(label_seg_median, tf.constant(2, dtype=tf.uint8)),
+        tf.constant(0, dtype=tf.uint8), label_seg_median)
+  mask = tf.not_equal(label, -1)  # All true.
+  mask = tf.squeeze(mask, axis=-1)
+
+  return image, label, mask
