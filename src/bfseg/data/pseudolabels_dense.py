@@ -46,13 +46,13 @@ class MeshdistPseudolabelsDense(tfds.core.GeneratorBasedBuilder):
         'office6_paper':
             'https://drive.google.com/uc?export=download&id=1h0SSB1tRY76t4WvAKpH6AnguAsxSHWlv',
         'office12_dense20_dyn_cam2':
-            'https://drive.google.com/uc?export=download&id=1NRvyqij-6jDrRdibTBmwpJvXS2zCziWq',
+            'https://drive.google.com/uc?export=download&id=1VbD8N_T9HqbEzaBhy53YlUYEVd-gPq_C',
         'office12_sparse50_dyn_cam2':
             'https://drive.google.com/uc?export=download&id=1NF2aJ_-jjjuaW0Wox-wwVd-rcBwwSlQB',
         'office12_sparse50_dyn_allcams':
             'https://drive.google.com/uc?export=download&id=11kedzHhymovz6QDdEw0K9lbkXf1RO2TH',
         'office3_dense20_dyn_cam2':
-            'https://drive.google.com/uc?export=download&id=1yopnV2n3RtFpLfsm9chBWHThlM2qaThK',
+            'https://drive.google.com/uc?export=download&id=1yjexvTgQDfM_5V6-XAVH-1Y9Sj0koiTp',
         'office3_sparse50_dyn_cam2':
             'https://drive.google.com/uc?export=download&id=1aaCaFXkGUd503aPql50YOUHnq6CJDdTm',
         'office3_sparse50_dyn_allcams':
