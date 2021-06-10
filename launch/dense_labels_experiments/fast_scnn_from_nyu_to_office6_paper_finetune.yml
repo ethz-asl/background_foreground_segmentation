@@ -22,12 +22,12 @@ dataset_params:
     - null
   test_dataset: null
   test_scene: null
-  train_dataset: MeshdistPseudolabelsSparse1
-  train_scene: office6
+  train_dataset: MeshdistPseudolabelsDense
+  train_scene: office6_paper
   validation_percentage: 10
 logging_params:
   model_save_freq: 1
-  exp_name: office6_finetune
+  exp_name: office6_paper_finetune
 cl_params:
   cl_framework: finetune
   fraction_replay_ds_to_use: 0.1

@@ -1,6 +1,6 @@
 # Train on CLA with finetuning using Fast-SCNN architecture pretrained on NYU.
 network_params:
-  architecture: fast_scnn
+  architecture: fast_scnn_plus_depth
   freeze_encoder: false
   model_params:
     image_h: 480
@@ -9,27 +9,31 @@ network_params:
 training_params:
   batch_size: 10
   learning_rate: 0.00001
-  num_training_epochs: 15
-  perform_data_augmentation: false
+  num_training_epochs: 250
+  perform_data_augmentation: true
+  perform_preprocessing: true
   reduce_lr_on_plateau: true
   stopping_min_epoch: 50
-  stopping_patience: 100
+  stopping_patience: 20
   use_balanced_loss: false
 dataset_params:
   replay_datasets: null
   replay_datasets_scene: null
   test_dataset: null
   test_scene: null
-  train_dataset: MeshdistPseudolabelsDense1
-  train_scene: office12_dense20_dyn_complete
-  validation_percentage: 10 # 73 (if 5 for sparse) since datasets are so imbalanced
+  train_dataset: MeshdistPseudolabelsDenseDepth #NyuDepthV2LabeledDepth #
+  train_scene: office3_densedepth20_dyn_test # null
+  validation_percentage: 50
 logging_params:
   model_save_freq: 1
-  exp_name: office12_dense20_dyn_complete_finetune
+  exp_name: densedepth20_test
 cl_params:
   cl_framework: finetune
   fraction_replay_ds_to_use: null
   # Note: this needs to be specified.
-  pretrained_dir: /home/xavier/.keras/datasets/1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad
+  pretrained_dir: null #/media/matthias/sandisk/saved_weights/nyu_pretrained_depth_weights_10.h5
   ratio_main_ds_replay_ds: null
-
+depth_params:
+  semseg_weight: 1
+  depth_weight: 4
+  consistency_weight: 1

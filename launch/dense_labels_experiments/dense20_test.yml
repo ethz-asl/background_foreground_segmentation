@@ -1,6 +1,6 @@
 # Train on CLA with finetuning using Fast-SCNN architecture pretrained on NYU.
 network_params:
-  architecture: fast_scnn_plus_depth
+  architecture: fast_scnn
   freeze_encoder: false
   model_params:
     image_h: 480
@@ -11,7 +11,7 @@ training_params:
   learning_rate: 0.00001
   num_training_epochs: 250
   perform_data_augmentation: true
-  perform_preprocessing: false
+  perform_preprocessing: true
   reduce_lr_on_plateau: true
   stopping_min_epoch: 50
   stopping_patience: 20
@@ -21,19 +21,15 @@ dataset_params:
   replay_datasets_scene: null
   test_dataset: null
   test_scene: null
-  train_dataset: NyuDepthV2LabeledDepth
-  train_scene: null
-  validation_percentage: 10
+  train_dataset: MeshdistPseudolabelsDense #NyuDepthV2LabeledDepth #
+  train_scene: office3_dense20_dyn_cam2 # null
+  validation_percentage: 95
 logging_params:
   model_save_freq: 1
-  exp_name: NyuDepthV2LabeledDepth_pretraining
+  exp_name: dense20_test
 cl_params:
   cl_framework: finetune
   fraction_replay_ds_to_use: null
   # Note: this needs to be specified.
-  pretrained_dir: null 
+  pretrained_dir: /media/matthias/sandisk/saved_weights/nyu_pretrained_weights_10.h5
   ratio_main_ds_replay_ds: null
-depth_params:
-  semseg_weight: 1
-  depth_weight: 4
-  consistency_weight: 1

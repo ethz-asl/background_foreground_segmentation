@@ -14,7 +14,7 @@ Labels:
 """
 
 
-class MeshdistPseudolabelsDense1(tfds.core.GeneratorBasedBuilder):
+class MeshdistPseudolabelsDenseDepth(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for BfsegCLAMeshdistLabels dataset."""
 
   VERSION = tfds.core.Version('0.2.0')
@@ -33,7 +33,7 @@ class MeshdistPseudolabelsDense1(tfds.core.GeneratorBasedBuilder):
         description=_DESCRIPTION,
         features=tfds.features.FeaturesDict({
             'image': tfds.features.Image(shape=(None, None, 3), dtype=tf.uint8),
-            'label': tfds.features.Image(shape=(None, None, 1), dtype=tf.uint8),
+            'label': tfds.features.FeaturesDict({'seg': tfds.features.Image(shape=(None, None, 1), dtype=tf.uint8), 'distance': tfds.features.Image(shape=(None, None, 1), dtype=tf.uint8)}),
             'filename': tf.string,
         }),
         supervised_keys=("image", "label"))
@@ -41,18 +41,12 @@ class MeshdistPseudolabelsDense1(tfds.core.GeneratorBasedBuilder):
   def _split_generators(self, dl_manager: tfds.download.DownloadManager):
     """Returns SplitGenerators."""
     dataset_paths = dl_manager.download_and_extract({
-        # 'office1_dense20_dyn_complete':
-        #     '',
-        # 'office1_sparse20_dyn_cam2':
-        #     '',
-        # 'office2_dense20_dyn_complete':
-        #     '',
-        # 'office2_sparse20_dyn_cam2':
-        #     '',
-        'office12_dense20_dyn_complete':
-            'https://drive.google.com/uc?export=download&id=1XVuOwg9MLpQIYZR8_AAwJzT5z_O30O2Z',
-        'office3_dense20_dyn_complete': 
-            'https://drive.google.com/uc?export=download&id=1q2IVkGwGIeIDBpWn1bqrokBPawb0Hxrt'
+        'office3_densedepth20_dyn_test':
+            'https://drive.google.com/uc?export=download&id=18YlKYVhC1-SolsxHQ7fknevX3U2HagrS',
+        'office3_densedepth20_dyn_cam2':
+            'https://drive.google.com/uc?export=download&id=1oksof1_2H8MzXkbyVwIY1mQm6yhy1T1S',
+        'office12_densedepth20_dyn_cam2':
+            'https://drive.google.com/uc?export=download&id=1byP70erqpmZjKYKXzyz5elDAJChyaJ3i'    
     })
     return [
         tfds.core.SplitGenerator(
@@ -77,7 +71,7 @@ class MeshdistPseudolabelsDense1(tfds.core.GeneratorBasedBuilder):
                                 []).append(os.path.join(dataset_path, filename))
     # and extract per prefix a set of images
     for prefix, item in grouped_by_idx.items():
-      blob = {'filename': prefix}
+      blob = {'filename': prefix, 'label':dict()}
       for filepath in item:
         components = filepath.split('_')
         modality, filetype = components[-1].split('.')
@@ -99,5 +93,9 @@ class MeshdistPseudolabelsDense1(tfds.core.GeneratorBasedBuilder):
           if modality in ['labels', 'mask']:
             data = data.astype(dataset_info['output_types'][modality])
             # image must be 3 dimensional in tensorflow
-            blob['label'] = np.expand_dims(data.astype('uint8'), axis=-1)
+            blob['label']['seg'] = np.expand_dims(data.astype('uint8'), axis=-1)
+          elif modality in ['distance']:
+            data = data.astype(dataset_info['output_types'][modality])
+            # image must be 3 dimensional in tensorflow
+            blob['label']['distance'] = np.expand_dims(data.astype('uint8'), axis=-1)
       yield prefix, blob

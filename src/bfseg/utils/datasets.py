@@ -263,18 +263,14 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = "rumlang1_full_test1"
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
-  elif (dataset_name == 'MeshdistPseudolabelsDense1'):
-    if (scene_type in ["office12_dense20_dyn_complete", "office3_dense20_dyn_complete"]):
+  elif (dataset_name == 'MeshdistPseudolabelsDense'):
+    if (scene_type in ['office6_sparse50_allcams', 'office6_paper', 'office12_dense20_dyn_cam2', 'office12_sparse50_dyn_cam2', 
+      'office12_sparse50_dyn_allcams', 'office3_dense20_dyn_cam2', 'office3_sparse50_dyn_cam2', 'office3_sparse50_dyn_allcams']):
       name = scene_type
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
-  elif (dataset_name == 'MeshdistPseudolabelsDenseDepth1'):
-    if (scene_type in ["office3_densedepth20_dyn_test", "office3_densedepth20_dyn_complete"]):
-      name = scene_type
-    else:
-      raise Exception("Invalid scene type: %s!" % scene_type)
-  elif (dataset_name == 'MeshdistPseudolabelsSparse1'):
-    if (scene_type in ["office6_sparse50_all_new", "office6"]):
+  elif (dataset_name == 'MeshdistPseudolabelsDenseDepth'):
+    if (scene_type in ["office3_densedepth20_dyn_test", "office3_densedepth20_dyn_cam2", "office12_densedepth20_dyn_cam2"]):
       name = scene_type
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)
@@ -356,14 +352,11 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
   elif (dataset_name == 'MeshdistPseudolabelsDyn'):
     ds = ds.map(preprocess_bagfile,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
-  elif (dataset_name == 'MeshdistPseudolabelsDense1'):
+  elif (dataset_name == 'MeshdistPseudolabelsDense'):
     ds = ds.map(preprocess_bagfile,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
-  elif (dataset_name == 'MeshdistPseudolabelsDenseDepth1'):
+  elif (dataset_name == 'MeshdistPseudolabelsDenseDepth'):
     ds = ds.map(preprocess_bagfile_depth,
-                num_parallel_calls=tf.data.experimental.AUTOTUNE)
-  elif (dataset_name == 'MeshdistPseudolabelsSparse1'):
-    ds = ds.map(preprocess_bagfile,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)
   elif (dataset_name
         in ['BfsegValidationLabeled', 'OfficeRumlangValidationLabeled']):

@@ -11,6 +11,7 @@ training_params:
   learning_rate: 0.00001
   num_training_epochs: 250
   perform_data_augmentation: true
+  perform_preprocessing: false
   reduce_lr_on_plateau: true
   stopping_min_epoch: 50
   stopping_patience: 20
@@ -22,15 +23,15 @@ dataset_params:
     - null
   test_dataset: null
   test_scene: null
-  train_dataset: MeshdistPseudolabelsSparse1
-  train_scene: office6_sparse50_all_new
-  validation_percentage: 10
+  train_dataset: MeshdistPseudolabelsDense
+  train_scene: office3_sparse50_dyn_cam2
+  validation_percentage: 5
 logging_params:
   model_save_freq: 1
-  exp_name: office6_sparse50_finetune
+  exp_name: office3_sparse50_dyn_cam2_finetune
 cl_params:
   cl_framework: finetune
   fraction_replay_ds_to_use: 0.1
   # Note: this needs to be specified.
-  pretrained_dir: /home/xavier/.keras/datasets/1Wu1p2U7BgK8TwzvTdLlBWCemo3oPN-ad
+  pretrained_dir: /media/xavier/sandisk/saved_weights/nyu_pretrained_weights_10.h5
   ratio_main_ds_replay_ds: null
