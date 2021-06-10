@@ -25,7 +25,7 @@ dataset_params:
   test_scene: null
   train_dataset: MeshdistPseudolabelsDenseDepth
   train_scene: office3_densedepth20_dyn_cam2
-  validation_percentage: 82
+  validation_percentage: 5
 logging_params:
   model_save_freq: 1
   exp_name: office3_densedepth20_dyn_cam2_finetune
