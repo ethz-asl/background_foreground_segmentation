@@ -280,7 +280,7 @@ def fast_scnn_plus_depth(input_shape,
                           strides=(1, 1),
                           normalization_type=normalization_type,
                           padding='same',
-                          relu=True)
+                          relu=False)
 
   #depth = tf.keras.layers.Dropout(0.3)(depth)
 

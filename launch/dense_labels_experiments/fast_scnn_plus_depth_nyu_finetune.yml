@@ -36,4 +36,4 @@ cl_params:
 depth_params:
   semseg_weight: 1
   depth_weight: 4
-  consistency_weight: 1
+  consistency_weight: 0

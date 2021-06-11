@@ -72,6 +72,7 @@ class DepthModel(BaseCLModel):
     """
     self.loss_ce = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     self.loss_tracker = keras.metrics.Mean('loss', dtype=tf.float32)
+    self.loss_mae = keras.metrics.MeanAbsoluteError(name='mae_loss', dtype=tf.float32) # NEW
     self.accuracy_tracker = keras.metrics.Accuracy('accuracy', dtype=tf.float32)
     self.miou_tracker = keras.metrics.MeanIoU(num_classes=2, name='mean_iou')
     self.mae_tracker = keras.metrics.MeanAbsoluteError(name='depth_mae', dtype=tf.float32) # NEW
@@ -166,11 +167,21 @@ class DepthModel(BaseCLModel):
     print("Depth loss inputs:")
     print("pred_y_depth: {}".format(pred_y_depth))
     print("y_depth: {}".format(y_depth))
-    loss_depth = ignorant_depth_loss(y_depth, pred_y_depth) # remove hardcoded version
+    
+    #loss_depth = ignorant_depth_loss(y_depth, pred_y_depth) # remove hardcoded version
+    
+    
+    pred_y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
+                                   tf.zeros_like(y_depth), pred_y_depth)
+    y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
+                         tf.zeros_like(y_depth), y_depth)
+    loss_depth = self.loss_mae(y_depth_ignorant, pred_y_depth_ignorant)
+
+
+
     # Masking for MAE only
     pred_y_depth_masked = tf.boolean_mask(pred_y_depth, mask_depth)
     y_depth_masked = tf.boolean_mask(y_depth, mask_depth)
-    
 
     # Consistency (https://github.com/ethz-asl/background_foreground_segmentation/blob/a817e09d6578427b01cac4d0f106b166caf8b402/src/bfseg/utils/losses.py#L47)
     semantic_classes = 2 # TODO: remove hardcoded version
@@ -289,6 +300,9 @@ def smooth_consistency_loss(depth_pred, y_pred_semantic, class_number=0):
     Semantics-Guided Disparity Smoothness (8):
     https://openaccess.thecvf.com/content_CVPR_2019/papers/Chen_Towards_Scene_Understanding_Unsupervised_Monocular_Depth_Estimation_With_Semantic-Aware_Representation_CVPR_2019_paper.pdf
   """
+  print("Smooth consistency loss: ")
+  print("depth_pred: {}".format(depth_pred))
+  print("y_pred_semantic: {}".format(y_pred_semantic))
 
   phi = tf.cast(tf.math.equal(y_pred_semantic, class_number), dtype=tf.float32)
   phi_x = tf.roll(phi, 1, axis=-3)
@@ -315,6 +329,9 @@ def ignorant_depth_loss(depth_label, y_pred_depth, maxDepthVal=1000.0 / 10.0):
                                    tf.zeros_like(depth_label), y_pred_depth)
   depth_label = tf.where(tf.math.is_nan(depth_label),
                          tf.zeros_like(depth_label), depth_label)
+  print("Ignorant depth loss: ")
+  print("depth_label: {}".format(depth_label))
+  print("y_pred_depth_ignorant: {}".format(y_pred_depth_ignorant))
 
   return depth_loss_function(depth_label, y_pred_depth_ignorant, maxDepthVal=maxDepthVal)
 
