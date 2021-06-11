@@ -22,7 +22,7 @@ dataset_params:
   test_dataset: null
   test_scene: null
   train_dataset: MeshdistPseudolabelsDenseDepth #NyuDepthV2LabeledDepth #
-  train_scene: office3_densedepth20_dyn_test # null
+  train_scene: office3_densedepth20_dyn_test #null # 
   validation_percentage: 50
 logging_params:
   model_save_freq: 1

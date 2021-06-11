@@ -166,7 +166,7 @@ class DepthModel(BaseCLModel):
     print("Depth loss inputs:")
     print("pred_y_depth: {}".format(pred_y_depth))
     print("y_depth: {}".format(y_depth))
-    loss_depth = ignorant_depth_loss(y_depth, pred_y_depth, maxDepthVal=10) # remove hardcoded version
+    loss_depth = ignorant_depth_loss(y_depth, pred_y_depth) # remove hardcoded version
     # Masking for MAE only
     pred_y_depth_masked = tf.boolean_mask(pred_y_depth, mask_depth)
     y_depth_masked = tf.boolean_mask(y_depth, mask_depth)
