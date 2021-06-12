@@ -327,7 +327,7 @@ def smooth_consistency_loss(depth_pred, y_pred_semantic, class_number=0):
   return tf.keras.backend.mean(diffx_no_nan + diffy_no_nan)
 
 
-def ignorant_depth_loss(depth_label, y_pred_depth, maxDepthVal=1000.0 / 10.0): 
+def ignorant_depth_loss(depth_label, y_pred_depth, maxDepthVal=1000.0 / 10.0, theta=10): 
   """
   wrapper to mask all "NaN" values in depth
   """
@@ -339,7 +339,7 @@ def ignorant_depth_loss(depth_label, y_pred_depth, maxDepthVal=1000.0 / 10.0):
   print("depth_label: {}".format(depth_label))
   print("y_pred_depth_ignorant: {}".format(y_pred_depth_ignorant))
 
-  return depth_loss_function(depth_label, y_pred_depth_ignorant, maxDepthVal=maxDepthVal)
+  return depth_loss_function(depth_label, y_pred_depth_ignorant, maxDepthVal=maxDepthVal, theta=theta)
 
 
 def depth_loss_function(y_true, y_pred, theta=0.1, maxDepthVal=1000.0 / 10.0): 
