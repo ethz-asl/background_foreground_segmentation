@@ -168,14 +168,14 @@ class DepthModel(BaseCLModel):
     print("pred_y_depth: {}".format(pred_y_depth))
     print("y_depth: {}".format(y_depth))
     
-    #loss_depth = ignorant_depth_loss(y_depth, pred_y_depth) # remove hardcoded version
+    loss_depth = ignorant_depth_loss(y_depth, pred_y_depth) # remove hardcoded version
     
     
-    pred_y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
-                                   tf.zeros_like(y_depth), pred_y_depth)
-    y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
-                         tf.zeros_like(y_depth), y_depth)
-    loss_depth = self.loss_mae(y_depth_ignorant, pred_y_depth_ignorant)
+    # pred_y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
+    #                                tf.zeros_like(y_depth), pred_y_depth)
+    # y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
+    #                      tf.zeros_like(y_depth), y_depth)
+    # loss_depth = self.loss_mae(y_depth_ignorant, pred_y_depth_ignorant)
 
 
 
