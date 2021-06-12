@@ -231,6 +231,12 @@ class DepthModel(BaseCLModel):
 
 
     total_loss, auxiliary_losses = self._handle_multiple_losses(loss)
+    print("WEIGHTS: ")
+    print("Trainable: {}".format(len(self.new_model.trainable_weights)))
+    print(self.new_model.trainable_weights)
+    print("WEIGHTS: ")
+    print("Non-Trainable: {}".format(len(self.new_model.non_trainable_weights)))
+    print(self.new_model.non_trainable_weights)
 
     grads = tape.gradient(total_loss, self.new_model.trainable_weights)
     self.optimizer.apply_gradients(zip(grads, self.new_model.trainable_weights))

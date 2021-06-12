@@ -230,34 +230,34 @@ def fast_scnn_plus_depth(input_shape,
     ff_final = tfa.layers.GroupNormalization(groups=32)(ff_final)
 
   ff_final = tf.keras.activations.relu(ff_final)
-  """## Step 4: Classifier"""
 
-  classifier = tf.keras.layers.SeparableConv2D(
+  """########Split up into semseg and depth """
+  
+  """## Step 4: Semseg"""
+
+  classifier_semseg = tf.keras.layers.SeparableConv2D(
       128, (3, 3), padding='same', strides=(1, 1),
-      name='DSConv1_classifier')(ff_final)
+      name='DSConv1_classifier_semseg')(ff_final)
   if (normalization_type == "batch"):
-    classifier = tf.keras.layers.BatchNormalization()(classifier)
+    classifier_semseg = tf.keras.layers.BatchNormalization()(classifier_semseg)
   else:
     # 32 is default value for the number of groups in GN. The number of input
     # channels here is 128.
-    classifier = tfa.layers.GroupNormalization(groups=32)(classifier)
-  classifier = tf.keras.activations.relu(classifier)
+    classifier_semseg = tfa.layers.GroupNormalization(groups=32)(classifier_semseg)
+  classifier_semseg = tf.keras.activations.relu(classifier_semseg)
 
-  classifier = tf.keras.layers.SeparableConv2D(
+  classifier_semseg = tf.keras.layers.SeparableConv2D(
       128, (3, 3), padding='same', strides=(1, 1),
-      name='DSConv2_classifier')(classifier)
+      name='DSConv2_classifier_semseg')(classifier_semseg)
   if (normalization_type == "batch"):
-    classifier = tf.keras.layers.BatchNormalization()(classifier)
+    classifier_semseg = tf.keras.layers.BatchNormalization()(classifier_semseg)
   else:
     # 32 is default value for the number of groups in GN. The number of input
     # channels here is 128.
-    classifier = tfa.layers.GroupNormalization(groups=32)(classifier)
-  classifier = tf.keras.activations.relu(classifier)
+    classifier_semseg = tfa.layers.GroupNormalization(groups=32)(classifier_semseg)
+  classifier_semseg = tf.keras.activations.relu(classifier_semseg)
 
-  """## Step 5: Split up into semseg and depth """
-
-  # Semseg
-  semseg = conv_block(classifier,
+  semseg = conv_block(classifier_semseg,
                           'conv',
                           num_classes, (1, 1),
                           strides=(1, 1),
@@ -273,8 +273,31 @@ def fast_scnn_plus_depth(input_shape,
   print("Semseg output shape: {}".format(semseg.shape))
   print("num_classes: {}".format(num_classes))
 
+
+  classifier_depth = tf.keras.layers.SeparableConv2D(
+      128, (3, 3), padding='same', strides=(1, 1),
+      name='DSConv1_classifier_depth')(ff_final)
+  if (normalization_type == "batch"):
+    classifier_depth = tf.keras.layers.BatchNormalization()(classifier_depth)
+  else:
+    # 32 is default value for the number of groups in GN. The number of input
+    # channels here is 128.
+    classifier_depth = tfa.layers.GroupNormalization(groups=32)(classifier_depth)
+  classifier_depth = tf.keras.activations.relu(classifier_depth)
+
+  classifier_depth = tf.keras.layers.SeparableConv2D(
+      128, (3, 3), padding='same', strides=(1, 1),
+      name='DSConv2_classifier_depth')(classifier_depth)
+  if (normalization_type == "batch"):
+    classifier_depth = tf.keras.layers.BatchNormalization()(classifier_depth)
+  else:
+    # 32 is default value for the number of groups in GN. The number of input
+    # channels here is 128.
+    classifier_depth = tfa.layers.GroupNormalization(groups=32)(classifier_depth)
+  classifier_depth = tf.keras.activations.relu(classifier_depth)
+
   # Depth (1 channel only)
-  depth = conv_block(classifier,
+  depth = conv_block(classifier_depth,
                           'conv',
                           1, (1, 1),
                           strides=(1, 1),
