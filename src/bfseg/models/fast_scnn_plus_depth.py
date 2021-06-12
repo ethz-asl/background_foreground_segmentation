@@ -309,7 +309,9 @@ def fast_scnn_plus_depth(input_shape,
 
   depth = tf.keras.layers.UpSampling2D(
       (2**num_downsampling_layers, 2**num_downsampling_layers))(depth)
-  depth = tf.square(depth)
+  
+  # minimum inverse depth to be predicted is 1: 
+  depth = tf.square(depth) + 1
   print("Depth output shape: {}".format(depth.shape))
 
 
