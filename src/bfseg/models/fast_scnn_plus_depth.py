@@ -297,7 +297,7 @@ def fast_scnn_plus_depth(input_shape,
   classifier_depth = tf.keras.activations.relu(classifier_depth)
 
   # Depth (1 channel only)
-  depth = conv_block(classifier_depth,
+  depth = conv_block(classifier_semseg,
                           'conv',
                           1, (1, 1),
                           strides=(1, 1),
