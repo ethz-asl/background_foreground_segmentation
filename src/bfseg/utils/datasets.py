@@ -135,7 +135,7 @@ def preprocess_nyu_depth(image, label):
           tf.constant(float('nan'), dtype=tf.float32), depth_label)
 
     old_shape = depth_norm_2.shape
-    depth_flattened = tf.reshape(depth_norm_2, [-1]).numpy() 
+    depth_flattened = tf.reshape(depth_norm_2, [-1])
     depth_flattened_trans, _  = tf_boxcox(depth_flattened)
     depth_restored = tf.reshape(depth_flattened_trans, old_shape)    
     depth_standardized = tf.image.per_image_standardization(depth_restored)
