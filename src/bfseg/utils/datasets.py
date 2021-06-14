@@ -94,6 +94,16 @@ def preprocess_bagfile_depth(image, label):
     depth_restored = tf.reshape(depth_flattened_trans, old_shape)    
     depth_standardized = tf.image.per_image_standardization(depth_restored)
     depth_label_final = depth_standardized
+  
+  elif mode == "inverse_standardize":
+    print("inverse standardize")
+    depth_norm_2 = tf.where(
+          tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
+          tf.constant(float('nan'), dtype=tf.float32), depth_norm)
+
+    depth_inverse = 10 / depth_norm_2  
+    depth_inverse_standardized = tf.image.per_image_standardization(depth_inverse)
+    depth_label_final = depth_inverse_standardized
 
   else: 
     depth_norm_2 = tf.where(
@@ -121,13 +131,13 @@ def preprocess_nyu_depth(image, label):
   - Assigns label: 1 if belong to background, 0 if foreground.
   - Creates all-True mask, since NYU labels are all known.
   """
-  mode = "boxcox_standardize"
   seg_label = label['seg']
   depth_label = tf.expand_dims(label['distance'], -1)
   seg_mask = tf.not_equal(seg_label, -1)  # All true.
   seg_label = tf.expand_dims(seg_label, axis=2)
   image = tf.cast(image, tf.float32) / 255.
   
+  mode = "inverse_standardize"
   if mode == "boxcox_standardize":
     print("boxcox standardize")
     depth_norm_2 = tf.where(
@@ -140,6 +150,16 @@ def preprocess_nyu_depth(image, label):
     depth_restored = tf.reshape(depth_flattened_trans, old_shape)    
     depth_standardized = tf.image.per_image_standardization(depth_restored)
     depth_label_final = depth_standardized
+  
+  elif mode == "inverse_standardize":
+    print("inverse standardize")
+    depth_norm_2 = tf.where(
+          tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
+          tf.constant(float('nan'), dtype=tf.float32), depth_label)
+
+    depth_inverse = 10 / depth_norm_2  
+    depth_inverse_standardized = tf.image.per_image_standardization(depth_inverse)
+    depth_label_final = depth_inverse_standardized
 
   else: 
     # clip max depth value to 10
