@@ -137,7 +137,7 @@ def preprocess_nyu_depth(image, label):
   seg_label = tf.expand_dims(seg_label, axis=2)
   image = tf.cast(image, tf.float32) / 255.
   
-  mode = "inverse_standardize"
+  mode = "boxcox_standardize"
   if mode == "boxcox_standardize":
     print("boxcox standardize")
     depth_norm_2 = tf.where(
