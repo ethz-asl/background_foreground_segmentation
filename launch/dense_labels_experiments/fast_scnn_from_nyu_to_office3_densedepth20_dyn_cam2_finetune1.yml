@@ -33,9 +33,9 @@ cl_params:
   cl_framework: finetune
   fraction_replay_ds_to_use: 0.1
   # Note: this needs to be specified.
-  pretrained_dir: /media/xavier/sandisk/saved_weights/nyu_pretrained_depth_weights_10.h5
+  pretrained_dir: /media/xavier/sandisk/saved_weights/nyu_depth_pretrained_weights_20.h5
   ratio_main_ds_replay_ds: null
 depth_params:
   semseg_weight: 1
   depth_weight: 4
-  consistency_weight: 1
+  consistency_weight: 10
