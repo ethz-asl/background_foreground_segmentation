@@ -111,6 +111,11 @@ def preprocess_nyu_depth(image, label):
   seg_mask = tf.not_equal(seg_label, -1)  # All true.
   seg_label = tf.expand_dims(seg_label, axis=2)
   image = tf.cast(image, tf.float32) / 255.
+  
+  # clip max depth value to 10
+  depth_label = tf.where(
+        tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
+        tf.constant(float(10), dtype=tf.float32), depth_label)
 
   # replace zeros with NaN for depth
   depth_norm_2 = tf.where(
