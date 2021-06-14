@@ -18,7 +18,7 @@ training_params:
   use_balanced_loss: false
 dataset_params:
   replay_datasets: 
-    - NyuDepthV2Labeled
+    - NyuDepthV2LabeledDepth
   replay_datasets_scene: 
     - null
   test_dataset: null
