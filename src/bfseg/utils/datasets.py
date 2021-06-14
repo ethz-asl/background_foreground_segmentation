@@ -62,7 +62,7 @@ def preprocess_bagfile(image, label):
   image = tf.cast(image, tf.float32)
   return image, label, mask
 
-@tf.function
+@tf.function 
 def preprocess_bagfile_depth(image, label):
   r"""Preprocesses bagfile dataset (e.g., Rumlang). The dataset consists of
   three labels (0, 1, 2) with the following meaning:
@@ -81,12 +81,26 @@ def preprocess_bagfile_depth(image, label):
 
   # Convert depth [0,255] to real distance [0m, 10m] (TODO: remove hardcoded 10)
   depth_norm = ((tf.cast(depth_label, dtype=tf.float32) - 1.0) * 10 / 254)
-  # replace zeros with NaN for depth
-  depth_norm_2 = tf.where(
+  mode = "boxcox_standardize"
+  if mode == "boxcox_standardize":
+    print("boxcox standardize")
+    depth_norm_2 = tf.where(
         tf.equal(depth_label, tf.constant(0, dtype=tf.uint8)),
         tf.constant(float('nan'), dtype=tf.float32), depth_norm)
-  # normalize depth (inverse)
-  depth_norm_2 = 10 / depth_norm_2
+
+    old_shape = depth_norm_2.shape
+    depth_flattened = tf.reshape(depth_norm_2, [-1])
+    depth_flattened_trans, _  = tf_boxcox(depth_flattened)
+    depth_restored = tf.reshape(depth_flattened_trans, old_shape)    
+    depth_standardized = tf.image.per_image_standardization(depth_restored)
+    depth_label_final = depth_standardized
+
+  else: 
+    depth_norm_2 = tf.where(
+            tf.equal(depth_label, tf.constant(0, dtype=tf.uint8)),
+            tf.constant(float('nan'), dtype=tf.float32), depth_norm)
+      # normalize depth (inverse)
+    depth_label_final = 10 / depth_norm_2
 
   # Semseg: Mask out unknown pixels for semseg
   seg_mask = tf.squeeze(tf.not_equal(seg_label, 2))
@@ -96,7 +110,7 @@ def preprocess_bagfile_depth(image, label):
   depth_mask = tf.squeeze(tf.not_equal(depth_norm, 0))
 
   image = tf.cast(image, tf.float32)
-  labels = {'seg_label': seg_label, 'depth_label': depth_norm_2}
+  labels = {'seg_label': seg_label, 'depth_label': depth_label_final}
   masks = {'seg_mask': seg_mask, 'depth_mask': depth_mask}
   return image, labels, masks
 
@@ -121,8 +135,8 @@ def preprocess_nyu_depth(image, label):
           tf.constant(float('nan'), dtype=tf.float32), depth_label)
 
     old_shape = depth_norm_2.shape
-    depth_flattened = tf.reshape(depth_norm_2, [-1]) 
-    depth_flattened_trans, _  = stats.boxcox(depth_flattened)
+    depth_flattened = tf.reshape(depth_norm_2, [-1]).numpy() 
+    depth_flattened_trans, _  = tf_boxcox(depth_flattened)
     depth_restored = tf.reshape(depth_flattened_trans, old_shape)    
     depth_standardized = tf.image.per_image_standardization(depth_restored)
     depth_label_final = depth_standardized
@@ -530,3 +544,8 @@ def update_datasets_with_replay_and_augmentation(
         train_ds = train_ds.map(preprocess_median_full_with_mask)
 
   return train_ds, test_ds
+
+
+def tf_boxcox(input):
+  y = tf.numpy_function(stats.boxcox, [input], (tf.float32, tf.float64))
+  return y 
