@@ -8,6 +8,7 @@ import cv2
 from bfseg.data.fsdata import load_fsdata
 from bfseg.utils.images import augmentation_with_mask, augmentation_with_mask_depth, preprocess_median_full_with_mask_depth, preprocess_median_full_with_mask
 from bfseg.utils.replay_buffer import ReplayBuffer
+import scipy.stats as stats 
 
 
 @tf.function
@@ -106,28 +107,43 @@ def preprocess_nyu_depth(image, label):
   - Assigns label: 1 if belong to background, 0 if foreground.
   - Creates all-True mask, since NYU labels are all known.
   """
+  mode = "boxcox_standardize"
   seg_label = label['seg']
   depth_label = tf.expand_dims(label['distance'], -1)
   seg_mask = tf.not_equal(seg_label, -1)  # All true.
   seg_label = tf.expand_dims(seg_label, axis=2)
   image = tf.cast(image, tf.float32) / 255.
   
-  # clip max depth value to 10
-  depth_label = tf.where(
-        tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
-        tf.constant(float(10), dtype=tf.float32), depth_label)
+  if mode == "boxcox_standardize":
+    print("boxcox standardize")
+    depth_norm_2 = tf.where(
+          tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
+          tf.constant(float('nan'), dtype=tf.float32), depth_label)
 
-  # replace zeros with NaN for depth
-  depth_norm_2 = tf.where(
-        tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
-        tf.constant(float('nan'), dtype=tf.float32), depth_label)
-  # normalize depth (inverse)
-  depth_norm_2 = 10 / depth_norm_2
+    old_shape = depth_norm_2.shape
+    depth_flattened = tf.reshape(depth_norm_2, [-1]) 
+    depth_flattened_trans, _  = stats.boxcox(depth_flattened)
+    depth_restored = tf.reshape(depth_flattened_trans, old_shape)    
+    depth_standardized = tf.image.per_image_standardization(depth_restored)
+    depth_label_final = depth_standardized
+
+  else: 
+    # clip max depth value to 10
+    depth_label = tf.where(
+          tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
+          tf.constant(float(10), dtype=tf.float32), depth_label)
+
+    # replace zeros with NaN for depth
+    depth_norm_2 = tf.where(
+          tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
+          tf.constant(float('nan'), dtype=tf.float32), depth_label)
+    # normalize depth (inverse)
+    depth_label_final = 10 / depth_norm_2
 
   # Depth mask for MAE only (not used in loss)
   depth_mask = tf.squeeze(tf.not_equal(depth_label, 0))
 
-  labels = {'seg_label': seg_label, 'depth_label': depth_norm_2}
+  labels = {'seg_label': seg_label, 'depth_label': depth_label_final}
   masks = {'seg_mask': seg_mask, 'depth_mask': depth_mask}
   return image, labels, masks
 
