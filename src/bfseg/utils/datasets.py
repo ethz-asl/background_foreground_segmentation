@@ -89,10 +89,12 @@ def preprocess_bagfile_depth(image, label):
         tf.equal(depth_label, tf.constant(0, dtype=tf.uint8)),
         tf.constant(float('nan'), dtype=tf.float32), depth_norm)
     # remove outliers (very few distort the distribution)
-    quant95 = tf_nanquantile95(depth_norm_2)
-    depth_norm_2 = tf.where(
-        tf.greater_equal(depth_norm_2, tf.constant(quant95, dtype=tf.float32)),
-        tf.constant(float('nan'), dtype=tf.float32), depth_norm_2)
+    #quant95 = tf_nanquantile95(depth_norm_2)
+    #print(quant95)
+    #print(quant95.shape) # problem is that shape is unknown
+    #depth_norm_2 = tf.where(
+    #    tf.greater_equal(depth_norm_2, quant95),
+    #    tf.constant(float('nan'), dtype=tf.float32), depth_norm_2)
     depth_standardized, _, _ = ignorant_standardization(depth_norm_2)
 
     depth_label_final = depth_standardized
@@ -576,8 +578,10 @@ def ignorant_standardization(x):
     valid_pixels = tf.where(tf.math.is_nan(x), 
                             tf.constant(0, dtype=tf.float32), tf.constant(1, dtype=tf.float32))
     num_pixels = tf.reduce_sum(valid_pixels)
-    nanmean = tf_nanmean(x)
-    nanstd = tf_nanstd(x)
+    nan_mask = tf.math.logical_not(tf.math.is_nan(x))
+    x_nonans = tf.boolean_mask(x, nan_mask)
+    nanmean = tf.math.reduce_mean(x_nonans)
+    nanstd = tf.math.reduce_std(x_nonans)
     min_nanstd = tf.math.rsqrt(num_pixels)
     adjusted_nanstd = tf.math.maximum(min_nanstd, nanstd)
     x_standardized = x - nanmean
