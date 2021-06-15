@@ -9,6 +9,7 @@ from bfseg.data.fsdata import load_fsdata
 from bfseg.utils.images import augmentation_with_mask, augmentation_with_mask_depth, preprocess_median_full_with_mask_depth, preprocess_median_full_with_mask
 from bfseg.utils.replay_buffer import ReplayBuffer
 import scipy.stats as stats 
+import numpy as np
 
 
 @tf.function
@@ -81,18 +82,19 @@ def preprocess_bagfile_depth(image, label):
 
   # Convert depth [0,255] to real distance [0m, 10m] (TODO: remove hardcoded 10)
   depth_norm = ((tf.cast(depth_label, dtype=tf.float32) - 1.0) * 10 / 254)
-  mode = "boxcox_standardize"
-  if mode == "boxcox_standardize":
-    print("boxcox standardize")
+  mode = "standardize"
+  if mode == "standardize":
+    print("standardize")
     depth_norm_2 = tf.where(
         tf.equal(depth_label, tf.constant(0, dtype=tf.uint8)),
         tf.constant(float('nan'), dtype=tf.float32), depth_norm)
+    # remove outliers (very few distort the distribution)
+    quant95 = tf_nanquantile95(depth_norm_2)
+    depth_norm_2 = tf.where(
+        tf.greater_equal(depth_norm_2, tf.constant(quant95, dtype=tf.float32)),
+        tf.constant(float('nan'), dtype=tf.float32), depth_norm_2)
+    depth_standardized, _, _ = ignorant_standardization(depth_norm_2)
 
-    old_shape = depth_norm_2.shape
-    depth_flattened = tf.reshape(depth_norm_2, [-1])
-    depth_flattened_trans, _  = tf_boxcox(depth_flattened)
-    depth_restored = tf.reshape(depth_flattened_trans, old_shape)    
-    depth_standardized = tf.image.per_image_standardization(depth_restored)
     depth_label_final = depth_standardized
   
   elif mode == "inverse_standardize":
@@ -102,7 +104,7 @@ def preprocess_bagfile_depth(image, label):
           tf.constant(float('nan'), dtype=tf.float32), depth_norm)
 
     depth_inverse = 10 / depth_norm_2  
-    depth_inverse_standardized = tf.image.per_image_standardization(depth_inverse)
+    depth_inverse_standardized, _, _ = ignorant_standardization(depth_inverse)
     depth_label_final = depth_inverse_standardized
 
   else: 
@@ -569,3 +571,31 @@ def update_datasets_with_replay_and_augmentation(
 def tf_boxcox(input):
   y = tf.numpy_function(stats.boxcox, [input], (tf.float32, tf.float64))
   return y 
+
+def ignorant_standardization(x):
+    valid_pixels = tf.where(tf.math.is_nan(x), 
+                            tf.constant(0, dtype=tf.float32), tf.constant(1, dtype=tf.float32))
+    num_pixels = tf.reduce_sum(valid_pixels)
+    nanmean = tf_nanmean(x)
+    nanstd = tf_nanstd(x)
+    min_nanstd = tf.math.rsqrt(num_pixels)
+    adjusted_nanstd = tf.math.maximum(min_nanstd, nanstd)
+    x_standardized = x - nanmean
+    x_standardized = tf.math.divide(x_standardized, adjusted_nanstd)
+    return x_standardized, nanmean, adjusted_nanstd
+
+def tf_nanmean(input):
+    y = tf.numpy_function(np.nanmean, [input], tf.float32)
+    return y 
+
+def tf_nanstd(input):
+    y = tf.numpy_function(np.nanstd, [input], tf.float32)
+    return y 
+
+def tf_nanquantile95(input):
+    y = tf.numpy_function(np_nanquantile95, [input], tf.float64)
+    y = tf.cast(y, tf.float32)
+    return y 
+
+def np_nanquantile95(x):
+    return np.nanquantile(x, 0.95)
