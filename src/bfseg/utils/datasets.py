@@ -82,14 +82,14 @@ def preprocess_bagfile_depth(image, label):
 
   # Convert depth [0,255] to real distance [0m, 10m] (TODO: remove hardcoded 10)
   depth_norm = ((tf.cast(depth_label, dtype=tf.float32) - 1.0) * 10 / 254)
-  mode = "standardize"
+  mode = "inverse_standardize"
   if mode == "standardize":
     print("standardize")
     depth_norm_2 = tf.where(
         tf.equal(depth_label, tf.constant(0, dtype=tf.uint8)),
         tf.constant(float('nan'), dtype=tf.float32), depth_norm)
     # remove outliers (very few distort the distribution)
-    #quant95 = tf_nanquantile95(depth_norm_2)
+    #quant95 = quantile95(depth_norm_2)
     #print(quant95)
     #print(quant95.shape) # problem is that shape is unknown
     #depth_norm_2 = tf.where(
@@ -102,7 +102,7 @@ def preprocess_bagfile_depth(image, label):
   elif mode == "inverse_standardize":
     print("inverse standardize")
     depth_norm_2 = tf.where(
-          tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
+          tf.equal(depth_label, tf.constant(0, dtype=tf.uint8)),
           tf.constant(float('nan'), dtype=tf.float32), depth_norm)
 
     depth_inverse = 10 / depth_norm_2  
@@ -596,10 +596,16 @@ def tf_nanstd(input):
     y = tf.numpy_function(np.nanstd, [input], tf.float32)
     return y 
 
-def tf_nanquantile95(input):
-    y = tf.numpy_function(np_nanquantile95, [input], tf.float64)
+def quantile95(x):
+    nan_mask = tf.math.logical_not(tf.math.is_nan(x))
+    x_nonans = tf.boolean_mask(x, nan_mask)
+    quant = tf_quantile95(x_nonans)
+    return quant
+
+def tf_quantile95(input):
+    y = tf.numpy_function(np_quantile95, [input], tf.float64)
     y = tf.cast(y, tf.float32)
     return y 
 
-def np_nanquantile95(x):
-    return np.nanquantile(x, 0.95)
+def np_quantile95(x):
+    return np.quantile(x, 0.95)
