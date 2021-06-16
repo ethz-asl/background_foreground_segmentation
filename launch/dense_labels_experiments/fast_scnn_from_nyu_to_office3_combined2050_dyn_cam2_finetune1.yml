@@ -33,5 +33,5 @@ cl_params:
   cl_framework: finetune
   fraction_replay_ds_to_use: 0.1
   # Note: this needs to be specified.
-  pretrained_dir: /media/xavier/sandisk/saved_weights/nyu_pretrained_weights_10.h5
+  pretrained_dir: /xavier_ssd/saved_weights/nyu_pretrained_weights_10.h5
   ratio_main_ds_replay_ds: null
