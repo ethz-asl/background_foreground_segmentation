@@ -324,7 +324,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       raise Exception("Invalid scene type: %s!" % scene_type)
   elif (dataset_name == 'MeshdistPseudolabelsDense'):
     if (scene_type in ['office6_sparse50_allcams', 'office6_paper', 'office12_dense20_dyn_cam2', 'office12_sparse50_dyn_cam2', 
-      'office12_sparse50_dyn_allcams', 'office3_dense20_dyn_cam2', 'office3_sparse50_dyn_cam2', 'office3_sparse50_dyn_allcams']):
+      'office12_sparse50_dyn_allcams', 'office3_dense20_dyn_cam2', 'office3_sparse50_dyn_cam2', 'office3_sparse50_dyn_allcams', 'office3_combined2050_dyn_cam2']):
       name = scene_type
     else:
       raise Exception("Invalid scene type: %s!" % scene_type)

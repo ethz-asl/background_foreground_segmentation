@@ -56,7 +56,9 @@ class MeshdistPseudolabelsDense(tfds.core.GeneratorBasedBuilder):
         'office3_sparse50_dyn_cam2':
             'https://drive.google.com/uc?export=download&id=1aaCaFXkGUd503aPql50YOUHnq6CJDdTm',
         'office3_sparse50_dyn_allcams':
-            'https://drive.google.com/uc?export=download&id=1b--TyIidfTZVoL4aYrBUFXe9_S7rqF2N'
+            'https://drive.google.com/uc?export=download&id=1b--TyIidfTZVoL4aYrBUFXe9_S7rqF2N',
+        'office3_combined2050_dyn_cam2':
+            'https://drive.google.com/uc?export=download&id=1IpNZPdwvBO7pnZJVEtK-_hq8W78F8t82'
     })
     return [
         tfds.core.SplitGenerator(
