@@ -1,5 +1,5 @@
 processImages: True
-pathToModel: "/home/rene/catkin_ws/src/background_foreground_segmentation/model.h5"
+pathToModel: "/home/author/catkin_ws/src/background_foreground_segmentation/model.h5"
 frameId: "rgb_camera_link"
 imageTopic: "/rgb/image_raw"
 cameraTopic: "/rgb/camera_info"

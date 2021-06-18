@@ -3,12 +3,10 @@
   <name>background_foreground_segmentation</name>
   <version>0.1.0</version>
   <description>Segmentation of LiDAR scans into building structure and clutter</description>
-  <maintainer email="blumh@ethz.ch">Hermann Blum</maintainer>
-  <author email="zrene@student.ethz.ch">René Zurbrügg</author>
-  <author email="blumh@ethz.ch">Hermann Blum</author>
-  <author email="frasarno@student.ethz.ch">Francesco Sarno</author>
+  <maintainer email="anonymous">anonymous</maintainer>
+  <author email="anonymous">anonymous</author>
 
-  <license>BSD</license>
+  <license>Confidential</license>
 
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>catkin_simple</buildtool_depend>
