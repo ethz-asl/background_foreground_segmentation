@@ -15,7 +15,7 @@
     <rosparam file="$(find background_foreground_segmentation)/launch/pickelhaube/cam1_intr_2.yaml"/>
     <remap from="camera_info" to="/rgb/camera_info"/>
     <remap from="image_rect" to="/depth_to_rgb/image_raw"/>
-    <remap from="points" to="/depth/points"/>
+    <remap from="points" to="/points2"/>
   </node>
 
   <!-- <node pkg="nodelet"
