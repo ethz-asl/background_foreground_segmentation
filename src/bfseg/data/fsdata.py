@@ -48,6 +48,7 @@ def load_fsdata(base_path, dataset_info=None, modalities=None):
   data_shape_description = dataset_info['output_shapes']
   data_shape_description['filename'] = []
   name_to_tf_type = {
+      'uint8': tf.uint8,
       'int32': tf.int32,
       'float32': tf.float32,
       'string': tf.string
@@ -83,7 +84,7 @@ def load_fsdata(base_path, dataset_info=None, modalities=None):
             blob['rgb'] = img[..., ::-1]
         else:
           data = cv2.imread(filepath, cv2.IMREAD_ANYDEPTH)
-          if modality in ['labels', 'mask']:
+          if modality in ['labels', 'mask', 'sparselabels', 'denselabels', 'combinedlabels', 'depthlabels', 'unaggregatedlabels', 'sparsedepthlabels']:
             # opencv translation as it ignores negative values
             data = data.astype(dataset_info['output_types'][modality])
             data[data == 255] = -1
