@@ -134,10 +134,7 @@ def preprocess_median_full_with_mask(image, label, mask):
   print("-------Inside preprocessing_median_full_with_mask")
 
   label_seg_median = tfa.image.median_filter2d(label, 11)
-  label_seg_median_full = tf.where(
-        tf.equal(label_seg_median, tf.constant(2, dtype=tf.uint8)),
-        tf.constant(0, dtype=tf.uint8), label_seg_median)
-  mask_seg = tf.not_equal(label, -1)  # All true.
+  mask_seg = tf.not_equal(label_seg_median, 2)  
   mask_seg = tf.squeeze(mask_seg, axis=-1)
 
-  return image, label_seg_median_full, mask_seg
+  return image, label_seg_median, mask_seg
