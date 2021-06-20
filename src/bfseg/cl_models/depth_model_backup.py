@@ -2,8 +2,6 @@ import tensorflow as tf
 from tensorflow import keras
 import warnings
 
-from tensorflow.python.ops.gen_math_ops import mean
-
 from bfseg.cl_models import BaseCLModel
 from bfseg.utils.models import create_model
 
@@ -13,6 +11,7 @@ class DepthModel(BaseCLModel):
   1. Feature distillation on the intermediate feature space (at the output of
      the encoder);
   2. Distillation on the network output.
+
   Args:
     run (sacred.run.Run): Object identifying the current sacred run.
     root_output_dir (str): Path to the folder that will contain the experiment
@@ -94,6 +93,7 @@ class DepthModel(BaseCLModel):
   def log_metrics(self, metric_type, logs, step):
     r"""Logs to sacred the metrics for the given dataset type ("train",
     "train_no_replay", "val", or "test") at the given step.
+
     Args:
       metric_type (str): Either "train", "train_no_replay", "val", "test", or
         the name of a dataset on which the model was evaluated: type of the
@@ -101,6 +101,7 @@ class DepthModel(BaseCLModel):
       logs (dict): Dictionary containing the metrics to log, indexed by the
         metric name, with their value at the given step.
       step (int): Training epoch to which the metrics are referred.
+
     Returns:
       None.
     """
@@ -118,11 +119,13 @@ class DepthModel(BaseCLModel):
 
   def forward_pass(self, training, x, y, mask):
     r"""Forward pass.
+
     Args:
       training (bool): Whether or not the model should be in training mode.
       x (tf.Tensor): Input to the network.
       y (tf.Tensor): Ground-truth labels corresponding to the given input.
       mask (tf.Tensor): Mask for the input to consider.
+
     Return:
       pred_y (tf.Tensor): Network prediction.
       pred_y_masked (tf.Tensor): Masked network prediction.
@@ -168,7 +171,10 @@ class DepthModel(BaseCLModel):
     
     loss_depth = ignorant_depth_loss(y_depth, pred_y_depth) # remove hardcoded version
     
-    loss_mse = mean_squared_error(y_depth, pred_y_depth)
+    # MSE Loss
+    loss_mse = mean_squared_error(pred_y_depth, y_depth)
+    
+    
     # pred_y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
     #                                tf.zeros_like(y_depth), pred_y_depth)
     # y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
@@ -189,6 +195,8 @@ class DepthModel(BaseCLModel):
     # print("pred_y_depth: {}".format(pred_y_depth))
     loss_consistency = sum([smooth_consistency_loss(pred_y_depth, pred_y_seg2, c) for c in range(semantic_classes)])
 
+
+
     # Final combined loss
     loss_combined = self.semseg_weight * loss_semseg + self.depth_weight * loss_depth + self.consistency_weight * loss_consistency + self.mse_weight * loss_mse
 
@@ -201,6 +209,7 @@ class DepthModel(BaseCLModel):
   def train_step(self, data):
     r"""Performs one training step with the input batch. Overrides `train_step`
     called internally by the `fit` method of the `tf.keras.Model`.
+
     Args:
       data (tuple): Input batch. It is expected to be of the form
         (train_x, train_y, train_mask), where:
@@ -259,6 +268,7 @@ class DepthModel(BaseCLModel):
     r"""Performs one evaluation (test/validation) step with the input batch.
     Overrides `test_step` called internally by the `evaluate` method of the
     `tf.keras.Model`.
+
     Args:
       data (tuple): Input batch. It is expected to be of the form
         (test_x, test_y, test_mask), where:
@@ -366,9 +376,7 @@ def depth_loss_function(y_true, y_pred, theta=0.1, maxDepthVal=1000.0 / 10.0):
       w3 * tf.keras.backend.mean(l_depth))
 
 def mean_squared_error(y_true, y_pred):
-  y_pred_ignorant = tf.where(tf.math.is_nan(y_true),
-                                   tf.zeros_like(y_true), y_pred)
-  y_true_ignorant = tf.where(tf.math.is_nan(y_true),
-                         tf.zeros_like(y_true), y_true)
-  l_mse = tf.keras.backend.mean(tf.math.squared_difference(y_pred_ignorant, y_true_ignorant))
+  l_mse = tf.keras.backend.mean(tf.math.squared_difference(y_pred, y_true))
   return tf.keras.backend.mean(l_mse)
+
+  

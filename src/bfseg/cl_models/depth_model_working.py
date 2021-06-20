@@ -2,8 +2,6 @@ import tensorflow as tf
 from tensorflow import keras
 import warnings
 
-from tensorflow.python.ops.gen_math_ops import mean
-
 from bfseg.cl_models import BaseCLModel
 from bfseg.utils.models import create_model
 
@@ -25,7 +23,6 @@ class DepthModel(BaseCLModel):
     self.semseg_weight = self.run.config['depth_params']['semseg_weight']
     self.depth_weight = self.run.config['depth_params']['depth_weight']
     self.consistency_weight = self.run.config['depth_params']['consistency_weight']
-    self.mse_weight = self.run.config['depth_params']['mse_weight']
 
   def _build_model(self):
     r"""Builds the models.
@@ -168,7 +165,7 @@ class DepthModel(BaseCLModel):
     
     loss_depth = ignorant_depth_loss(y_depth, pred_y_depth) # remove hardcoded version
     
-    loss_mse = mean_squared_error(y_depth, pred_y_depth)
+    
     # pred_y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
     #                                tf.zeros_like(y_depth), pred_y_depth)
     # y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
@@ -190,10 +187,10 @@ class DepthModel(BaseCLModel):
     loss_consistency = sum([smooth_consistency_loss(pred_y_depth, pred_y_seg2, c) for c in range(semantic_classes)])
 
     # Final combined loss
-    loss_combined = self.semseg_weight * loss_semseg + self.depth_weight * loss_depth + self.consistency_weight * loss_consistency + self.mse_weight * loss_mse
+    loss_combined = self.semseg_weight * loss_semseg + self.depth_weight * loss_depth + self.consistency_weight * loss_consistency
 
     # Return loss dict
-    loss = {'loss': loss_combined, 'loss_semseg': loss_semseg, 'loss_depth': loss_depth, 'loss_consistency': loss_consistency, 'loss_mse': loss_mse}
+    loss = {'loss': loss_combined, 'loss_semseg': loss_semseg, 'loss_depth': loss_depth, 'loss_consistency': loss_consistency}
 
     # return complete loss, but only segementation predictions
     return pred_y_seg, pred_y_seg_masked, y_seg_masked, pred_y_depth, pred_y_depth_masked, y_depth_masked, loss
@@ -364,11 +361,3 @@ def depth_loss_function(y_true, y_pred, theta=0.1, maxDepthVal=1000.0 / 10.0):
 
   return (w1 * l_ssim) + (w2 * tf.keras.backend.mean(l_edges)) + (
       w3 * tf.keras.backend.mean(l_depth))
-
-def mean_squared_error(y_true, y_pred):
-  y_pred_ignorant = tf.where(tf.math.is_nan(y_true),
-                                   tf.zeros_like(y_true), y_pred)
-  y_true_ignorant = tf.where(tf.math.is_nan(y_true),
-                         tf.zeros_like(y_true), y_true)
-  l_mse = tf.keras.backend.mean(tf.math.squared_difference(y_pred_ignorant, y_true_ignorant))
-  return tf.keras.backend.mean(l_mse)
