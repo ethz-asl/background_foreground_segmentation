@@ -166,7 +166,7 @@ class DepthModel(BaseCLModel):
     # print("pred_y_depth: {}".format(pred_y_depth))
     # print("y_depth: {}".format(y_depth))
     
-    loss_depth = ignorant_depth_loss(y_depth, pred_y_depth) # remove hardcoded version
+    loss_depth = ignorant_depth_loss(y_depth, pred_y_depth, theta=self.mse_weight) # remove hardcoded version
     
     loss_mse = mean_squared_error(y_depth, pred_y_depth)
     # pred_y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
@@ -190,7 +190,7 @@ class DepthModel(BaseCLModel):
     loss_consistency = sum([smooth_consistency_loss(pred_y_depth, pred_y_seg2, c) for c in range(semantic_classes)])
 
     # Final combined loss
-    loss_combined = self.semseg_weight * loss_semseg + self.depth_weight * loss_depth + self.consistency_weight * loss_consistency + self.mse_weight * loss_mse
+    loss_combined = self.semseg_weight * loss_semseg + self.depth_weight * loss_depth + self.consistency_weight * loss_consistency 
 
     # Return loss dict
     loss = {'loss': loss_combined, 'loss_semseg': loss_semseg, 'loss_depth': loss_depth, 'loss_consistency': loss_consistency, 'loss_mse': loss_mse}

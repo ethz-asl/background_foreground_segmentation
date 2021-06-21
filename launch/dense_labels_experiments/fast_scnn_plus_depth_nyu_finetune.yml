@@ -37,4 +37,4 @@ depth_params:
   semseg_weight: 1
   depth_weight: 4
   consistency_weight: 10
-  mse_weight: 0
+  mse_weight: 0.01 # default: 0.1
