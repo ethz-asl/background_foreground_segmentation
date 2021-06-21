@@ -82,7 +82,7 @@ def preprocess_bagfile_depth(image, label):
 
   # Convert depth [0,255] to real distance [0m, 10m] (TODO: remove hardcoded 10)
   depth_norm = ((tf.cast(depth_label, dtype=tf.float32) - 1.0) * 10 / 254)
-  mode = "power_median"
+  mode = "power_standardize"
   if mode == "normal standardize":
     print("normal standardize")
     depth_norm_2 = tf.where(
@@ -153,6 +153,26 @@ def preprocess_bagfile_depth(image, label):
     # normalize depth (power (lambda = 0.54) + median (1.29) scaling)
     depth_norm_2 = (depth_norm_2**0.54 - 1)/0.54 - 1.29
     depth_label_final = depth_norm_2
+
+  elif mode == "power_standardize": 
+    print("power standardize mode")
+    # clip max depth value to 10
+    depth_norm = tf.where(
+          tf.math.greater_equal(depth_norm, tf.constant(10, dtype=tf.float32)),
+          tf.constant(float(10), dtype=tf.float32), depth_norm)
+    # clip min depth value to 0.5
+    depth_norm = tf.where(
+        tf.less(depth_norm, tf.constant(0.5, dtype=tf.float32)),
+        tf.constant(float(0.5), dtype=tf.float32), depth_norm)
+
+    # replace zeros with NaN for depth
+    depth_norm_2 = tf.where(
+          tf.equal(depth_label, tf.constant(0, dtype=tf.uint8)),
+          tf.constant(float('nan'), dtype=tf.float32), depth_norm)
+    # normalize depth (power (lambda = 0.54) + standardization)
+    depth_norm_2 = (depth_norm_2**0.54 - 1)/0.54 
+    depth_standardized, _, _ = ignorant_standardization(depth_norm_2)
+    depth_label_final = depth_standardized
   
   elif mode == "normal":
     depth_norm_2 = tf.where(
@@ -185,7 +205,7 @@ def preprocess_nyu_depth(image, label):
   seg_label = tf.expand_dims(seg_label, axis=2)
   image = tf.cast(image, tf.float32) / 255.
   
-  mode = "power_median"
+  mode = "power_standardize"
   if mode == "boxcox_standardize":
     print("boxcox standardize")
     depth_norm_2 = tf.where(
@@ -246,6 +266,26 @@ def preprocess_nyu_depth(image, label):
     # normalize depth (power (lambda = 0.54) + median (1.29) scaling)
     depth_norm_2 = (depth_norm_2**0.54 - 1)/0.54 - 1.29
     depth_label_final = depth_norm_2
+
+  elif mode == "power_standardize": 
+    print("power standardize mode")
+    # clip max depth value to 10
+    depth_label = tf.where(
+          tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
+          tf.constant(float(10), dtype=tf.float32), depth_label)
+    # clip min depth value to 0.5
+    depth_label = tf.where(
+        tf.less(depth_label, tf.constant(0.5, dtype=tf.float32)),
+        tf.constant(float(0.5), dtype=tf.float32), depth_label)
+
+    # replace zeros with NaN for depth
+    depth_norm_2 = tf.where(
+          tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
+          tf.constant(float('nan'), dtype=tf.float32), depth_label)
+    # normalize depth (power (lambda = 0.54) + standardization)
+    depth_norm_2 = (depth_norm_2**0.54 - 1)/0.54 
+    depth_standardized, _, _ = ignorant_standardization(depth_norm_2)
+    depth_label_final = depth_standardized
   
   elif mode == "normal": 
     print("normal mode")
