@@ -82,7 +82,7 @@ roslaunch background_foreground_segmentation <experiment>.launch rosbag_folder:=
 ln -s /your/rosbag/location $BFSEG_ROOT/rosbags
 ```
 The bagfiles are listed in `rosbags.md`.
-## Examples for localization experiments
+## Examples for localization experiments (not runnable without ROS dependencies)
 
 Use an example bagfile (**Garage1**): [download bagfile](https://drive.google.com/file/d/1bVjDkZkycKaDUXlDpqKvr6hIjR4oC8ng/view?usp=sharing)
 
@@ -111,7 +111,7 @@ localising in the Office (to measure forgetting):
 roslaunch background_foreground_segmentation crossdomain_nyutoofficetocla_office7.launch
 ```
 
-## Evaluation of Localised Trajectories
+## Evaluation of Localised Trajectories (not runnable without ROS dependencies)
 When running the experiments as above, poses from the ground-truth (leica) and the robot (icp) are recorded in the `$BFSEG_ROOT/logs` directory. To get the localisation accuracy, use the following script to interpolate the leica pose to the timestamps of the icp localisation:
 
 ```python
@@ -145,7 +145,7 @@ icp.plot('headerstamp', 'rmse_xy')
 print('Mean: {:.3f}, Median: {:.3f}, Std: {:.3f}'.format(icp['rmse_xy'].mean(), icp['rmse_xy'].median(), icp['rmse_xy'].std()))
 ```
 
-## Getting the Pseudolabels
+## Getting the Pseudolabels  (not runnable without ROS dependencies)
 Each run with `pickelhaube_full_*.launch` will automatically store a dataset of pseudolabels in `$BFSEG_ROOT/logs/pickelhaube_full*/`. You can load the dataset into tensorflow like this:
 
 ```python
@@ -190,7 +190,7 @@ The results like model snapshots and metrics are then stored in the directory se
 
 You may also use the pre-trained models or the config files used to obtain these (see [`pretrained_models_and_configs.md`](pretrained_models_and_configs.md)).
 
-## Online Learning
+## Online Learning  (not runnable without ROS dependencies)
 The paper experiment was conducted on bagfile [Rumlang1](https://drive.google.com/file/d/1uJQkurwowBo5NmOd9aCYqvV2wDAx2FHs/view?usp=sharing).
 
 For online learning we rely on simultaneously executing nodes in python2 and python3, so in case you encounter import errors make sure to install the dependencies to both python versions.
