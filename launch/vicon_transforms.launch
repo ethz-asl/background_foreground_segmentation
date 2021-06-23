@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<launch>
-	<node pkg="tf" type="static_transform_publisher" name="camera_base_to_metal_structure" args="0.11 0 0 0 0 0 1 vicon/azure/azure  camera_base 100"/>
-	<node pkg="tf" type="static_transform_publisher" name="camara_frame_to_structure_frame" args="0 0 0 1.5708 0 1.5708  camera_base  rgb_camera_link  100"/> -->
-	<!-- enable this if you want to use ground truth pose from vicon room - links map to world -->
-	<!-- <node pkg="tf" type="static_transform_publisher" name="wrld" args="0 0 0 0 0 0 1  map world 100"/> -->
-
-</launch>
