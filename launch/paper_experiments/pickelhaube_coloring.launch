@@ -14,7 +14,7 @@ Launch file for Selective ICP with rviz
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find cpt_selective_icp)/launch/rviz.rviz" />
 
     <!-- should be started last for handover to ICP-->
-    <include file="$(find alphasense_tools)/launch/pickelhaube_from_bag.launch">
+    <include file="$(find anonymous_sensor1_tools)/launch/pickelhaube_from_bag.launch">
         <arg name="rosbag" value="$(arg rosbag)" />
     </include>
 

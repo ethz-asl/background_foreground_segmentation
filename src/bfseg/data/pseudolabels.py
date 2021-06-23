@@ -20,7 +20,7 @@ class MeshdistPseudolabels(tfds.core.GeneratorBasedBuilder):
   VERSION = tfds.core.Version('0.2.0')
   RELEASE_NOTES = {
       '0.2.0': 'added office scenes',
-      '0.1.3': 'completed alphasense garage data',
+      '0.1.3': 'completed anonymous_sensor1 garage data',
       '0.1.2': 'removed cam2 from garage1',
       '0.1.1': 'more data',
       '0.1.0': 'Initial testing.'

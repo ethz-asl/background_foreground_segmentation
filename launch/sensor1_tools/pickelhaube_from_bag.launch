@@ -14,6 +14,6 @@
         args="--clock -d 1 -r $(arg rate) $(arg rosbag)"
         />
 
-  <include file="$(find background_foreground_segmentation)/launch/alphasense_tools/pickelhaube_calibrations.launch" />
+  <include file="$(find background_foreground_segmentation)/launch/anonymous_sensor1_tools/pickelhaube_calibrations.launch" />
 
 </launch>

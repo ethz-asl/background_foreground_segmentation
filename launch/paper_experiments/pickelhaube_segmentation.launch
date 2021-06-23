@@ -87,7 +87,7 @@ Launch file for Selective ICP with rviz
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find background_foreground_segmentation)/config/segmented_icp.rviz" />
 
     <!-- should be started last for handover to ICP-->
-    <include file="$(find background_foreground_segmentation)/launch/alphasense_tools/pickelhaube_from_bag.launch">
+    <include file="$(find background_foreground_segmentation)/launch/anonymous_sensor1_tools/pickelhaube_from_bag.launch">
         <arg name="rosbag" value="$(arg rosbag)" />
     </include>
 

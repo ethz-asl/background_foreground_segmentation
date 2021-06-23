@@ -109,7 +109,7 @@ Launch file for Selective ICP with rviz
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find cpt_selective_icp)/launch/rviz.rviz" />
 
     <!-- should be started last for handover to ICP-->
-    <include file="$(find background_foreground_segmentation)/launch/pickelhaube/pickelhaube_versavis_from_bag.launch">
+    <include file="$(find background_foreground_segmentation)/launch/pickelhaube/pickelhaube_anonymous_sensor2_from_bag.launch">
         <arg name="rosbag" value="$(arg rosbag)" />
         <arg name="rate" value="0.1" />
     </include>

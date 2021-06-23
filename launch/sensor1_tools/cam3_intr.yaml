@@ -14,4 +14,4 @@ cam0:
   resolution:
   - 720
   - 540
-  rostopic: /alphasense_driver_ros/cam3/rgb
+  rostopic: /anonymous_sensor1_driver_ros/cam3/rgb

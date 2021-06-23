@@ -34,47 +34,47 @@
         <!-- x y z qx qy qz qw frame_id child_frame_id -->
 
 
-  <node pkg="image_undistort"
-        type="image_undistort_node"
+  <node pkg="anonymous_tool"
+        type="anonymous_tool_node"
         name="cam0_undistorter">
-    <rosparam file="$(find background_foreground_segmentation)/launch/alphasense_tools/cam0_intr.yaml"/>
+    <rosparam file="$(find background_foreground_segmentation)/launch/anonymous_sensor1_tools/cam0_intr.yaml"/>
     <param name="input_camera_info_from_ros_params" value="true"/>
     <param name="input_camera_namespace" value="cam0"/>
     <param name="output_frame" value="cam0_rectified_frame"/>
-    <remap from="input/image" to="/alphasense_driver_ros/cam0/rgb"/>
+    <remap from="input/image" to="/anonymous_sensor1_driver_ros/cam0/rgb"/>
     <remap from="output/image" to="/pickelhaube/cam0/image"/>
     <remap from="output/camera_info" to="/pickelhaube/cam0/camera_info"/>
   </node>
-  <node pkg="image_undistort"
-        type="image_undistort_node"
+  <node pkg="anonymous_tool"
+        type="anonymous_tool_node"
         name="cam1_undistorter">
-    <rosparam file="$(find background_foreground_segmentation)/launch/alphasense_tools/cam1_intr.yaml"/>
+    <rosparam file="$(find background_foreground_segmentation)/launch/anonymous_sensor1_tools/cam1_intr.yaml"/>
     <param name="input_camera_info_from_ros_params" value="true"/>
     <param name="input_camera_namespace" value="cam0"/>
     <param name="output_frame" value="cam1_rectified_frame"/>
-    <remap from="input/image" to="/alphasense_driver_ros/cam1/rgb"/>
+    <remap from="input/image" to="/anonymous_sensor1_driver_ros/cam1/rgb"/>
     <remap from="output/image" to="/pickelhaube/cam1/image"/>
     <remap from="output/camera_info" to="/pickelhaube/cam1/camera_info"/>
   </node>
-  <node pkg="image_undistort"
-        type="image_undistort_node"
+  <node pkg="anonymous_tool"
+        type="anonymous_tool_node"
         name="cam2_undistorter">
-    <rosparam file="$(find background_foreground_segmentation)/launch/alphasense_tools/cam2_intr.yaml"/>
+    <rosparam file="$(find background_foreground_segmentation)/launch/anonymous_sensor1_tools/cam2_intr.yaml"/>
     <param name="input_camera_info_from_ros_params" value="true"/>
     <param name="input_camera_namespace" value="cam0"/>
     <param name="output_frame" value="cam2_rectified_frame"/>
-    <remap from="input/image" to="/alphasense_driver_ros/cam2/rgb"/>
+    <remap from="input/image" to="/anonymous_sensor1_driver_ros/cam2/rgb"/>
     <remap from="output/image" to="/pickelhaube/cam2/image"/>
     <remap from="output/camera_info" to="/pickelhaube/cam2/camera_info"/>
   </node>
-  <node pkg="image_undistort"
-        type="image_undistort_node"
+  <node pkg="anonymous_tool"
+        type="anonymous_tool_node"
         name="cam3_undistorter">
-    <rosparam file="$(find background_foreground_segmentation)/launch/alphasense_tools/cam3_intr.yaml"/>
+    <rosparam file="$(find background_foreground_segmentation)/launch/anonymous_sensor1_tools/cam3_intr.yaml"/>
     <param name="input_camera_info_from_ros_params" value="true"/>
     <param name="input_camera_namespace" value="cam0"/>
     <param name="output_frame" value="cam3_rectified_frame"/>
-    <remap from="input/image" to="/alphasense_driver_ros/cam3/rgb"/>
+    <remap from="input/image" to="/anonymous_sensor1_driver_ros/cam3/rgb"/>
     <remap from="output/image" to="/pickelhaube/cam3/image"/>
     <remap from="output/camera_info" to="/pickelhaube/cam3/camera_info"/>
   </node>

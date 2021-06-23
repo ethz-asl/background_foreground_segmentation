@@ -8,7 +8,7 @@
   <arg name="image_proc"              default="true" />
   <!-- camera manager -->
   <arg name="camera_manager"          default="$(arg camera_name)_camera_manager" />
-  <!-- <arg name="camera_settings_file"    default="$(find versavis)/cfg/BFS-U3-04S2C.yaml" />
+  <!-- <arg name="camera_settings_file"    default="$(find anonymous_sensor2)/cfg/BFS-U3-04S2C.yaml" />
  -->
    <!-- Determine this using rosrun pointgrey_camera_driver list_cameras.
        If not specified, defaults to first camera found. -->
@@ -68,11 +68,11 @@
       <param name="auto_white_balance" value="Continuous" />
     </node>
     <node pkg="nodelet" type="nodelet" name="compile_nodelet_cam0"
-	    args="load versavis/VersaVISSynchronizerNodelet /$(arg camera_manager)"
+	    args="load anonymous_sensor2/anonymous_sensor2SynchronizerNodelet /$(arg camera_manager)"
           output="screen"
           required="true">
       <param name="driver_topic" type="string" value="/$(arg camera_name)_$(arg camera_type)_0/image_numbered" />
-      <param name="versavis_topic" type="string" value="/versavis/cam0/" />
+      <param name="anonymous_sensor2_topic" type="string" value="/anonymous_sensor2/cam0/" />
       <param name="imu_offset_us" type="int" value="0"/>
     </node>
   </group>
@@ -118,11 +118,11 @@
       <param name="auto_white_balance" value="Continuous" />
     </node>
     <node pkg="nodelet" type="nodelet" name="compile_nodelet_cam1"
-	    args="load versavis/VersaVISSynchronizerNodelet /$(arg camera_manager)"
+	    args="load anonymous_sensor2/anonymous_sensor2SynchronizerNodelet /$(arg camera_manager)"
           output="screen"
           required="true">
       <param name="driver_topic" type="string" value="/$(arg camera_name)_$(arg camera_type)_1/image_numbered" />
-      <param name="versavis_topic" type="string" value="/versavis/cam1/" />
+      <param name="anonymous_sensor2_topic" type="string" value="/anonymous_sensor2/cam1/" />
       <param name="imu_offset_us" type="int" value="0"/>
     </node>
   </group>
@@ -167,38 +167,38 @@
       <param name="auto_white_balance" value="Continuous" />
     </node>
     <node pkg="nodelet" type="nodelet" name="compile_nodelet_cam2"
-	    args="load versavis/VersaVISSynchronizerNodelet /$(arg camera_manager)"
+	    args="load anonymous_sensor2/anonymous_sensor2SynchronizerNodelet /$(arg camera_manager)"
           output="screen"
           required="true">
       <param name="driver_topic" type="string" value="/$(arg camera_name)_$(arg camera_type)_2/image_numbered" />
-      <param name="versavis_topic" type="string" value="/versavis/cam2/" />
+      <param name="anonymous_sensor2_topic" type="string" value="/anonymous_sensor2/cam2/" />
       <param name="imu_offset_us" type="int" value="0"/>
     </node>
   </group>
 
-  <!-- Relay publish chameleon3 camera_info topic as versavis. -->
-  <node name="relay0" pkg="topic_tools" type="relay" args="/$(arg camera_name)_$(arg camera_type)_0/camera_info /versavis/cam0/camera_info" required="true" output="screen"/>
-  <node name="relay1" pkg="topic_tools" type="relay" args="/$(arg camera_name)_$(arg camera_type)_1/camera_info /versavis/cam1/camera_info" required="true" output="screen"/>
-  <node name="relay2" pkg="topic_tools" type="relay" args="/$(arg camera_name)_$(arg camera_type)_2/camera_info /versavis/cam2/camera_info" required="true" output="screen"/>
+  <!-- Relay publish chameleon3 camera_info topic as anonymous_sensor2. -->
+  <node name="relay0" pkg="topic_tools" type="relay" args="/$(arg camera_name)_$(arg camera_type)_0/camera_info /anonymous_sensor2/cam0/camera_info" required="true" output="screen"/>
+  <node name="relay1" pkg="topic_tools" type="relay" args="/$(arg camera_name)_$(arg camera_type)_1/camera_info /anonymous_sensor2/cam1/camera_info" required="true" output="screen"/>
+  <node name="relay2" pkg="topic_tools" type="relay" args="/$(arg camera_name)_$(arg camera_type)_2/camera_info /anonymous_sensor2/cam2/camera_info" required="true" output="screen"/>
 
-  <!-- Run VersaVIS link. -->
+  <!-- Run anonymous_sensor2 link. -->
   <node name="rosserial_python" pkg="rosserial_python" type="serial_node.py"
     args="_port:=/dev/serial/by-id/usb-Arduino_LLC_Arduino_Zero_DDE7A44550544135342E3120FF162718-if00 _baud:=250000" respawn="true" output="screen" />
 
-  <!-- Reset VersaVIS with ros message -->
+  <!-- Reset anonymous_sensor2 with ros message -->
   <node pkg="rostopic" type="rostopic" name="resetter"
-    args="pub /versavis/reset std_msgs/Bool false --once" output="screen" />
+    args="pub /anonymous_sensor2/reset std_msgs/Bool false --once" output="screen" />
 
   <!-- Recieve IMU message. -->
-  <node name="versavis_imu_receiver" pkg="versavis"
-      type="versavis_imu_receiver" required="true" output="screen">
+  <node name="anonymous_sensor2_imu_receiver" pkg="anonymous_sensor2"
+      type="anonymous_sensor2_imu_receiver" required="true" output="screen">
     <!-- ADIS16448AMLZ parameters -->
     <param name="imu_accelerator_sensitivity"           value="0.000833" />
     <!-- <param name="imu_gyro_sensitivity"                  value="0.04" /> -->
     <param name="imu_gyro_sensitivity"                  value="0.04" />
     <param name="imu_acceleration_covariance"           value="0.043864908" /> <!-- no idea where it is from -->
     <param name="imu_gyro_covariance"                   value="6e-9" /> <!-- no idea where it is from -->
-    <param name="imu_sub_topic"           type="string" value="/versavis/imu_micro"/>
+    <param name="imu_sub_topic"           type="string" value="/anonymous_sensor2/imu_micro"/>
   </node>
 
   <!-- Dynamic reconfigure. -->
