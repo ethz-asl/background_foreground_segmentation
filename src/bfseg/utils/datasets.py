@@ -82,7 +82,7 @@ def preprocess_bagfile_depth(image, label):
 
   # Convert depth [0,255] to real distance [0m, 10m] (TODO: remove hardcoded 10)
   depth_norm = ((tf.cast(depth_label, dtype=tf.float32) - 1.0) * 10 / 254)
-  mode = "inverse_standardize"
+  mode = "inverse_median"
   if mode == "normal standardize":
     print("normal standardize")
     depth_norm_2 = tf.where(
@@ -215,7 +215,7 @@ def preprocess_nyu_depth(image, label):
   seg_label = tf.expand_dims(seg_label, axis=2)
   image = tf.cast(image, tf.float32) / 255.
   
-  mode = "inverse_standardize"
+  mode = "inverse_median"
   if mode == "boxcox_standardize":
     print("boxcox standardize")
     depth_norm_2 = tf.where(
