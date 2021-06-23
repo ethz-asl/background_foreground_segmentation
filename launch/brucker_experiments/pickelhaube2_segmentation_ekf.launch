@@ -114,7 +114,7 @@ Launch file for Selective ICP with rviz and Realsense Integration
           pkg="cpt_selective_icp_dyn"
           output="screen" >
           <!--launch-prefix="tmux split-window" -->
-    <rosparam command="load" file="$(find background_foreground_segmentation)/launch/rss_experiments/mapper_parameters_dyn.yaml" />
+    <rosparam command="load" file="$(find background_foreground_segmentation)/launch/paper_experiments/mapper_parameters_dyn.yaml" />
                 <param name="scanTopic" value="/points_filtered" />
                 <param name="odomTopic" value="/camera/odom/sample" />
                 <param name="skipScans" value="1" /> 
@@ -123,21 +123,21 @@ Launch file for Selective ICP with rviz and Realsense Integration
                 <param name="icpCovRot" value="0.1"/>
         <param name="cadTopic" value="mesh_publisher/mesh_out" />
         <param name="icpConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/full_icp.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/full_icp.yaml" />
         <param name="selectiveIcpConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/selective_icp.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/selective_icp.yaml" />
         <param name="inputFiltersConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/input_filters.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/input_filters.yaml" />
         <param name="mapPostFiltersConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/map_post_filter.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/map_post_filter.yaml" />
         <param name="mapPreFiltersConfig"
-               value="$(find background_foreground_segmentation)/launch/rss_experiments/map_pre_filter.yaml" />
+               value="$(find background_foreground_segmentation)/launch/paper_experiments/map_pre_filter.yaml" />
         <param name="path"
                  value="$(find cpt_selective_icp_dyn)" />
     </node>
 
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
-    <rosparam command="load" file="$(find background_foreground_segmentation)/launch/rss_experiments/ekf_params.yaml" />
+    <rosparam command="load" file="$(find background_foreground_segmentation)/launch/brucker_experiments/ekf_params.yaml" />
   </node>
 
     <node name="mesh_publisher"
