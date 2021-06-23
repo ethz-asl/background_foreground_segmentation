@@ -1,5 +1,5 @@
 ## Download and set up the pretrained models and the configuration files.
-- Download from [here](https://drive.google.com/drive/folders/106YqZGZpcWqFPGwzW5IyVJzHnd_uurgG?usp=sharing) the folder containing the pretrained models and the configuration files.
+- Download from [link removed for anonymity, the folder 'configs_and_models' is already part of the supplement] the folder containing the pretrained models and the configuration files.
 In the following, let us denote the path where the folder is saved via the environmental variable `SAVED_FOLDER`, e.g.:
     ```bash
     export SAVED_FOLDER=/home/user/configs_and_models

@@ -84,7 +84,7 @@ ln -s /your/rosbag/location $BFSEG_ROOT/rosbags
 The bagfiles are listed in `rosbags.md`.
 ## Examples for localization experiments (not runnable without ROS dependencies)
 
-Use an example bagfile (**Garage1**): [download bagfile](https://drive.google.com/file/d/1bVjDkZkycKaDUXlDpqKvr6hIjR4oC8ng/view?usp=sharing)
+Use an example bagfile (**Garage1**): [link removed for anonymity]
 
 **Localisation without Segmentation**
 ```bash
@@ -191,7 +191,7 @@ The results like model snapshots and metrics are then stored in the directory se
 You may also use the pre-trained models or the config files used to obtain these (see [`pretrained_models_and_configs.md`](pretrained_models_and_configs.md)).
 
 ## Online Learning  (not runnable without ROS dependencies)
-The paper experiment was conducted on bagfile [Rumlang1](https://drive.google.com/file/d/1uJQkurwowBo5NmOd9aCYqvV2wDAx2FHs/view?usp=sharing).
+The paper experiment was conducted on bagfile [link removed for anonymity].
 
 For online learning we rely on simultaneously executing nodes in python2 and python3, so in case you encounter import errors make sure to install the dependencies to both python versions.
 
