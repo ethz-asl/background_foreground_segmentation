@@ -16,24 +16,26 @@ training_params:
   stopping_patience: 20
   use_balanced_loss: false
 dataset_params:
-  replay_datasets: null
-  replay_datasets_scene: null
+  replay_datasets: 
+    - NyuDepthV2LabeledDepth
+  replay_datasets_scene: 
+    - null
   test_dataset: null
   test_scene: null
-  train_dataset: MeshdistPseudolabelsDenseDepth #NyuDepthV2LabeledDepth #
-  train_scene: office3_densedepth20_dyn_test #null # 
-  validation_percentage: 50
+  train_dataset: MeshdistPseudolabelsDenseDepth
+  train_scene: office3_densedepth20_dyn_cam2
+  validation_percentage: 5
 logging_params:
   model_save_freq: 1
-  exp_name: densedepth20_test
+  exp_name: office3_densedepth20_dyn_cam2_finetune
 cl_params:
   cl_framework: finetune
-  fraction_replay_ds_to_use: null
+  fraction_replay_ds_to_use: 0.05
   # Note: this needs to be specified.
-  pretrained_dir: null #/media/matthias/sandisk/saved_weights/nyu_pretrained_depth_weights_10.h5
+  pretrained_dir: /xavier_ssd/saved_weights/nyu_depth_pretrained_weights_inverse_median_45.h5
   ratio_main_ds_replay_ds: null
 depth_params:
   semseg_weight: 1
   depth_weight: 4
   consistency_weight: 10
-  preprocessing_mode: inverse_standardize
+  preprocessing_mode: inverse_median
