@@ -3,7 +3,7 @@
 import inspect
 import warnings
 
-from bfseg.models import FastSCNN, UNet, FastSCNNPlusDepth
+from bfseg.models import FastSCNN, UNet, FastSCNNPlusDepth, FastSCNNPlusDorn
 
 
 def create_model(model_name,
@@ -52,6 +52,10 @@ def create_model(model_name,
     model_params['normalization_type'] = normalization_type
   elif (model_name == "fast_scnn_plus_depth"):
     model_fn = FastSCNNPlusDepth
+    model_params['num_classes'] = 2
+    model_params['normalization_type'] = normalization_type
+  elif (model_name == "fast_scnn_plus_dorn"):
+    model_fn = FastSCNNPlusDorn
     model_params['num_classes'] = 2
     model_params['normalization_type'] = normalization_type
   elif (model_name == "unet"):

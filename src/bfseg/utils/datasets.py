@@ -203,6 +203,53 @@ def preprocess_bagfile(image, label):
 #   return image, labels, masks
 
 @tf.function 
+def preprocess_bagfile_depth_normal(image, label):
+  r"""Preprocesses bagfile dataset (e.g., Rumlang). The dataset consists of
+  three labels (0, 1, 2) with the following meaning:
+  - 0: foreground
+  - 1: background
+  - 2: unsure (ignored in training)
+  """
+  image = tf.image.convert_image_dtype(image, tf.float32)
+  # Resize image and label.
+  image = tf.image.resize(image, (480, 640),
+                          method=tf.image.ResizeMethod.BILINEAR)
+  seg_label = tf.image.resize(label['seg'], (480, 640),
+                          method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+  depth_label = tf.image.resize(label['distance'], (480, 640),
+                          method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+
+  # Convert depth [0,255] to real distance [0m, 10m] 
+  depth_norm = ((tf.cast(depth_label, dtype=tf.float32) - 1.0) * 10 / 254)  
+  print("normal mode")
+  # clip max depth value to 10
+  depth_norm = tf.where(
+        tf.math.greater_equal(depth_norm, tf.constant(10, dtype=tf.float32)),
+        tf.constant(float(10), dtype=tf.float32), depth_norm)
+  # clip min depth value to 0.5
+  depth_norm = tf.where(
+      tf.less(depth_norm, tf.constant(0.5, dtype=tf.float32)),
+      tf.constant(float(0.5), dtype=tf.float32), depth_norm)
+  # replace zeros with NaN for depth
+  depth_norm_2 = tf.where(
+      tf.equal(depth_label, tf.constant(0, dtype=tf.uint8)),
+      tf.constant(float('nan'), dtype=tf.float32), depth_norm)
+ 
+  depth_label_final = depth_norm_2 
+
+  # Semseg: Mask out unknown pixels for semseg
+  seg_mask = tf.squeeze(tf.not_equal(seg_label, 2))
+  seg_label = tf.cast(seg_label == 1, tf.uint8)
+
+  # Depth mask for MAE only (not used in loss)
+  depth_mask = tf.squeeze(tf.not_equal(depth_norm, 0))
+
+  image = tf.cast(image, tf.float32)
+  labels = {'seg_label': seg_label, 'depth_label': depth_label_final}
+  masks = {'seg_mask': seg_mask, 'depth_mask': depth_mask}
+  return image, labels, masks
+
+@tf.function 
 def preprocess_bagfile_depth_inverse(image, label):
   r"""Preprocesses bagfile dataset (e.g., Rumlang). The dataset consists of
   three labels (0, 1, 2) with the following meaning:
@@ -569,6 +616,42 @@ def preprocess_bagfile_depth_power_standardize(image, label):
 #   return image, labels, masks
 
 @tf.function
+def preprocess_nyu_depth_normal(image, label):
+  r"""Preprocesses NYU dataset:
+  - Normalize images: `uint8` -> `float32`.
+  - Assigns label: 1 if belong to background, 0 if foreground.
+  - Creates all-True mask, since NYU labels are all known.
+  """
+  seg_label = label['seg']
+  depth_label = tf.expand_dims(label['distance'], -1)
+  seg_mask = tf.not_equal(seg_label, -1)  # All true.
+  seg_label = tf.expand_dims(seg_label, axis=2)
+  image = tf.cast(image, tf.float32) / 255.
+  
+  print("normal mode")
+  # clip max depth value to 10
+  depth_label = tf.where(
+        tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
+        tf.constant(float(10), dtype=tf.float32), depth_label)
+  # clip min depth value to 0.5
+  depth_label = tf.where(
+        tf.less(depth_label, tf.constant(0.5, dtype=tf.float32)),
+        tf.constant(float(0.5), dtype=tf.float32), depth_label)
+  # replace zeros with NaN for depth
+  depth_norm_2 = tf.where(
+        tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
+        tf.constant(float('nan'), dtype=tf.float32), depth_label)
+
+  depth_label_final = depth_norm_2
+
+  # Depth mask for MAE only (not used in loss)
+  depth_mask = tf.squeeze(tf.not_equal(depth_label, 0))
+
+  labels = {'seg_label': seg_label, 'depth_label': depth_label_final}
+  masks = {'seg_mask': seg_mask, 'depth_mask': depth_mask}
+  return image, labels, masks 
+
+@tf.function
 def preprocess_nyu_depth_inverse(image, label):
   r"""Preprocesses NYU dataset:
   - Normalize images: `uint8` -> `float32`.
@@ -581,7 +664,7 @@ def preprocess_nyu_depth_inverse(image, label):
   seg_label = tf.expand_dims(seg_label, axis=2)
   image = tf.cast(image, tf.float32) / 255.
   
-  print("inverse median mode")
+  print("inverse mode")
   # clip max depth value to 10
   depth_label = tf.where(
         tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
@@ -974,6 +1057,9 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data, prep
     elif preprocessing_mode == "inverse_standardize":
       ds = ds.map(preprocess_nyu_depth_power_standardize,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)  
+    elif preprocessing_mode == "normal":
+      ds = ds.map(preprocess_nyu_depth_normal,
+                num_parallel_calls=tf.data.experimental.AUTOTUNE)  
     else: 
       ds = ds.map(preprocess_nyu_depth_inverse,
                   num_parallel_calls=tf.data.experimental.AUTOTUNE)
@@ -1006,6 +1092,9 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data, prep
     elif preprocessing_mode == "inverse_standardize":
       ds = ds.map(preprocess_bagfile_depth_power_standardize,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE)  
+    elif preprocessing_mode == "normal":
+      ds = ds.map(preprocess_bagfile_depth_normal,
+                num_parallel_calls=tf.data.experimental.AUTOTUNE)
     else: 
       ds = ds.map(preprocess_bagfile_depth_inverse,
                   num_parallel_calls=tf.data.experimental.AUTOTUNE)
