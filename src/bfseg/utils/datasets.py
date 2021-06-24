@@ -646,7 +646,7 @@ def load_replay_datasets(replay_datasets, replay_datasets_scene, batch_size):
 def update_datasets_with_replay_and_augmentation(
     train_no_replay_ds, test_ds, fraction_replay_ds_to_use,
     ratio_main_ds_replay_ds, replay_datasets, replay_datasets_scene, batch_size,
-    perform_data_augmentation, contains_depth=False, perform_preprocessing=False):
+    perform_data_augmentation, contains_depth=False):
   r"""Returns training and test datasets after creating a replay buffer and
   performing data augmentation, if necessary.
   Args:
@@ -682,8 +682,7 @@ def update_datasets_with_replay_and_augmentation(
         ratio_main_ds_replay_ds=ratio_main_ds_replay_ds,
         fraction_replay_ds_to_use=fraction_replay_ds_to_use,
         perform_data_augmentation=perform_data_augmentation,
-        contains_depth=contains_depth,
-        perform_preprocessing=perform_preprocessing)
+        contains_depth=contains_depth)
     train_ds = replay_buffer.flow()
     # When using replay, evaluate separate metrics only on training set without
     # replay.
@@ -702,11 +701,6 @@ def update_datasets_with_replay_and_augmentation(
         train_ds = train_ds.map(augmentation_with_mask_depth)
       else:
         train_ds = train_ds.map(augmentation_with_mask)
-    if (perform_preprocessing):
-      if (contains_depth):
-        train_ds = train_ds.map(preprocess_median_full_with_mask_depth)
-      else:
-        train_ds = train_ds.map(preprocess_median_full_with_mask)
 
   return train_ds, test_ds
 

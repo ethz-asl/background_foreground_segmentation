@@ -11,7 +11,6 @@ training_params:
   learning_rate: 0.00001
   num_training_epochs: 250
   perform_data_augmentation: true
-  perform_preprocessing: false
   reduce_lr_on_plateau: true
   stopping_min_epoch: 50
   stopping_patience: 20
