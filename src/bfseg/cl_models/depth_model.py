@@ -25,7 +25,6 @@ class DepthModel(BaseCLModel):
     self.semseg_weight = self.run.config['depth_params']['semseg_weight']
     self.depth_weight = self.run.config['depth_params']['depth_weight']
     self.consistency_weight = self.run.config['depth_params']['consistency_weight']
-    self.mse_weight = self.run.config['depth_params']['mse_weight']
 
   def _build_model(self):
     r"""Builds the models.
@@ -166,7 +165,7 @@ class DepthModel(BaseCLModel):
     # print("pred_y_depth: {}".format(pred_y_depth))
     # print("y_depth: {}".format(y_depth))
     
-    loss_depth = ignorant_depth_loss(y_depth, pred_y_depth, theta=self.mse_weight) # remove hardcoded version
+    loss_depth = ignorant_depth_loss(y_depth, pred_y_depth) # remove hardcoded version
     
     loss_mse = mean_squared_error(y_depth, pred_y_depth)
     # pred_y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
