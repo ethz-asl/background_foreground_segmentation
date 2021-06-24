@@ -6,7 +6,7 @@ Launch file for Selective ICP with rviz and Realsense Integration
 <launch>
 
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
-    <rosparam command="load" file="$(find background_foreground_segmentation)/launch/rss_experiments/ekf_params.yaml" />
+    <rosparam command="load" file="$(find background_foreground_segmentation)/launch/realsense_experiments/ekf_params.yaml" />
   </node>
 
 </launch>

@@ -9,7 +9,7 @@ Launch file for Selective ICP with rviz and Realsense integration
 	<include file="$(find background_foreground_segmentation)/launch/realsense_experiments/pickelhaube2_rt.launch">
 		<arg name="rosbag" value="$(arg rosbag_folder)/pickelhaube_2021-02-08-12-32-19.bag"/>
 		<arg name="cad_file" value="$(find background_foreground_segmentation)/launch/paper_experiments/210212_Rumlang_Meters_SE.off" />
-		<arg name="logprefix" value="pickelhaube_full_rumlang1_rt" />
+		<arg name="logprefix" value="pickelhaube_rumlang1_rt" />
 	</include>
 
     <node pkg="tf2_ros"
