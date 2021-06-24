@@ -35,6 +35,6 @@ cl_params:
   ratio_main_ds_replay_ds: null
 depth_params:
   semseg_weight: 1
-  depth_weight: 0
+  depth_weight: 4
   consistency_weight: 0
-  mse_weight: 1
+  mse_weight: 0.1
