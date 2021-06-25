@@ -412,7 +412,7 @@ def create_ord_label(depth):
   #print(mask.shape)
   #print(ord_c0.shape)
     
-  mask = tf.less(mask, label)
+  mask = tf.equal(mask, label)
   print("mask: {}".format(mask.shape))
   print("ord_c0: {}".format(ord_c0.shape))
   ord_c0 = tf.where(mask, 0.0, ord_c0) #ord_c0[mask] = 0
