@@ -33,7 +33,7 @@ cl_params:
   pretrained_dir: null 
   ratio_main_ds_replay_ds: null
 depth_params:
-  semseg_weight: 1
+  semseg_weight: 0
   depth_weight: 1
   consistency_weight: 0
   preprocessing_mode: normal
