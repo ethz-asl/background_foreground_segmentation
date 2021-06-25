@@ -397,9 +397,9 @@ def create_ord_label(depth):
   #ord_c0 = tf.ones([N, ord_num, H, W], dtype=tf.float32)
     
   if discretization == "SID":
-      label = ord_num * tf.math.log(depth) / tf.math.log(beta)
+      label = ord_num * tf.math.log(depth + 1) / tf.math.log(beta + 1)
   else:
-      label = ord_num * (depth - 1.0) / (beta - 1.0)
+      label = ord_num * depth / beta
   label = tf.cast(label, dtype=tf.int64)
   print("label: {}".format(label.shape))
   mask = tf.linspace(0, ord_num - 1, ord_num) # ord_num - 1 instead of 255
