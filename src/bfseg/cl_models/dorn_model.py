@@ -369,8 +369,8 @@ def dorn_loss_function(prob, depth):
   ord_c0, ord_c1 = create_ord_label(depth)
   print("Ord_c0: {}".format(ord_c0.shape))
   print("Ord_c1: {}".format(ord_c1.shape))
-  logP = tf.math.log(tf.clip_by_value(prob, clip_value_min=1e-8, clip_value_max=9999))
-  log1_P = tf.math.log(tf.clip_by_value(1 - prob, clip_value_min=1e-8, clip_value_max=9999))
+  logP = tf.math.log(tf.clip_by_value(prob, clip_value_min=1e-8, clip_value_max=1e8))
+  log1_P = tf.math.log(tf.clip_by_value(1 - prob, clip_value_min=1e-8, clip_value_max=1e8))
   entropy = tf.reduce_sum(ord_c1*logP, axis=1) + tf.reduce_sum(ord_c0*log1_P, axis=1) # eq. (2)
         
   valid_mask = tf.squeeze(valid_mask, axis=1)
@@ -412,7 +412,7 @@ def create_ord_label(depth):
   #print(mask.shape)
   #print(ord_c0.shape)
     
-  mask = tf.equal(mask, label)
+  mask = tf.less(mask, label)
   print("mask: {}".format(mask.shape))
   print("ord_c0: {}".format(ord_c0.shape))
   ord_c0 = tf.where(mask, 0.0, ord_c0) #ord_c0[mask] = 0

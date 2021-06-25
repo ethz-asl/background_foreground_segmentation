@@ -297,7 +297,7 @@ def fast_scnn_plus_dorn(input_shape,
   print("Label 1: {}".format(label1.shape))
   label = tf.concat([label0, label1], -1)
   print("Label: {}".format(label.shape))
-  label = tf.clip_by_value(label, clip_value_min=1e-8, clip_value_max=9999)
+  label = tf.clip_by_value(label, clip_value_min=1e-8, clip_value_max=1e8)
   label_ord = tf.keras.activations.softmax(label, axis=-1) # (B, H, W, ord_num, 2)
   binned_depth_prob = label_ord[:,:,:,:,1]
   print("Depth prob output shape: {}".format(binned_depth_prob.shape))
