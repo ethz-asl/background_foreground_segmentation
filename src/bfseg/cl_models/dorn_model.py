@@ -348,7 +348,7 @@ def dorn_loss_function(prob, depth):
     Code modified from here https://github.com/lochenchou/DORN/blob/main/loss.py
   """
   """
-  :param prob: ordinal regression probability, N x  H x W x 2*Ord Num, torch.Tensor
+  :param prob: ordinal regression probability, N x H x W x Ord Num, torch.Tensor
   :param depth: depth ground truth, HxWxN, torch.Tensor
   :return: loss: loss value, torch.float
   """
@@ -381,7 +381,7 @@ def dorn_loss_function(prob, depth):
   
 
 def create_ord_label(depth):
-  ord_num = 20
+  ord_num = 16
   beta = 10.0
   discretization = "SID"
   depth_shape = tf.shape(depth)
@@ -412,7 +412,7 @@ def create_ord_label(depth):
   #print(mask.shape)
   #print(ord_c0.shape)
     
-  mask = tf.equal(mask, label)
+  mask = tf.less(mask, label)
   print("mask: {}".format(mask.shape))
   print("ord_c0: {}".format(ord_c0.shape))
   ord_c0 = tf.where(mask, 0.0, ord_c0) #ord_c0[mask] = 0

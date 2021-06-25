@@ -275,9 +275,10 @@ def fast_scnn_plus_dorn(input_shape,
 
 
   # Depth (1 channel only)
+  ord_num = 16
   binned_depth = conv_block(classifier_semseg,
                           'conv',
-                          20, (1, 1),
+                          2*ord_num, (1, 1),
                           strides=(1, 1),
                           normalization_type=normalization_type,
                           padding='same',
@@ -287,21 +288,29 @@ def fast_scnn_plus_dorn(input_shape,
 
   binned_depth = tf.keras.layers.UpSampling2D(
       (2**num_downsampling_layers, 2**num_downsampling_layers))(binned_depth)
-  binned_depth = tf.keras.activations.softmax(binned_depth)
-  
-  # minimum inverse depth to be predicted is 1: 
-  print("Depth output shape: {}".format(binned_depth.shape))
 
+  # Ordinal Regression Layer, adapted from https://github.com/lochenchou/DORN/blob/6826230b225a9578cd8acfa7b59f1a35146487d7/model/ordinal_regression_layer.py 
+  print("Binned_depth: {}".format(binned_depth.shape))
+  label0 = tf.expand_dims(binned_depth[:, :, :, 0::2], -1)
+  label1 = tf.expand_dims(binned_depth[:, :, :, 1::2], -1)
+  print("Label 0: {}".format(label0.shape))
+  print("Label 1: {}".format(label1.shape))
+  label = tf.concat([label0, label1], -1)
+  print("Label: {}".format(label.shape))
+  label = tf.clip_by_value(label, clip_value_min=1e-8, clip_value_max=9999)
+  label_ord = tf.keras.activations.softmax(label, axis=-1) # (B, H, W, ord_num, 2)
+  binned_depth_prob = label_ord[:,:,:,:,1]
+  print("Depth prob output shape: {}".format(binned_depth_prob.shape))
 
   # Pseudo output only used for smooth consistency loss
-  combined = tf.keras.layers.concatenate([binned_depth, semseg],
+  combined = tf.keras.layers.concatenate([binned_depth_prob, semseg],
                                          axis=-1,
                                          name="combined")
   print("FSCNN: Semseg shape: {}".format(semseg.shape))
-  print("FSCNN: Depth shape: {}".format(binned_depth.shape))
+  print("FSCNN: Depth shape: {}".format(binned_depth_prob.shape))
   print("FSCNN: Combined shape: {}".format(combined.shape))
 
   encoder = tf.keras.Model(inputs=inputs, outputs=ff_final)
-  model = tf.keras.Model(inputs=inputs, outputs=[semseg, combined, binned_depth])
+  model = tf.keras.Model(inputs=inputs, outputs=[semseg, combined, binned_depth_prob])
 
   return encoder, model
