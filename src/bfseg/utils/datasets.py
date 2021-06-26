@@ -630,17 +630,17 @@ def preprocess_nyu_depth_normal(image, label):
   
   print("normal mode")
   # clip max depth value to 10
-  depth_label = tf.where(
+  depth_norm = tf.where(
         tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
         tf.constant(float(10), dtype=tf.float32), depth_label)
   # clip min depth value to 0.5
-  depth_label = tf.where(
-        tf.less(depth_label, tf.constant(0.5, dtype=tf.float32)),
-        tf.constant(float(0.5), dtype=tf.float32), depth_label)
+  depth_norm = tf.where(
+        tf.less(depth_norm, tf.constant(0.5, dtype=tf.float32)),
+        tf.constant(float(0.5), dtype=tf.float32), depth_norm)
   # replace zeros with NaN for depth
   depth_norm_2 = tf.where(
         tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
-        tf.constant(float('nan'), dtype=tf.float32), depth_label)
+        tf.constant(float('nan'), dtype=tf.float32), depth_norm)
 
   depth_label_final = depth_norm_2
 
@@ -666,17 +666,17 @@ def preprocess_nyu_depth_inverse(image, label):
   
   print("inverse mode")
   # clip max depth value to 10
-  depth_label = tf.where(
+  depth_norm = tf.where(
         tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
         tf.constant(float(10), dtype=tf.float32), depth_label)
   # clip min depth value to 0.5
-  depth_label = tf.where(
-        tf.less(depth_label, tf.constant(0.5, dtype=tf.float32)),
-        tf.constant(float(0.5), dtype=tf.float32), depth_label)
+  depth_norm = tf.where(
+        tf.less(depth_norm, tf.constant(0.5, dtype=tf.float32)),
+        tf.constant(float(0.5), dtype=tf.float32), depth_norm)
   # replace zeros with NaN for depth
   depth_norm_2 = tf.where(
         tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
-        tf.constant(float('nan'), dtype=tf.float32), depth_label)
+        tf.constant(float('nan'), dtype=tf.float32), depth_norm)
   # invert depth 
   depth_norm_2 = 10 / depth_norm_2 
   depth_label_final = depth_norm_2
@@ -703,17 +703,17 @@ def preprocess_nyu_depth_inverse_median(image, label):
   
   print("inverse median mode")
   # clip max depth value to 10
-  depth_label = tf.where(
+  depth_norm = tf.where(
         tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
         tf.constant(float(10), dtype=tf.float32), depth_label)
   # clip min depth value to 0.5
-  depth_label = tf.where(
-        tf.less(depth_label, tf.constant(0.5, dtype=tf.float32)),
-        tf.constant(float(0.5), dtype=tf.float32), depth_label)
+  depth_norm = tf.where(
+        tf.less(depth_norm, tf.constant(0.5, dtype=tf.float32)),
+        tf.constant(float(0.5), dtype=tf.float32), depth_norm)
   # replace zeros with NaN for depth
   depth_norm_2 = tf.where(
         tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
-        tf.constant(float('nan'), dtype=tf.float32), depth_label)
+        tf.constant(float('nan'), dtype=tf.float32), depth_norm)
   # normalize depth (inverse + median (4.03) scaling)
   depth_norm_2 = 10 / depth_norm_2 - 4.03 
   depth_label_final = depth_norm_2
@@ -740,17 +740,17 @@ def preprocess_nyu_depth_inverse_standardize(image, label):
   
   print("inverse standardize mode")
   # clip max depth value to 10
-  depth_label = tf.where(
+  depth_norm = tf.where(
         tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
         tf.constant(float(10), dtype=tf.float32), depth_label)
   # clip min depth value to 0.5
-  depth_label = tf.where(
-        tf.less(depth_label, tf.constant(0.5, dtype=tf.float32)),
-        tf.constant(float(0.5), dtype=tf.float32), depth_label)
+  depth_norm = tf.where(
+        tf.less(depth_norm, tf.constant(0.5, dtype=tf.float32)),
+        tf.constant(float(0.5), dtype=tf.float32), depth_norm)
   # replace zeros with NaN for depth
   depth_norm_2 = tf.where(
         tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
-        tf.constant(float('nan'), dtype=tf.float32), depth_label)
+        tf.constant(float('nan'), dtype=tf.float32), depth_norm)
   # normalize depth (inverse + standardize)
   depth_inverse = 10 / depth_norm_2  
   depth_inverse_standardized, _, _ = ignorant_standardization(depth_inverse)
@@ -778,17 +778,17 @@ def preprocess_nyu_depth_power_median(image, label):
   
   print("power median mode")
   # clip max depth value to 10
-  depth_label = tf.where(
+  depth_norm = tf.where(
         tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
         tf.constant(float(10), dtype=tf.float32), depth_label)
   # clip min depth value to 0.5
-  depth_label = tf.where(
-        tf.less(depth_label, tf.constant(0.5, dtype=tf.float32)),
-        tf.constant(float(0.5), dtype=tf.float32), depth_label)
+  depth_norm = tf.where(
+        tf.less(depth_norm, tf.constant(0.5, dtype=tf.float32)),
+        tf.constant(float(0.5), dtype=tf.float32), depth_norm)
   # replace zeros with NaN for depth
   depth_norm_2 = tf.where(
         tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
-        tf.constant(float('nan'), dtype=tf.float32), depth_label)
+        tf.constant(float('nan'), dtype=tf.float32), depth_norm)
   # normalize depth (power (lambda = 0.54) + median (1.29) scaling)
   depth_norm_2 = (depth_norm_2**0.54 - 1)/0.54 - 1.29
   depth_label_final = depth_norm_2
@@ -815,17 +815,17 @@ def preprocess_nyu_depth_power_standardize(image, label):
   
   print("power standardize mode")
   # clip max depth value to 10
-  depth_label = tf.where(
+  depth_norm = tf.where(
         tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
         tf.constant(float(10), dtype=tf.float32), depth_label)
   # clip min depth value to 0.5
-  depth_label = tf.where(
-        tf.less(depth_label, tf.constant(0.5, dtype=tf.float32)),
-        tf.constant(float(0.5), dtype=tf.float32), depth_label)
+  depth_norm = tf.where(
+        tf.less(depth_norm, tf.constant(0.5, dtype=tf.float32)),
+        tf.constant(float(0.5), dtype=tf.float32), depth_norm)
   # replace zeros with NaN for depth
   depth_norm_2 = tf.where(
         tf.equal(depth_label, tf.constant(0, dtype=tf.float32)),
-        tf.constant(float('nan'), dtype=tf.float32), depth_label)
+        tf.constant(float('nan'), dtype=tf.float32), depth_norm)
   # normalize depth (power (lambda = 0.54) + standardization)
   depth_norm_2 = (depth_norm_2**0.54 - 1)/0.54 
   depth_standardized, _, _ = ignorant_standardization(depth_norm_2)
