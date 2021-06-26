@@ -382,7 +382,8 @@ def dorn_loss_function(prob, depth):
 
 def create_ord_label(depth):
   ord_num = 32
-  beta = 10.0
+  beta_max = 10.0
+  beta_min = 0.5
   discretization = "SID"
   depth_shape = tf.shape(depth)
   N = depth_shape[0]
@@ -397,9 +398,9 @@ def create_ord_label(depth):
   #ord_c0 = tf.ones([N, ord_num, H, W], dtype=tf.float32)
     
   if discretization == "SID":
-      label = ord_num * tf.math.log(depth + 1) / tf.math.log(beta + 1)
+      label = ord_num * tf.math.log(depth + 1 - beta_min) / tf.math.log(beta_max + 1)
   else:
-      label = ord_num * depth / beta
+      label = ord_num * depth / beta_max
   label = tf.cast(label, dtype=tf.int64)
   print("label: {}".format(label.shape))
   mask = tf.linspace(0, ord_num - 1, ord_num) # ord_num - 1 instead of 255
