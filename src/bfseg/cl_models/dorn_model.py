@@ -381,7 +381,7 @@ def dorn_loss_function(prob, depth):
   
 
 def create_ord_label(depth):
-  ord_num = 16
+  ord_num = 32
   beta = 10.0
   discretization = "SID"
   depth_shape = tf.shape(depth)

@@ -275,7 +275,7 @@ def fast_scnn_plus_dorn(input_shape,
 
 
   # Depth (1 channel only)
-  ord_num = 16
+  ord_num = 32
   binned_depth = conv_block(classifier_semseg,
                           'conv',
                           2*ord_num, (1, 1),
