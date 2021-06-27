@@ -34,6 +34,6 @@ cl_params:
   ratio_main_ds_replay_ds: null
 depth_params:
   semseg_weight: 1
-  depth_weight: 1
-  consistency_weight: 1
+  depth_weight: 0.2
+  consistency_weight: 0.5
   preprocessing_mode: normal
