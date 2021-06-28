@@ -634,7 +634,7 @@ def preprocess_nyu_depth_normal(image, label):
         tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
         tf.constant(float(10), dtype=tf.float32), depth_label)
   # clip min depth value to 0.5
-  depth_norm = tf.where(
+  depth_norm = tf.where4
         tf.less(depth_norm, tf.constant(0.5, dtype=tf.float32)),
         tf.constant(float(0.5), dtype=tf.float32), depth_norm)
   # replace zeros with NaN for depth
@@ -1130,6 +1130,9 @@ def load_datasets(train_dataset,
   assert ((fisher_params_dataset is None) == (fisher_params_sample_percentage is
                                               None))
   training_percentage = 100 - validation_percentage
+  # TODO: remove this memory fix
+  if train_dataset == "MeshdistPseudolabelsDenseDepth":
+    training_percentage = 85 - validation_percentage
   train_ds = load_data(dataset_name=train_dataset,
                        scene_type=train_scene,
                        fraction=f"[:{training_percentage}%]",
