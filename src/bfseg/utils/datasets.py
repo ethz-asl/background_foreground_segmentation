@@ -1132,7 +1132,7 @@ def load_datasets(train_dataset,
   training_percentage = 100 - validation_percentage
   # TODO: remove this memory fix
   if train_dataset == "MeshdistPseudolabelsDenseDepth":
-    training_percentage = 75 - validation_percentage
+    training_percentage = 65 - validation_percentage
   train_ds = load_data(dataset_name=train_dataset,
                        scene_type=train_scene,
                        fraction=f"[:{training_percentage}%]",
