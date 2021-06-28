@@ -634,7 +634,7 @@ def preprocess_nyu_depth_normal(image, label):
         tf.math.greater_equal(depth_label, tf.constant(10, dtype=tf.float32)),
         tf.constant(float(10), dtype=tf.float32), depth_label)
   # clip min depth value to 0.5
-  depth_norm = tf.where4
+  depth_norm = tf.where(
         tf.less(depth_norm, tf.constant(0.5, dtype=tf.float32)),
         tf.constant(float(0.5), dtype=tf.float32), depth_norm)
   # replace zeros with NaN for depth
