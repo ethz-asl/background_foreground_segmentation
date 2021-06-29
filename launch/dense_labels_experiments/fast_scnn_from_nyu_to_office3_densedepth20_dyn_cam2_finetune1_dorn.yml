@@ -7,7 +7,7 @@ network_params:
     image_w: 640
   normalization_type: group
 training_params:
-  batch_size: 10
+  batch_size: 5
   learning_rate: 0.00001
   num_training_epochs: 250
   perform_data_augmentation: true
@@ -30,7 +30,7 @@ logging_params:
   exp_name: office3_densedepth20_dyn_cam2_finetune
 cl_params:
   cl_framework: finetune
-  fraction_replay_ds_to_use: 0.05
+  fraction_replay_ds_to_use: 0.1
   # Note: this needs to be specified.
   pretrained_dir: /xavier_ssd/saved_weights/nyu_dorn_pretrained_weights_60.h5
   ratio_main_ds_replay_ds: null
