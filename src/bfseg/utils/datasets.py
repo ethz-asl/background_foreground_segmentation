@@ -1130,9 +1130,9 @@ def load_datasets(train_dataset,
   assert ((fisher_params_dataset is None) == (fisher_params_sample_percentage is
                                               None))
   training_percentage = 100 - validation_percentage
-  # TODO: remove this memory fix
-  if train_dataset == "MeshdistPseudolabelsDenseDepth":
-    training_percentage = 65 - validation_percentage
+  # TODO: remove this experimental memory fix
+  #if train_dataset == "MeshdistPseudolabelsDenseDepth":
+  #  training_percentage = 65 - validation_percentage
   train_ds = load_data(dataset_name=train_dataset,
                        scene_type=train_scene,
                        fraction=f"[:{training_percentage}%]",
