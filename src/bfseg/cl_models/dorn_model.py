@@ -135,20 +135,13 @@ class DornModel(BaseCLModel):
     mask_seg = mask['seg_mask']
     mask_depth = mask['depth_mask']
 
-    #[_, pred_y] = self.new_model(x, training=training)
     something, predictions = self.new_model(x, training=training)
-    # print(something.shape)
     [pred_y_seg, pred_y_combined, pred_y_binned_depth] = predictions 
   
     # Semseg
     pred_y_seg_masked = tf.boolean_mask(pred_y_seg, mask_seg)
     y_seg_masked = tf.boolean_mask(y_seg, mask_seg)
-    # print("Semseg loss inputs: (last 2)")
-    # print("Mask seg: {}".format(mask_seg))
-    # print("y_seg: {}".format(y_seg))
-    # print("pred_y_seg: {}".format(pred_y_seg.shape))
-    # print("pred_y_seg_masked: {}".format(pred_y_seg_masked))
-    # print("y_seg_masked: {}".format(y_seg_masked))
+
     if (self._use_balanced_loss):
       #TODO(fmilano): Make flexible to number of classes.
       sample_weight = get_balanced_weights(labels=y_seg_masked, num_classes=2)
@@ -160,20 +153,7 @@ class DornModel(BaseCLModel):
     pred_y_seg = tf.math.argmax(pred_y_seg, axis=-1) 
     pred_y_seg_masked = tf.boolean_mask(pred_y_seg, mask_seg)
     
-    # Depth
-    # print("Depth loss inputs:")
-    # print("pred_y_depth: {}".format(pred_y_depth))
-    # print("y_depth: {}".format(y_depth))
-    
     loss_depth = ignorant_dorn_loss(y_depth, pred_y_binned_depth) # remove hardcoded version
-    
-    #loss_mse = mean_squared_error(y_depth, pred_y_depth)
-    # pred_y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
-    #                                tf.zeros_like(y_depth), pred_y_depth)
-    # y_depth_ignorant = tf.where(tf.math.is_nan(y_depth),
-    #                      tf.zeros_like(y_depth), y_depth)
-    # loss_depth = self.loss_mae(y_depth_ignorant, pred_y_depth_ignorant)
-
 
     # Get argmax instead of bins
     pred_y_depth = tf.math.argmax(pred_y_binned_depth, axis=-1)
@@ -186,12 +166,6 @@ class DornModel(BaseCLModel):
     # Consistency (https://github.com/ethz-asl/background_foreground_segmentation/blob/a817e09d6578427b01cac4d0f106b166caf8b402/src/bfseg/utils/losses.py#L47)
     semantic_classes = 2 # TODO: remove hardcoded version
     pred_y_seg2 = tf.expand_dims(pred_y_seg, -1)
-    
-    print("Consistency loss inputs:")
-    print("pred_y_seg2: {}".format(pred_y_seg2))
-    print("pred_y_depth: {}".format(pred_y_depth))
-    
-    print("Pred_y_depth before consistency: {}".format(pred_y_depth.shape))
     loss_consistency = sum([smooth_consistency_loss(pred_y_depth, pred_y_seg2, c) for c in range(semantic_classes)])
 
     # Final combined loss
@@ -223,28 +197,11 @@ class DornModel(BaseCLModel):
     with tf.GradientTape() as tape:
       pred_y, pred_y_masked, train_y_masked, pred_y_depth, pred_y_depth_masked, train_y_depth_masked, loss = self.forward_pass(
           training=True, x=train_x, y=train_y, mask=train_mask)
-    # print("Forward pass outputs: ")
-    # print("Pred_y: {}".format(pred_y.shape))
-    # print("Pred_y_masked: {}".format(pred_y_masked.shape))
-    # print("train_y_masked: {}".format(train_y_masked.shape))
-    # print("Pred_y_depth: {}".format(pred_y_depth.shape))
-    # print("Pred_y_depth_masked: {}".format(pred_y_depth_masked.shape))
-    # print("train_y_depth_masked: {}".format(train_y_depth_masked.shape))
-
 
     total_loss, auxiliary_losses = self._handle_multiple_losses(loss)
-    # print("WEIGHTS: ")
-    # print("Trainable: {}".format(len(self.new_model.trainable_weights)))
-    # print(self.new_model.trainable_weights)
-    # print("WEIGHTS: ")
-    # print("Non-Trainable: {}".format(len(self.new_model.non_trainable_weights)))
-    # print(self.new_model.non_trainable_weights)
 
     grads = tape.gradient(total_loss, self.new_model.trainable_weights)
     self.optimizer.apply_gradients(zip(grads, self.new_model.trainable_weights))
-    # moved inside forward pass
-    #pred_y = tf.math.argmax(pred_y, axis=-1) 
-    #pred_y_masked = tf.boolean_mask(pred_y, train_mask)
 
     # Update accuracy and loss. # TODO: fix MAE
     self.accuracy_tracker.update_state(train_y_masked, pred_y_masked)
@@ -307,9 +264,6 @@ def smooth_consistency_loss(depth_pred, y_pred_semantic, class_number=0):
     Semantics-Guided Disparity Smoothness (8):
     https://openaccess.thecvf.com/content_CVPR_2019/papers/Chen_Towards_Scene_Understanding_Unsupervised_Monocular_Depth_Estimation_With_Semantic-Aware_Representation_CVPR_2019_paper.pdf
   """
-  # print("Smooth consistency loss: ")
-  # print("depth_pred: {}".format(depth_pred))
-  # print("y_pred_semantic: {}".format(y_pred_semantic))
 
   phi = tf.cast(tf.math.equal(y_pred_semantic, class_number), dtype=tf.float32)
   phi_x = tf.roll(phi, 1, axis=-3)
@@ -336,9 +290,6 @@ def ignorant_dorn_loss(depth_label, pred_depth_probs):
                                    tf.zeros_like(depth_label), pred_depth_probs)
   depth_label = tf.where(tf.math.is_nan(depth_label),
                          tf.zeros_like(depth_label), depth_label)
-  # print("Ignorant depth loss: ")
-  # print("depth_label: {}".format(depth_label))
-  # print("y_pred_depth_ignorant: {}".format(y_pred_depth_ignorant))
 
   return dorn_loss_function(pred_depth_probs_ignorant, depth_label)
 
@@ -348,11 +299,10 @@ def dorn_loss_function(prob, depth):
     Code modified from here https://github.com/lochenchou/DORN/blob/main/loss.py
   """
   """
-  :param prob: ordinal regression probability, N x H x W x Ord Num, torch.Tensor
-  :param depth: depth ground truth, HxWxN, torch.Tensor
-  :return: loss: loss value, torch.float
+  :param prob: ordinal regression probability, N x H x W x Ord Num
+  :param depth: depth ground truth
+  :return: loss: loss value
   """
-  print("--- forward ---")
   # permute dimensions
   prob = tf.transpose(prob, [0, 3, 1, 2])
   depth = tf.transpose(depth, [0, 3, 1, 2])
@@ -362,13 +312,8 @@ def dorn_loss_function(prob, depth):
   H = prob_shape[2]
   W = prob_shape[3]
   #N, C, H, W = prob.shape
-  print("Prob: {}".format(prob.shape))
-  print("Depth: {}".format(depth.shape))
   valid_mask = depth > 0.
-  print("Valid mask: {}".format(valid_mask.shape))
   ord_c0, ord_c1 = create_ord_label(depth)
-  print("Ord_c0: {}".format(ord_c0.shape))
-  print("Ord_c1: {}".format(ord_c1.shape))
   logP = tf.math.log(tf.clip_by_value(prob, clip_value_min=1e-8, clip_value_max=1e8))
   log1_P = tf.math.log(tf.clip_by_value(1 - prob, clip_value_min=1e-8, clip_value_max=1e8))
   entropy = tf.reduce_sum(ord_c1*logP, axis=1) + tf.reduce_sum(ord_c0*log1_P, axis=1) # eq. (2)
@@ -376,7 +321,6 @@ def dorn_loss_function(prob, depth):
   valid_mask = tf.squeeze(valid_mask, axis=1)
   valid_entropy = tf.boolean_mask(entropy, valid_mask)
   loss = - tf.math.reduce_mean(valid_entropy) # loss = - entropy[valid_mask].mean()
-  print("Loss: {}".format(loss))
   return loss
   
 
@@ -392,31 +336,22 @@ def create_ord_label(depth):
   #N, _, H, W = depth.shape
   ord_c0 = tf.ones_like(depth, dtype=tf.float32)
   ord_c0 = tf.tile(ord_c0, [1, ord_num, 1, 1])
-  #ord_c0 = tf.ones([N, ord_num, H, W])
-  print("ord_c0: {}".format(ord_c0.shape))
-  print(depth.dtype)
   #ord_c0 = tf.ones([N, ord_num, H, W], dtype=tf.float32)
     
   if discretization == "SID":
       label = ord_num * tf.math.log(depth + 1 - beta_min) / tf.math.log(beta_max + 1)
   else:
       label = ord_num * depth / beta_max
+
   label = tf.cast(label, dtype=tf.int64)
-  print("label: {}".format(label.shape))
   mask = tf.linspace(0, ord_num - 1, ord_num) # ord_num - 1 instead of 255
   mask = tf.expand_dims(mask, 0)
   mask = tf.expand_dims(mask, -1)
   mask = tf.expand_dims(mask, -1) # mask has dim [1, ord_num, 1, 1] now
   mask = tf.tile(mask, [N, 1, H, W])
   mask = tf.cast(mask, tf.int64)
-  
-  #print(mask.shape)
-  #print(ord_c0.shape)
     
   mask = tf.less(mask, label)
-  print("mask: {}".format(mask.shape))
-  print("ord_c0: {}".format(ord_c0.shape))
   ord_c0 = tf.where(mask, 0.0, ord_c0) #ord_c0[mask] = 0
   ord_c1 = 1 - ord_c0
-  print("ord_c0: {}".format(ord_c0.shape))
   return ord_c0, ord_c1
