@@ -114,18 +114,10 @@ Launch file for Selective ICP with rviz
         store_labels: true
         label_frequency: 3
         image_topics:
-          <!-- - - /pickelhaube_resized/cam0/image
-            - /meshdist/cam0/projected_pc
-            - /meshdist/cam0/projected_pc_distance
-          - - /pickelhaube_resized/cam1/image
-            - /meshdist/cam1/projected_pc
-            - /meshdist/cam1/projected_pc_distance -->
           - - /pickelhaube_resized/cam2/image
             - /meshdist/lidar/projected_pc
             - /meshdist/lidar/projected_pc_distance
         out_topics:
-          <!-- - /meshdist/cam0/labels
-          - /meshdist/cam1/labels -->
           - /meshdist/lidar/final_labels
         label_options:
           downsamplingFactor: 1

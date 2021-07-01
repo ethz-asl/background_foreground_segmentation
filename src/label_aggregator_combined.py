@@ -27,7 +27,6 @@ def callback(original, labels, distance, labels_dense):
                                                       distance.width)
   np_labels_dense = np.frombuffer(labels_dense.data,
                             dtype=np.uint8).reshape(labels.height, labels.width)
-  #print("Received dense labels as well: {}".format(labels_dense.shape))
   
   t1 = time.time()
 
@@ -152,7 +151,6 @@ def main():
         [originalSub, labelsSub, distanceSub, denseLabelsSub], 10, 0.1, allow_headerless=True)
     ts.registerCallback(getCallbackForTopic(idx, publishers[idx], counters))
     print("Subscribed to", originalTopic)
-  print("----------------Initi label_aggregator_combined-------------------")
   rospy.spin()
 
 
