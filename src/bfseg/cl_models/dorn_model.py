@@ -152,7 +152,9 @@ class DornModel(BaseCLModel):
     # moved inside
     pred_y_seg = tf.math.argmax(pred_y_seg, axis=-1) 
     pred_y_seg_masked = tf.boolean_mask(pred_y_seg, mask_seg)
-    
+
+
+    # Depth 
     loss_depth = ignorant_dorn_loss(y_depth, pred_y_binned_depth) # remove hardcoded version
 
     # Get argmax instead of bins
