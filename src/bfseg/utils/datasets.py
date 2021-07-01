@@ -1130,9 +1130,9 @@ def load_datasets(train_dataset,
   assert ((fisher_params_dataset is None) == (fisher_params_sample_percentage is
                                               None))
   training_percentage = 100 - validation_percentage
-  # TODO: remove this experimental memory fix
-  if train_dataset == "MeshdistPseudolabelsDenseDepth":
-    training_percentage = 65 - validation_percentage
+  # experimental fix
+  # if train_dataset == "MeshdistPseudolabelsDenseDepth":
+  #   training_percentage = 65 - validation_percentage
   train_ds = load_data(dataset_name=train_dataset,
                        scene_type=train_scene,
                        fraction=f"[:{training_percentage}%]",
@@ -1244,7 +1244,7 @@ def update_datasets_with_replay_and_augmentation(
     train_ds = train_no_replay_ds
     # Check if data augmentation should be used.
     if (perform_data_augmentation):
-      # Special augmentation function in case augmentation is with depth (TODO: improve)
+      # Special augmentation function in case augmentation is with depth
       if (contains_depth):
         train_ds = train_ds.map(augmentation_with_mask_depth)
       else:
