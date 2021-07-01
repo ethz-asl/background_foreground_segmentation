@@ -26,12 +26,12 @@ Launch file for Selective ICP with rviz
     <node pkg="background_foreground_segmentation"
           type="pose_logger.py"
           name="poselogger">
-        <param name="filename" value="/home/matthias/data/rss_2021_data/$(arg logprefix)_icp.csv" />
+        <param name="filename" value="$(find background_foreground_segmentation)/logs/$(arg logprefix)_icp.csv" />
     </node>
     <node pkg="background_foreground_segmentation"
           type="point_logger.py"
           name="leicalogger">
-        <param name="filename" value="/home/matthias/data/rss_2021_data/$(arg logprefix)_leica.csv" />
+        <param name="filename" value="$(find background_foreground_segmentation)/logs/$(arg logprefix)_leica.csv" />
         <param name="overwrite" value="false" />
     </node>
 
@@ -39,7 +39,7 @@ Launch file for Selective ICP with rviz
     <node pkg="background_foreground_segmentation" type="background_foreground_segmentation_dense_node"
           name="dataset_creator_cam2_from_depth" output="screen">
         <rosparam command="load" file="$(find background_foreground_segmentation)/config/dense_dataset_creator.yaml"/>
-        <param name="outputFolder" value="/home/matthias/data/rss_2021_data/label_aggregator_dense/labels_kinect/"/>
+        <param name="outputFolder" value="$(find background_foreground_segmentation)/logs/label_aggregator_dense/labels_kinect/"/>
         <param name="cameraImageTopic" value="/pickelhaube_resized/cam2/image"/>
         <param name="cameraInfoTopic" value="/pickelhaube_resized/cam2/camera_info"/>
         <param name="cameraFrame" value="/cam2_rectified_frame"/>
