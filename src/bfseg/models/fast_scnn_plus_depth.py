@@ -270,10 +270,8 @@ def fast_scnn_plus_depth(input_shape,
   semseg = tf.keras.layers.UpSampling2D(
       (2**num_downsampling_layers, 2**num_downsampling_layers))(semseg)
   # semseg = tf.keras.activations.softmax(semseg)
-  print("Semseg output shape: {}".format(semseg.shape))
-  print("num_classes: {}".format(num_classes))
 
-
+  """ #Left in for experiments with separate classifiers
   classifier_depth = tf.keras.layers.SeparableConv2D(
       128, (3, 3), padding='same', strides=(1, 1),
       name='DSConv1_classifier_depth')(ff_final)
@@ -295,8 +293,9 @@ def fast_scnn_plus_depth(input_shape,
     # channels here is 128.
     classifier_depth = tfa.layers.GroupNormalization(groups=32)(classifier_depth)
   classifier_depth = tf.keras.activations.relu(classifier_depth)
+  """
 
-  # Depth (1 channel only)
+  """## Step 5: Depth"""
   depth = conv_block(classifier_semseg,
                           'conv',
                           1, (1, 1),
@@ -310,18 +309,10 @@ def fast_scnn_plus_depth(input_shape,
   depth = tf.keras.layers.UpSampling2D(
       (2**num_downsampling_layers, 2**num_downsampling_layers))(depth)
   
-  # minimum inverse depth to be predicted is 1: 
-  # depth = tf.square(depth) + 1
-  print("Depth output shape: {}".format(depth.shape))
-
-
   # Pseudo output only used for smooth consistency loss
   combined = tf.keras.layers.concatenate([depth, semseg],
                                          axis=-1,
                                          name="combined")
-  print("FSCNN: Semseg shape: {}".format(semseg.shape))
-  print("FSCNN: Depth shape: {}".format(depth.shape))
-  print("FSCNN: Combined shape: {}".format(combined.shape))
 
   encoder = tf.keras.Model(inputs=inputs, outputs=ff_final)
   model = tf.keras.Model(inputs=inputs, outputs=[semseg, combined, depth])
