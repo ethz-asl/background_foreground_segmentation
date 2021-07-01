@@ -51,7 +51,8 @@ def run(_run, network_params, training_params, dataset_params, logging_params,
       test_dataset=dataset_params['test_dataset'],
       test_scene=dataset_params['test_scene'],
       batch_size=training_params['batch_size'],
-      validation_percentage=dataset_params['validation_percentage'])
+      validation_percentage=dataset_params['validation_percentage'],
+      preprocessing_mode=depth_params['preprocessing_mode'])
   # Run the training.
   model.compile(
       optimizer=tf.keras.optimizers.Adam(training_params['learning_rate']))
