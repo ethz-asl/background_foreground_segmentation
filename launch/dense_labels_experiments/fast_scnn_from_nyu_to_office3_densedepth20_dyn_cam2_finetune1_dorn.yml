@@ -30,7 +30,7 @@ logging_params:
   exp_name: office3_densedepth20_dyn_cam2_finetune
 cl_params:
   cl_framework: finetune
-  fraction_replay_ds_to_use: 0.1
+  fraction_replay_ds_to_use: 0.05
   # Note: this needs to be specified.
   pretrained_dir: /xavier_ssd/saved_weights/nyu_dorn_pretrained_weights_60.h5
   ratio_main_ds_replay_ds: null
