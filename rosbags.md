@@ -14,4 +14,5 @@ Download these rosbags to reproduce the corresponding experiments.
   <tr><td>Construction</td><td>Rumlang1</td><td><a href="https://drive.google.com/file/d/1uJQkurwowBo5NmOd9aCYqvV2wDAx2FHs/view?usp=sharing">download</a></td></tr>
   <tr><td>Construction</td><td>Rumlang2</td><td><a href="https://drive.google.com/file/d/1p8XicZlBKWeu2M0qIIc97_6AGCnz_vyf/view?usp=sharing">download</a></td></tr>
   <tr><td>Construction</td><td>Rumlang3</td><td><a href="https://drive.google.com/file/d/1BqZjPgXkWuvx4vKs38gXWrDnFOdU5_Rr/view?usp=sharing">download</a></td></tr>
+  <tr><td>Office</td><td>Office3</td><td><a href="https://drive.google.com/file/d/1c24CLb8ZPldWijbMzb5y5jiMcERC0XvQ/view?usp=sharing">download</a></td></tr>
 </table>

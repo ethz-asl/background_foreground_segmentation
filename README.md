@@ -257,3 +257,44 @@ roslaunch background_foreground_segmentation pickelhaube_online_learning_rumlang
 ### <span style="color:red">Necessary additions</span>
 - Link to pretrained weights
 - How to train bulk
+
+# Realsense Experiments:
+
+Experiments with Visual Odometry Prior for ICP from the Realsense Tracking Camera can be found in `/launch/realsense_experiments`. The localization results from the report can be reproduced (after downloading the Rumlang1 Rosbag, see above) by running 
+```bash
+# Normal
+roslaunch background_foreground_segmentation pickelhaube_full_rumlang1.launch
+# With Realsense Visual Odometry Prior
+roslaunch background_foreground_segmentation pickelhaube_full_rumlang1_dyn.launch
+# With Realsense Visual Odometry Prior + Scan Skipping
+roslaunch background_foreground_segmentation pickelhaube_rumlang1_rt.launch 
+# With EKF
+roslaunch background_foreground_segmentation pickelhaube_rumlang1_ekf.launch 
+```
+Poses are then logged to `/logs/$(arg logprefix)_icp.csv` and `/logs/$(arg logprefix)_leica.csv` and were analyzed using `notebooks/realsense_localization_evaluation.ipynb`. 
+
+# Dense Labels Experiments
+
+Dense and sparse labels from the Office environment are generated automatically using launch files from `/launch/dense_labels_experiments` with the Office3 rosbag (see `rosbags.md`).
+```bash
+# Labels without Depth
+roslaunch background_foreground_segmentation pickelhaube_dense_sparse_labelgen_office3.launch
+# Labels with Depth
+roslaunch background_foreground_segmentation pickelhaube_dense_sparse_depth_labelgen_office3.launch
+```
+Labels are logged to `logs/labels_lidar` (sparse) and `logs/labels_kinect`(dense). Load the labels into tensorflow as described above. Alternatively, you can load already created pseudolabels that we used for our experiments (after running `tfds build pseudolabels_dense` and `tfds build pseudolabels_densedepth` from `/src/bfseg/data` directory):
+
+```python
+import bfseg.data.pseudolabels
+import bfseg.data.meshdist.bfseg_cla_meshdist_labels
+import tensorflow_datasets as tfds
+
+ds = tfds.load('MeshdistPseudolabelsDense', split='office3_sparse50_dyn_cam2') # sparse
+ds = tfds.load('MeshdistPseudolabelsDense', split='office3_dense20_dyn_cam2') # dense
+ds = tfds.load('MeshdistPseudolabelsDense', split='office3_combined2050_dyn_cam2') # combined
+ds = tfds.load('MeshdistPseudolabelsDenseDepth', split='office3_densedepth20_dyn_cam2') # dense + depth
+ds = tfds.load('meshdist_pseudolabels', split='office5')  # for office
+ds = tfds.load('bfseg_cla_meshdist_labels')  # for garage
+```
+
+To reproduce single-task and multi-task training results with dense pseudo-label, use the command in `/experiment_cfg/dense_label_experiments.md`. For Xavier set-up, have a looka at `xavier_setup.md`. The final results from the report are then analyzed in `/notebooks/dense_labels_training_results.ipynb`. Visualizations can be found in `/notebooks/dense_labels_visualizations`.
