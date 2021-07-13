@@ -34,9 +34,18 @@ ____
 - `stopping_patience` (`int`): Patience parameter of the early-stopping callback.
 - `use_balanced_loss` (`bool`): Whether or not balanced cross-entropy loss should be used (cf. `src/bfseg/utils/metrics.py`).
 
+
 ### Optional parameters
 
 None.
+
+### Required parameters for multi-task setup 
+
+We add four additional `depth_params` multi-task setup:
+- `semseg_weight` (`float`): Weight of cross-entropy loss for semantic segmentation
+- `depth_weigth` (`float`): Weight of depth loss for depth regression
+- `consistency_weight` (`float`): Weight of consistency loss betweeen segementation and depth
+- `preprocessing_mode` (`str`): Preprocessing mode of depth labels. Available options: `power_std`, `power_median`, `inverse_std`, `inverse_median`, `inverse`, `normal` (normal for DORN)
 
 ____
 
@@ -81,7 +90,20 @@ ____
   - `"office6_2502"`
   - `"rumlang2"`
   - `"rumlang3"`
-- `OfficeRumlangValidationLabeled`. Valid dataset scenes:
+- `MeshdistPseudolabelsDyn`. Valid dataset scenes:
+  - `"rumlang1_full_dyn"`
+  - `"rumlang1_full"`
+- `MeshdistPseudolabelsDense`. Valid dataset scenes: 
+  - `"office12_dense20_dyn_cam2"` 
+  - `"office12_sparse50_dyn_cam2"`
+  - `"office12_sparse50_dyn_allcams"`
+  - `"office3_dense20_dyn_cam2"` (used for dense pseudo-labels in semester project results)
+  - `"office3_sparse50_dyn_cam2"` (used for sparse pseudo-labels in semester project results)
+  - `"office3_sparse50_dyn_allcams"`
+  - `"office3_combined2050_dyn_cam2"` (used for combined pseudo-label in semester project results)
+- `MeshdistPseudolabelsDenseDepth`. Valid dataset scenes: 
+  - `"office12_densedepth20_dyn_cam2"` 
+  - `"office3_densedepth20_dyn_cam2"` (used for mulit-task dense pseudo-labels in semester project results)
   - `None`
   - `"OFFICE"`
   - `"RUMLANG"`
