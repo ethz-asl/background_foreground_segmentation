@@ -196,6 +196,8 @@ The repository is structured in the following way:
   - `src/online_learning.py`: runs online inference, training and pseudolabel generation
 - `src/` also contains training scripts:
   - `src/train_binary_segmodel_base.py`: training with/without memory replay
+  - `src/train_binary_segmodel_depth.py`: multi-task training (segmentation + depth regression) with/without memory replay
+  - `src/train_binary_segmodel_dorn.py`: multi-task training (segmentation + quantized depth classification) with/without memory replay
   - `src/train_binary_segmodel_distillation.py`: training with distillation based methods
   - `src/train_binary_segmodel_EWC.py`: training with EWC
 - `src/bfseg/` is the python library used for both parts.

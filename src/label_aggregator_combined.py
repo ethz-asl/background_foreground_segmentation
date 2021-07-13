@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-  ROS node that takes the sparse label of the projected pointcloud and aggregates them
+  ROS node that takes the sparse and dense label of the projected pointcloud and aggregates them
 """
 import sys
 import rospy
