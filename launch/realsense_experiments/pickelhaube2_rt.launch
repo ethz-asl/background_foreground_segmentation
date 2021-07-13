@@ -54,7 +54,7 @@ Launch file for Selective ICP with rviz
           <param name="odomTopic" value="/camera/odom/sample" />
           <param name="realsenseOdomTopic" value="/realsense_odom" />
           <param name="inputQueueSize" value="5" />
-          <param name="tfMapFrame" value="5" />
+          <param name="tfMapFrame" value="map" />
           <param name="cameraPoseFrame" value="camera_pose_frame" />
           <param name="cameraOdomFrame" value="camera_odom_frame" />
           <param name="realsenseCov" value="0.1" />

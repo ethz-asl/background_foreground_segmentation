@@ -297,4 +297,4 @@ ds = tfds.load('MeshdistPseudolabelsDense', split='office3_combined2050_dyn_cam2
 ds = tfds.load('MeshdistPseudolabelsDenseDepth', split='office3_densedepth20_dyn_cam2') # dense + depth
 ```
 
-To reproduce single-task and multi-task training results with dense pseudo-label, use the command in `/experiment_cfg/dense_label_experiments.md`. For Xavier set-up, have a looka at `xavier_setup.md`. The final results from the report are then analyzed in `/notebooks/dense_labels_training_results.ipynb`. Visualizations can be found in `/notebooks/dense_labels_visualizations`.
+To reproduce single-task and multi-task training results with dense pseudo-label, use the command in `/experiment_cfg/dense_label_experiments.md`. For Xavier set-up, have a look at `xavier_setup.md`. The final results from the report are then analyzed in `/notebooks/dense_labels_training_results.ipynb`. Visualizations can be found in `/notebooks/dense_labels_visualizations.ipynb`.
