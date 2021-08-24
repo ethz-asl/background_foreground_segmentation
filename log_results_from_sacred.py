@@ -14,6 +14,7 @@ import zipfile
 
 from bfseg.utils.evaluation import evaluate_model_multiple_epochs_and_datasets
 
+MONGO_URI = ADD_MONGO_URI_HERE
 
 class LogExperiment:
 
@@ -51,9 +52,15 @@ class LogExperiment:
     # Set the test datasets on which to optionally evaluated the pretrained
     # models.
     self._datasets_names_to_evaluate = [
-        "BfsegValidationLabeled", "OfficeRumlangValidationLabeled"
+        "BfsegValidationLabeled",
+        "OfficeRumlangValidationLabeled",
+        # Add other datasets to evalute here: e.g., "NyuDepthV2Labeled"
     ]
-    self._datasets_scenes_to_evaluate = ["CLA", "RUMLANG"]
+    self._datasets_scenes_to_evaluate = [
+        "CLA",
+        "RUMLANG",
+        # Add other scenes to evaluate here: "OFFICE"
+    ]
 
     self._find_splits_to_log()
 

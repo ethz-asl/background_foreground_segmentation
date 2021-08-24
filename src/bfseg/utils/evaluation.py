@@ -261,6 +261,7 @@ def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
   encoder, full_model = create_model(model_name="fast_scnn",
                                      freeze_encoder=False,
                                      freeze_whole_model=False,
+                                     # This might need to be changed to "batch".
                                      normalization_type="group",
                                      image_h=480,
                                      image_w=640)
@@ -290,7 +291,8 @@ def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
         with open(output_evaluation_filename, 'r') as f:
           evaluation_metrics = yml.load(f, Loader=yml.FullLoader)
         # Check that also the pretrained model used matches.
-        if (evaluation_metrics['pretrained_dir'] == pretrained_dir):
+        if ('pretrained_dir' in evaluation_metrics and
+            evaluation_metrics['pretrained_dir'] == pretrained_dir):
           accuracies[curr_dataset_and_scene][epoch] = evaluation_metrics[
               'accuracy']
           mean_ious[curr_dataset_and_scene][epoch] = evaluation_metrics[
