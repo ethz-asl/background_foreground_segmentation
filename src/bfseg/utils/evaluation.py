@@ -205,10 +205,17 @@ def evaluate_model(model,
   accuracy_tracker.reset_states()
   miou_tracker.reset_states()
   image_idx = 0
+
+  printed_warning = False
+
   for sample in test_dataset:
     if (len(sample) == 3):
       x, y, mask = sample
-      assert (False)
+      if (not printed_warning):
+        print("\033[93mReceived dataset that already contains a mask. This is "
+              "expected if the dataset consists of pseudolabels. Using given "
+              "mask for evaluation.\033[0m")
+        printed_warning = True
     else:
       assert (len(sample) == 2)
       x, y = sample
