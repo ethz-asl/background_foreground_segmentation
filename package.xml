@@ -16,6 +16,9 @@
   <test_depend>rosunit</test_depend>
 
   <depend>cgal_catkin</depend>
+  <depend>cgal_definitions</depend>
+  <depend>cpt_utils</depend>
+  <depend>cpt_selective_icp</depend>
   <depend>pcl_ros</depend>
   <depend>roscpp</depend>
   <depend>image_geometry</depend>

@@ -5,7 +5,7 @@ import tensorflow_datasets as tfds
 import warnings
 
 from bfseg.data.fsdata import load_fsdata
-from bfseg.utils.images import augmentation
+from bfseg.utils.images import augmentation_with_mask
 from bfseg.utils.replay_buffer import ReplayBuffer
 
 
@@ -99,7 +99,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       - If `dataset_name` is "BfsegCLAMeshdistLabels":
         - None: All the samples in the dataset are selected (no scene
             subdivision is available).
-      - If `dataset_name` is "MeshdistPseudolabels": 
+      - If `dataset_name` is "MeshdistPseudolabels":
         - None: All the scenes in the dataset are selected.
         - "garage_full": All the three scenes from the garage.
         - "rumlang_full": Both the scenes from Rumlang.
@@ -108,11 +108,9 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
           - "garage2"
           - "garage3"
           - "office4"
-          - "office4_2302"
-          - "office4_2402"
           - "office5"
-          - "office6_2502"
-          - "rumlang2" 
+          - "office6"
+          - "rumlang2"
           - "rumlang3"
       - If `dataset_name` is "BfsegValidationLabeled":
         - None: All the scenes in the dataset are selected.
@@ -158,21 +156,9 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = "garage1+garage2+garage3"
     elif (scene_type == "rumlang_full"):
       name = "rumlang2+rumlang3"
-    elif (scene_type == "office4_2302"):
-      ds = load_fsdata(
-          '/cluster/work/riner/users/blumh/pickelhaube_full_office4')
-      name = scene_type
-    elif (scene_type == "office4_2402"):
-      ds = load_fsdata('/cluster/work/riner/users/blumh/'
-                       'pickelhaube_full_office4_agreement_dump')
-      name = scene_type
-    elif (scene_type == "office6_2502"):
-      ds = load_fsdata(
-          '/cluster/work/riner/users/blumh/pickelhaube_full_office6')
-      name = scene_type
     elif (scene_type in [
-        "garage1", "garage2", "garage3", "office4", "office5", "rumlang2",
-        "rumlang3"
+        "garage1", "garage2", "garage3", "office4", "office5", "office6",
+        "rumlang2", "rumlang3"
     ]):
       name = scene_type
     else:
@@ -388,6 +374,6 @@ def update_datasets_with_replay_and_augmentation(
     train_ds = train_no_replay_ds
     # Check if data augmentation should be used.
     if (perform_data_augmentation):
-      train_ds = train_ds.map(augmentation)
+      train_ds = train_ds.map(augmentation_with_mask)
 
   return train_ds, test_ds

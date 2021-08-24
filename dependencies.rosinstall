@@ -9,8 +9,11 @@
     local-name: glog_catkin
     uri: git@github.com:ethz-asl/glog_catkin.git
 - git:
-    local-name: go_icp_catkin
-    uri: git@github.com:ethz-asl/go_icp_catkin.git
+    local-name: cad-percept
+    uri: git@github.com:ethz-asl/cad-percept.git
+- git:
+    local-name: image_undistort
+    uri: git@github.com:ethz-asl/image_undistort.git
 - git:
     local-name: minkindr
     uri: git@github.com:ethz-asl/minkindr.git

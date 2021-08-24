@@ -55,6 +55,8 @@ class MeshdistPseudolabels(tfds.core.GeneratorBasedBuilder):
             'https://drive.google.com/uc?export=download&id=1Qbu2maNJ6aUxG2dBtqHRrTj0CqWsk4ZF',
         'office5':
             'https://drive.google.com/uc?export=download&id=1eMd0m8COn_sKbxbr-cVvbsCdMeSd_FlN',
+        'office6':
+            'https://drive.google.com/uc?export=download&id=1h0SSB1tRY76t4WvAKpH6AnguAsxSHWlv',
     })
     return [
         tfds.core.SplitGenerator(

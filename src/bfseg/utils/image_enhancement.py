@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import skimage
 from skimage.segmentation import watershed
 from scipy.spatial import distance
+from skimage.feature import canny
+from skimage.color import rgb2gray
 """
 Helper functions to convert self supervised sparse annotations to images
 """
@@ -57,7 +59,7 @@ def reduce_superpixel(seeds_bg,
       distSum[superpixel_label] += dist
       distSquared[superpixel_label] += dist * dist
 
-  mean = distSum / distCounter
+  mean = distSum.astype('float32') / distCounter
   stdDev = (distSquared / distCounter) - (mean * mean)
   stdDev[np.isnan(stdDev)] = 0
 
@@ -95,8 +97,8 @@ def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
       np.multiply(
           original,
           np.stack([
-              assign == class_background, assign == class_background,
-              assign == class_background
+              assign == class_background, assign == class_background, assign
+              == class_background
           ],
                    axis=-1)))
   plt.title("background")
@@ -105,8 +107,8 @@ def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
       np.multiply(
           original,
           np.stack([
-              assign == class_foreground, assign == class_foreground,
-              assign == class_foreground
+              assign == class_foreground, assign == class_foreground, assign
+              == class_foreground
           ],
                    axis=-1)))
   plt.title("foreground")
@@ -115,8 +117,8 @@ def plot_reduced_sp(seeds_bg, seeds_fg, assignment, distance, original):
       np.multiply(
           original,
           np.stack([
-              assign == class_unknown, assign == class_unknown,
-              assign == class_unknown
+              assign == class_unknown, assign == class_unknown, assign
+              == class_unknown
           ],
                    axis=-1)))
   plt.title("unknown")
@@ -144,6 +146,7 @@ def aggregate_sparse_labels(np_labels,
                             np_orig,
                             outSize=None,
                             useSuperpixel=True,
+                            stdDevThreshold=0.5,
                             foregroundTrustRegion=True,
                             fg_bg_threshold=100,
                             superpixelCount=1000):
@@ -198,11 +201,15 @@ def aggregate_sparse_labels(np_labels,
     superpixels = skimage.segmentation.slic(
         np_orig,
         n_segments=superpixelCount,
-        compactness=4,
-        sigma=1,
+        compactness=10,
+        sigma=.2,
     )
 
-    mask = reduce_superpixel(seeds_bg, seeds_fg, superpixels, np_distance)
+    mask = reduce_superpixel(seeds_bg,
+                             seeds_fg,
+                             superpixels,
+                             np_distance,
+                             stdDevThreshold=stdDevThreshold)
 
   else:
     markers = np.zeros(np_labels_foreground.shape, dtype=np.uint)
@@ -219,9 +226,7 @@ def aggregate_sparse_labels(np_labels,
     markers[height - bot_padding, step * i] = class_unknown + 1
 
     # Run watershed on canny edge filtered image.
-    mask = watershed(
-        skimage.feature.canny(skimage.color.rgb2gray(np_orig), sigma=0.1),
-        markers) - 1
+    mask = watershed(canny(rgb2gray(np_orig), sigma=0.1), markers) - 1
 
   return mask
 

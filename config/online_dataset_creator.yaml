@@ -1,0 +1,18 @@
+# Set this to true if you only want to extract images and poses from rosbag
+ignorePointcloud: false
+# Topic where point cloud with distance information is published
+cloudTopic: /rslidar_points
+# In which frame is the cloud published?
+cloudFrame: /rslidar
+# Max distance from a point to the groundtruth mesh. If a point has i bigger distance, it will be replaced with this value
+maxDistance: 0.5 #[m]
+# Max distance of a lidar point from the camera. If a point has i bigger distance, it will be replaced with this value
+lidarMaxDistance: 10 #[m]
+# If existing files should be overriden
+overrideOutput: true
+# Filetype of the original image. Either png or jpg
+fileType: "png"
+storeImages: true
+exportPose: false
+createPreview: true
+outputFiles: false

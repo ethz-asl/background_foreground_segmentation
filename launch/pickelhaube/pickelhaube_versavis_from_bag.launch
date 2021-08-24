@@ -1,6 +1,7 @@
 <launch>
 
   <arg name="rosbag" default="" />
+  <arg name="rate" default="0.2" />
 
   <!-- Proper Output Info -->
   <env name="ROSCONSOLE_FORMAT" value="[${severity}] (${node}) [${time}]: ${message}\n" />
@@ -9,7 +10,7 @@
 
   <node pkg="rosbag" type="play"
         name="rosbag"
-        args="--clock -d 1 -r 0.5 $(arg rosbag)"
+        args="--clock -d 1 -r $(arg rate) $(arg rosbag)"
         />
 
     <node pkg="nodelet" type="nodelet" name="pickelhaube_camera_manager"

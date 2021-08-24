@@ -216,7 +216,8 @@ class LogExperiment:
         epochs_to_evaluate=actual_epochs_to_evaluate,
         datasets_names_to_evaluate=datasets_names_to_evaluate,
         datasets_scenes_to_evaluate=datasets_scenes_to_evaluate,
-        save_folder=self._save_folder_evaluate)
+        save_folder=self._save_folder_evaluate,
+        use_fov_mask=True)
 
     return accuracies, mean_ious
 

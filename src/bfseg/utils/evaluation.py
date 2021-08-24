@@ -1,3 +1,4 @@
+import cv2
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import os
@@ -169,15 +170,22 @@ def scoreAndPlotPredictions(imageCallback,
       )
 
 
-def evaluate_model(model, test_dataset, pretrained_dir=None):
+def evaluate_model(model,
+                   test_dataset,
+                   use_fov_mask,
+                   pretrained_dir=None,
+                   output_image_folder=None):
   r"""Evaluates a model on a given test dataset.
 
   Args:
     model (tensorflow.keras.Model): Model to evaluate.
     test_dataset (tensorflow.python.data.ops.dataset_ops.PrefetchDataset): Test
       dataset on which to evaluate the CL model.
+    use_fov_mask (bool): Whether or not to use the FoV mask.
     pretrained_dir (str): If not None, path from which the weights of a
       pretrained model will be loaded.
+    output_image_folder (str): If not None, segmentation predictions on the
+      given test dataset will be saved to this folder.
 
   Returns:
     accuracy (float): Accuracy of the given model over the given test dataset.
@@ -186,25 +194,66 @@ def evaluate_model(model, test_dataset, pretrained_dir=None):
   # Optionally load weights.
   if (pretrained_dir is not None):
     model.load_weights(pretrained_dir)
+  # If the segmentation predictions should be saved, set up the output folder.
+  if (output_image_folder is not None):
+    if (not os.path.isdir(output_image_folder)):
+      os.makedirs(output_image_folder)
   accuracy_tracker = tf.keras.metrics.Accuracy(name='accuracy',
                                                dtype=tf.float32)
   miou_tracker = tf.keras.metrics.MeanIoU(name='mean_iou', num_classes=2)
 
   accuracy_tracker.reset_states()
   miou_tracker.reset_states()
+  image_idx = 0
   for sample in test_dataset:
     if (len(sample) == 3):
       x, y, mask = sample
+      assert (False)
     else:
       assert (len(sample) == 2)
       x, y = sample
-      mask = tf.ones(shape=x.shape[:-1])
+      if (use_fov_mask):
+        # Read the FoV mask from file.
+        current_dir = os.path.dirname(__file__)
+        mask_filename = os.path.realpath(f"{current_dir}/../../../fov_mask.png")
+        mask = cv2.imread(mask_filename)
+        assert (mask.shape == (480, 640, 3))
+        mask = tf.cast(mask[:, :, 0] / 255., dtype=tf.uint8)
+      else:
+        mask = tf.ones(shape=x.shape[:-1])
+      batch_size = x.shape[0]
+      mask = tf.repeat(tf.expand_dims(mask, axis=0), batch_size, axis=0)
     [_, pred_y] = model(x, training=False)
     y_masked = tf.boolean_mask(y, mask)
     pred_y = tf.keras.backend.argmax(pred_y, axis=-1)
     pred_y_masked = tf.boolean_mask(pred_y, mask)
     accuracy_tracker.update_state(y_masked, pred_y_masked)
     miou_tracker.update_state(y_masked, pred_y_masked)
+
+    # Optionally save the prediction images.
+    if (output_image_folder is not None):
+      assert (len(x.shape) == 4)
+      assert (len(y.shape) == 4)
+      assert (len(pred_y.shape) == 3)
+      for prediction_image, gt_image, input_image in zip(pred_y, y, x):
+        prediction_image = tf.cast(tf.expand_dims(prediction_image, axis=-1),
+                                   dtype=tf.float32) * 255. * 0.7
+        gt_image = tf.cast(gt_image, dtype=tf.float32) * 255. * 0.7
+        # - Save prediction.
+        tf.keras.preprocessing.image.save_img(os.path.join(
+            output_image_folder, f"{image_idx}_prediction.png"),
+                                              prediction_image,
+                                              scale=False)
+        # - Also save corresponding ground-truth segmentation and the input
+        #   image.
+        tf.keras.preprocessing.image.save_img(os.path.join(
+            output_image_folder, f"{image_idx}_gt.png"),
+                                              gt_image,
+                                              scale=False)
+        tf.keras.preprocessing.image.save_img(
+            os.path.join(output_image_folder, f"{image_idx}_input.png"),
+            input_image)
+        image_idx += 1
 
   accuracy = accuracy_tracker.result().numpy().item()
   mean_iou = miou_tracker.result().numpy().item()
@@ -216,9 +265,12 @@ def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
                                                 epochs_to_evaluate,
                                                 datasets_names_to_evaluate,
                                                 datasets_scenes_to_evaluate,
-                                                save_folder):
+                                                save_folder,
+                                                use_fov_mask,
+                                                save_predictions=False):
   r"""Evaluates a model with the checkpoint(s) from the given epoch(s) on the
-  given test dataset(s).
+  given test dataset(s). NOTE: The model parameters (e.g., the normalization
+  type) need to be changed manually if needed (cf. `create_model`).
 
   Args:
     pretrained_dirs (str or list of str): Path to pretrained models that should
@@ -231,7 +283,10 @@ def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
       which the model(s) should be evaluated.
     save_folder (str): Folder where the results of the evalutions should be
       saved.
-  
+    use_fov_mask (bool): Whether or not to use the FoV mask.
+    save_predictions (bool): Whether or not to save the images with the
+      segmentation predictions.
+
   Returns:
     accuracies (dict): Accuracies, indexed by the concatenation of the dataset
       name and scene and by the epoch number.
@@ -325,9 +380,19 @@ def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
         continue
 
       # Evaluate the pretrained model on the given dataset.
-      accuracy, mean_iou = evaluate_model(model=model,
-                                          test_dataset=test_dataset,
-                                          pretrained_dir=pretrained_dir)
+      # - Optionally save the segmentation predictions.
+      if (save_predictions):
+        output_image_folder = os.path.join(save_folder,
+                                           f"predictions_epoch_{epoch}")
+      else:
+        output_image_folder = None
+
+      accuracy, mean_iou = evaluate_model(
+          model=model,
+          test_dataset=test_dataset,
+          use_fov_mask=use_fov_mask,
+          pretrained_dir=pretrained_dir,
+          output_image_folder=output_image_folder)
       accuracies[curr_dataset_and_scene][epoch] = accuracy
       mean_ious[curr_dataset_and_scene][epoch] = mean_iou
       # Write the result to file.

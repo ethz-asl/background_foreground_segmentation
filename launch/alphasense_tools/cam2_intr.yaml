@@ -1,0 +1,17 @@
+cam0:
+  camera_model: pinhole
+  distortion_coeffs:
+  - -0.05013548889838957
+  - 0.02317365200574201
+  - -0.020715406189557462
+  - 0.005499764867651349
+  distortion_model: equidistant
+  intrinsics:
+  - 349.9838620423303
+  - 349.6964995020951
+  - 345.6712086152619
+  - 295.26105531933683
+  resolution:
+  - 720
+  - 540
+  rostopic: /alphasense_driver_ros/cam2/rgb
