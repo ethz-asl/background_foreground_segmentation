@@ -320,13 +320,14 @@ def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
   assert (len(datasets_names_to_evaluate) == len(datasets_scenes_to_evaluate))
 
   # Create the model.
-  encoder, full_model = create_model(model_name="fast_scnn",
-                                     freeze_encoder=False,
-                                     freeze_whole_model=False,
-                                     # This might need to be changed to "batch".
-                                     normalization_type="group",
-                                     image_h=480,
-                                     image_w=640)
+  encoder, full_model = create_model(
+      model_name="fast_scnn",
+      freeze_encoder=False,
+      freeze_whole_model=False,
+      # This might need to be changed to "batch".
+      normalization_type="group",
+      image_h=480,
+      image_w=640)
   model = tf.keras.Model(inputs=full_model.input,
                          outputs=[encoder.output, full_model.output])
 
