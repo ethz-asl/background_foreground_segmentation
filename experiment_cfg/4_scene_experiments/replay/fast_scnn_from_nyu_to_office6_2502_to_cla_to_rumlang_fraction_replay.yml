@@ -31,7 +31,7 @@ dataset_params:
   validation_percentage: 10
 logging_params:
   model_save_freq: 1
-  exp_name: fast_scnn_from_nyu_to_office6_2502_to_cla_to_rumlang_finetune_fraction_replay
+  exp_name: fast_scnn_from_nyu_to_office6_2502_to_cla_to_rumlang_replay
 cl_params:
   cl_framework: finetune
   fraction_replay_ds_to_use: 0.1
