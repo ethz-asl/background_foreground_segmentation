@@ -17,8 +17,9 @@ Labels:
 class MeshdistPseudolabels(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for bagfile datasets (e.g., Rumlang)."""
 
-  VERSION = tfds.core.Version('0.2.0')
+  VERSION = tfds.core.Version('0.2.1')
   RELEASE_NOTES = {
+      '0.2.1': 'fixing office scenes',
       '0.2.0': 'added office scenes',
       '0.1.3': 'completed alphasense garage data',
       '0.1.2': 'removed cam2 from garage1',
@@ -57,6 +58,8 @@ class MeshdistPseudolabels(tfds.core.GeneratorBasedBuilder):
             'https://drive.google.com/uc?export=download&id=1eMd0m8COn_sKbxbr-cVvbsCdMeSd_FlN',
         'office6':
             'https://drive.google.com/uc?export=download&id=1h0SSB1tRY76t4WvAKpH6AnguAsxSHWlv',
+        'office6-2':
+            'https://drive.google.com/uc?export=download&id=1-82Ntr8p5iDL6potsPBpPfU3NwXPRl_4',
     })
     return [
         tfds.core.SplitGenerator(
