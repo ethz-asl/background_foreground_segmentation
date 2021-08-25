@@ -1,4 +1,4 @@
-# NYU -> CLA -> Rumlang -> Office6_2502 with replay.
+# NYU -> CLA -> Office6_2502 -> Rumlang with finetuning.
 network_params:
   architecture: fast_scnn
   freeze_encoder: false
@@ -23,17 +23,17 @@ dataset_params:
   replay_datasets_scene:
     - null
     - null
-    - rumlang_full
+    - office6
   test_dataset: null
   test_scene: null
   train_dataset: MeshdistPseudolabels
-  train_scene: office6
+  train_scene: rumlang_full
   validation_percentage: 10
 logging_params:
   model_save_freq: 1
-  exp_name: fast_scnn_from_nyu_to_cla_to_rumlang_to_office6_2502_replay
+  exp_name: fast_scnn_from_nyu_to_cla_to_office6_2502_to_rumlang_finetune
 cl_params:
   cl_framework: finetune
-  fraction_replay_ds_to_use: 0.1
-  pretrained_dir: /cluster/scratch/blumh/bfseg_pretrain/nyu_to_cla_replay_to_rumlang_replay.h5
+  fraction_replay_ds_to_use: 0.0
+  pretrained_dir: /cluster/scratch/blumh/bfseg_pretrain/nyu_to_cla_finetune_to_office_2502_finetune.h5
   ratio_main_ds_replay_ds: null

@@ -1,4 +1,4 @@
-# Finetune on Rumlang with replay from NYU, CLA, and Office6_2502.
+# NYU -> CLA -> Office6_2502 -> Rumlang with replay.
 network_params:
   architecture: fast_scnn
   freeze_encoder: false
