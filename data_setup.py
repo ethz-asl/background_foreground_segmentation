@@ -10,6 +10,7 @@ import bfseg.data.pseudolabels
 tfds.load('OfficeRumlangValidationLabeled')
 tfds.load('MeshdistPseudolabels')
 tfds.load('NyuDepthV2Labeled')
+tfds.load('NyuDepthV2Labeled', split='full')
 tfds.load('nyu_subsampled')
 tfds.load("BfsegValidationLabeled")
 tfds.load("meshdist_pseudolabels")

@@ -4,6 +4,7 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import warnings
 
+import bfseg.data.nyu.Nyu_depth_v2_labeled
 from bfseg.data.fsdata import load_fsdata
 from bfseg.utils.images import augmentation_with_mask
 from bfseg.utils.replay_buffer import ReplayBuffer
@@ -216,6 +217,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
 
   # Actually load the dataset.
   if (scene_type not in ["office4_2302", "office4_2402", "office6_2502"]):
+    print(dataset_name, split)
     ds = tfds.load(dataset_name,
                    split=split,
                    shuffle_files=shuffle_data,
@@ -307,9 +309,12 @@ def load_replay_datasets(replay_datasets, replay_datasets_scene, batch_size):
   assert (isinstance(replay_datasets, list) and
           isinstance(replay_datasets_scene, list) and
           len(replay_datasets) == len(replay_datasets_scene))
+  print(replay_datasets)
+  print(replay_datasets_scene)
   replay_ds = {}
   for curr_replay_dataset, curr_replay_dataset_scene in zip(
       replay_datasets, replay_datasets_scene):
+    print(curr_replay_dataset, curr_replay_dataset_scene)
     replay_ds[f"{curr_replay_dataset}_{curr_replay_dataset_scene}"] = load_data(
         dataset_name=curr_replay_dataset,
         scene_type=curr_replay_dataset_scene,
