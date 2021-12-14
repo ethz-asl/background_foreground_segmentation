@@ -109,7 +109,7 @@ roslaunch background_foreground_segmentation <experiment>.launch rosbag_folder:=
 ```bash
 ln -s /your/rosbag/location $BFSEG_ROOT/rosbags
 ```
-The bagfiles are listed [here](https://github.com/ethz-asl/background_foreground_segmentation/blob/cleanup/rosbags.md).
+The bagfiles are listed [here](rosbags.md).
 ## Examples for localization experiments
 
 Use an example bagfile (**Garage1**): [download bagfile](https://drive.google.com/file/d/1bVjDkZkycKaDUXlDpqKvr6hIjR4oC8ng/view?usp=sharing)
