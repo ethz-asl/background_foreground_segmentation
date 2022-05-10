@@ -13,13 +13,18 @@ import yaml as yml
 import zipfile
 
 from bfseg.utils.evaluation import evaluate_model_multiple_epochs_and_datasets
+import bfseg.settings as settings
 
-MONGO_URI = ADD_MONGO_URI_HERE
+MONGO_URI = 'mongodb://{user}:{pwd}@{host}/{db}'.format(
+        host=settings.EXPERIMENT_DB_HOST,
+        user=settings.EXPERIMENT_DB_USER,
+        pwd=settings.EXPERIMENT_DB_PWD,
+        db=settings.EXPERIMENT_DB_NAME)
 
 class LogExperiment:
 
   def __init__(self, experiment_id, save_folder, save_output=False):
-    loader = ExperimentLoader(mongo_uri=MONGO_URI, db_name='bfseg')
+    loader = ExperimentLoader(mongo_uri=MONGO_URI, db_name=settings.EXPERIMENT_DB_NAME)
 
     # Load the experiment.
     self._experiment_id = experiment_id
@@ -234,7 +239,7 @@ class LogExperiment:
         "MeshdistPseudolabels_office4", "MeshdistPseudolabels_office5",
         "MeshdistPseudolabels_office4_2302",
         "MeshdistPseudolabels_office4_2402",
-        "MeshdistPseudolabels_office6_2502", "MeshdistPseudolabels_rumlang2",
+        "MeshdistPseudolabels_office6", "MeshdistPseudolabels_rumlang2",
         "MeshdistPseudolabels_rumlang3", "BfsegValidationLabeled_None",
         "BfsegValidationLabeled_ARCHE", "BfsegValidationLabeled_CLA",
         "OfficeRumlangValidationLabeled_None",

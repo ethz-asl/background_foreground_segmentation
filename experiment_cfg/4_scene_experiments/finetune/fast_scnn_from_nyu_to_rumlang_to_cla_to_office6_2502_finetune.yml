@@ -27,7 +27,7 @@ dataset_params:
   test_dataset: null
   test_scene: null
   train_dataset: MeshdistPseudolabels
-  train_scene: office6
+  train_scene: office6_2502_new
   validation_percentage: 10
 logging_params:
   model_save_freq: 1

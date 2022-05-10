@@ -22,7 +22,7 @@ dataset_params:
     - MeshdistPseudolabels
   replay_datasets_scene:
     - null
-    - office6
+    - office6_2502_new
     - rumlang_full
   test_dataset: null
   test_scene: null

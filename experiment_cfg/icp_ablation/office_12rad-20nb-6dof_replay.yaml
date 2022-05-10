@@ -1,4 +1,3 @@
-# NYU -> CLA -> Rumlang -> Office6_2502 with finetuning.
 network_params:
   architecture: fast_scnn
   freeze_encoder: false
@@ -18,22 +17,18 @@ training_params:
 dataset_params:
   replay_datasets:
     - NyuDepthV2Labeled
-    - BfsegCLAMeshdistLabels
-    - MeshdistPseudolabels
   replay_datasets_scene:
     - null
-    - null
-    - rumlang_full
   test_dataset: null
   test_scene: null
   train_dataset: MeshdistPseudolabels
-  train_scene: office6_2502_new
+  train_scene: office6-12rad-20nb-6dof
   validation_percentage: 10
 logging_params:
   model_save_freq: 1
-  exp_name: fast_scnn_from_nyu_to_cla_to_rumlang_to_office6_2502_finetune
+  exp_name: icpablation_office_12rad-20nb-6dof_replay
 cl_params:
   cl_framework: finetune
-  fraction_replay_ds_to_use: 0.0
-  pretrained_dir: /cluster/scratch/blumh/bfseg_pretrain/nyu_to_cla_finetune_to_rumlang_finetune.h5
+  fraction_replay_ds_to_use: 0.1
+  pretrained_dir: /cluster/scratch/blumh/bfseg_pretrain/model_epoch_42_group_norm.h5
   ratio_main_ds_replay_ds: null

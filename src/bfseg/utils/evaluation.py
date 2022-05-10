@@ -304,7 +304,7 @@ def evaluate_model_multiple_epochs_and_datasets(pretrained_dirs,
     pretrained_dirs = [pretrained_dirs]
   else:
     assert (isinstance(pretrained_dirs, list))
-  if (isinstance(epochs_to_evaluate, int)):
+  if (isinstance(epochs_to_evaluate, int)) or (isinstance(epochs_to_evaluate, str)):
     epochs_to_evaluate = [epochs_to_evaluate]
   else:
     assert (isinstance(epochs_to_evaluate, list))

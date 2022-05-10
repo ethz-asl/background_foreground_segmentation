@@ -159,7 +159,7 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
       name = "rumlang2+rumlang3"
     elif (scene_type in [
         "garage1", "garage2", "garage3", "office4", "office5", "office6",
-        "office6-2", "rumlang2", "rumlang3"
+        "office6-2", "rumlang2", "rumlang3",
     ]):
       name = scene_type
     elif (scene_type == "office6_2502_new"):
@@ -167,7 +167,8 @@ def load_data(dataset_name, scene_type, fraction, batch_size, shuffle_data):
                         'pickelhaube_full_office6_2502')
       name = scene_type
     else:
-      raise Exception("Invalid scene type: %s!" % scene_type)
+      name = scene_type
+      # raise Exception("Invalid scene type: %s!" % scene_type)
   elif (dataset_name == 'BfsegValidationLabeled'):
     if (scene_type is None):
       name = 'CLA+ARCHE'

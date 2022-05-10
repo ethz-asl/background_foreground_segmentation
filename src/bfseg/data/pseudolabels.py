@@ -17,8 +17,9 @@ Labels:
 class MeshdistPseudolabels(tfds.core.GeneratorBasedBuilder):
   """DatasetBuilder for bagfile datasets (e.g., Rumlang)."""
 
-  VERSION = tfds.core.Version('0.2.1')
+  VERSION = tfds.core.Version('0.2.2')
   RELEASE_NOTES = {
+      '0.2.2': 'data for ablation study',
       '0.2.1': 'fixing office scenes',
       '0.2.0': 'added office scenes',
       '0.1.3': 'completed alphasense garage data',
@@ -58,8 +59,28 @@ class MeshdistPseudolabels(tfds.core.GeneratorBasedBuilder):
             'https://drive.google.com/uc?export=download&id=1eMd0m8COn_sKbxbr-cVvbsCdMeSd_FlN',
         'office6':
             'https://drive.google.com/uc?export=download&id=1h0SSB1tRY76t4WvAKpH6AnguAsxSHWlv',
-        'office6-2':
-            'https://drive.google.com/uc?export=download&id=1-82Ntr8p5iDL6potsPBpPfU3NwXPRl_4',
+        # 'office6-2':
+            # 'https://drive.google.com/uc?export=download&id=1-82Ntr8p5iDL6potsPBpPfU3NwXPRl_4',
+        # 'rumlang23-08rad-30nb-4dof':
+            # 'https://drive.google.com/uc?export=download&id=1YYax_rQOC2GFKRP6INXvFJw_F9atViFA',
+        # 'rumlang23-12rad-20nb-6dof':
+            # 'https://drive.google.com/uc?export=download&id=1CEhaIzpia8hTjW36AQBIXpUwWOoFJSjp',
+        'rumlang23-12rad-10nb-6dof':
+            'https://drive.google.com/uc?export=download&id=1dmnPZq0g7YmrzdXkWxekahboIvGo0NHK',
+        # 'rumlang23-15rad-10nb-4dof':
+            # 'https://drive.google.com/uc?export=download&id=1H5UK_nQoYGZJj8VXruOzo31ytmkadRCQ',
+        # 'rumlang23-15rad-20nb-6dof':
+            # 'https://drive.google.com/uc?export=download&id=1Ao_JzzkPp0TPqXoGj2fhZABW71jAM7eP',
+        # 'office6-15rad-10nb-6dof':
+            # 'https://drive.google.com/uc?export=download&id=1LxBumz9U7dpgow8uBJP2RwKR-lIT3sMI',
+        # 'office6-12rad-20nb-6dof':
+            # 'https://drive.google.com/uc?export=download&id=1H2wN-jYvI05ZMpTdkn_ex_OokEhcxRcV',
+        # 'office6-08rad-30nb-6dof':
+            # 'https://drive.google.com/uc?export=download&id=1TCc-Fj4dl0uY6EyaCa5OVgv4eXT0bs98',
+        'office6-10rad-30nb-4dof':
+            'https://drive.google.com/uc?export=download&id=1z3YOrL3NxT3lGvQEx1naDPqdtOARP2Zu',
+        'office6-08rad-20nb-4dof':
+            'https://drive.google.com/uc?export=download&id=1N4B9CF-x4HajZyq5qev2dRDjIIA54MUb',
     })
     return [
         tfds.core.SplitGenerator(

@@ -2,8 +2,8 @@ import os
 
 from bfseg.utils.evaluation import evaluate_model_multiple_epochs_and_datasets
 
-save_folder = PATH_TO_THE_FOLDER_THAT_SHOULD_CONTAIN_THE_EVALUATION_RESULTS
-pretrained_models_folder = PATH_TO_THE_FOLDER_WITH_THE_PRETRAINED_MODELS
+save_folder = '/cluster/scratch/blumh/bfseg_download/evaluate/'
+pretrained_models_folder = '/cluster/scratch/blumh/bfseg_download/models/'
 
 # Whether or not to use the FoV mask for evaluation.
 use_fov_mask = True
@@ -13,30 +13,45 @@ save_predictions = False
 
 # Change these with the experiments for which you want to obtain the evaluation,
 # in the format (id_experiment, epoch).
-id_and_epoch = [(1064, 100), (1069, 100)]
+id_and_epoch = [
+        ('nyu-cla-office-rumlang-finetune', 'final'),
+        ('nyu-cla-office-rumlang-replay', 'final'),
+        ('nyu-cla-rumlang-office-finetune', 'final'),
+        ('nyu-cla-rumlang-office-replay', 'final'),
+        ('nyu-rumlang-office-cla-finetune', 'final'),
+        ('nyu-rumlang-office-cla-replay', 'final'),
+        ('nyu-rumlang-cla-office-finetune', 'final'),
+        ('nyu-rumlang-cla-office-replay', 'final'),
+        ('nyu-office-cla-rumlang-finetune', 'final'),
+        ('nyu-office-cla-rumlang-replay', 'final'),
+        ('nyu-office-rumlang-cla-finetune', 'final'),
+        ('nyu-office-rumlang-cla-replay', 'final'),
+]
 
 datasets_to_evaluate = [
     # NYU.
     ("NyuDepthV2Labeled", None),
-    ("NyuDepthV2Labeled", "kitchen"),
-    ("NyuDepthV2Labeled", "bedroom"),
+    # ("NyuDepthV2Labeled", "kitchen"),
+    # ("NyuDepthV2Labeled", "bedroom"),
     # Hive labels.
     ("BfsegValidationLabeled", "CLA"),
     ("OfficeRumlangValidationLabeled", "OFFICE"),
     ("OfficeRumlangValidationLabeled", "RUMLANG"),
     # Pseudo-labels.
     ("BfsegCLAMeshdistLabels", None),
-    ("MeshdistPseudolabels", "garage1"),
-    ("MeshdistPseudolabels", "garage2"),
-    ("MeshdistPseudolabels", "garage3"),
+    # ("MeshdistPseudolabels", "garage1"),
+    # ("MeshdistPseudolabels", "garage2"),
+    # ("MeshdistPseudolabels", "garage3"),
     ("MeshdistPseudolabels", "rumlang_full"),
-    ("MeshdistPseudolabels", "rumlang2"),
-    ("MeshdistPseudolabels", "rumlang3"),
-    ("MeshdistPseudolabels", "office4"),
-    ("MeshdistPseudolabels", "office5"),
-    ("MeshdistPseudolabels", "office4_2302"),
-    ("MeshdistPseudolabels", "office4_2402"),
-    ("MeshdistPseudolabels", "office6_2502")
+    # ("MeshdistPseudolabels", "rumlang2"),
+    # ("MeshdistPseudolabels", "rumlang3"),
+    # ("MeshdistPseudolabels", "office4"),
+    # ("MeshdistPseudolabels", "office5"),
+    # ("MeshdistPseudolabels", "office6"),
+    # ("MeshdistPseudolabels", "office4_2302"),
+    # ("MeshdistPseudolabels", "office4_2402"),
+    # ("MeshdistPseudolabels", "office6_2502")
+    ("MeshdistPseudolabels", "office6_2502_new")
 ]
 
 accuracies = {}
